@@ -743,7 +743,7 @@ var viewer3D = {
         }
         var api = new window._IfcAPI();
         // WASM: intentar local primero, luego CDN
-        var wasmBase = 'https://cdn.jsdelivr.net/npm/web-ifc@0.0.51/';
+        var wasmBase = 'https://cdn.jsdelivr.net/npm/web-ifc@0.0.68/';
         try {
           var wr = await fetch('./wasm/web-ifc.wasm', {method:'HEAD'});
           if (wr.ok) wasmBase = './wasm/';
@@ -1145,22 +1145,34 @@ function mostrarReporte(rep) {
 }
 </script>
 <script type="module">
-// Precargar web-ifc como ESM y exponer globalmente
-async function preloadWebIfc() {
+// Cargar web-ifc como ESM (único formato disponible) y exponer globalmente
+// Se precarga al cargar la página para que esté listo cuando el usuario lo necesite
+async function loadWebIfc() {
+  if (window._IfcAPI) return; // ya cargado
   var urls = [
     './js/web-ifc-api.js',
-    'https://cdn.jsdelivr.net/npm/web-ifc@0.0.51/web-ifc-api.js',
-    'https://unpkg.com/web-ifc@0.0.51/web-ifc-api.js'
+    'https://cdn.jsdelivr.net/npm/web-ifc@0.0.68/web-ifc-api.js',
+    'https://unpkg.com/web-ifc@0.0.68/web-ifc-api.js'
   ];
   for (var i = 0; i < urls.length; i++) {
     try {
       var mod = await import(urls[i]);
       var IfcAPI = mod.IfcAPI || (mod.default && mod.default.IfcAPI);
-      if (IfcAPI) { window._IfcAPI = IfcAPI; return; }
-    } catch(e) {}
+      if (IfcAPI) {
+        window._IfcAPI = IfcAPI;
+        console.log('web-ifc cargado desde:', urls[i]);
+        return;
+      }
+    } catch(e) {
+      console.log('Fallo cargando web-ifc desde:', urls[i], e.message);
+    }
   }
+  console.warn('No se pudo cargar web-ifc desde ninguna fuente');
 }
-window._loadWebIfc = preloadWebIfc;
+// Exponer para que cargarModelo pueda llamarlo
+window._loadWebIfc = loadWebIfc;
+// Precargar inmediatamente (en segundo plano)
+loadWebIfc();
 </script>
 </body>
 </html>
