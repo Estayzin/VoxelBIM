@@ -161,6 +161,19 @@ header p  { font-size:10px; color:#4a6080; margin-top:1px; font-weight:400; font
 .login-error{font:400 10px var(--mono);color:#ff3d57;text-align:center;margin-top:12px;letter-spacing:.05em;display:none;}
 .login-error.show{display:block;}
 .login-footer-txt{font:400 9px var(--mono);color:var(--muted);text-align:center;margin-top:28px;letter-spacing:.06em;opacity:.35;}
+/* Sección próximamente */
+.login-coming{margin-top:28px;padding-top:20px;border-top:1px solid var(--border);}
+.login-coming-label{font:600 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.2em;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.login-coming-label::before,.login-coming-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.coming-btn{width:100%;padding:9px 12px;margin-bottom:8px;background:transparent;border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;gap:10px;cursor:not-allowed;opacity:.5;transition:opacity .15s;text-align:left;}
+.coming-btn:last-child{margin-bottom:0;}
+.coming-icon{width:24px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.coming-icon.aps{background:rgba(0,144,255,.15);}
+.coming-icon.bim{background:rgba(124,77,255,.15);}
+.coming-text{flex:1;}
+.coming-text .ct-title{font:600 10px var(--mono);color:var(--text);letter-spacing:.03em;}
+.coming-text .ct-sub{font:400 9px var(--mono);color:var(--muted);margin-top:1px;letter-spacing:.03em;}
+.coming-badge{font:700 8px var(--mono);color:var(--accent2);background:rgba(124,77,255,.1);border:1px solid rgba(124,77,255,.2);border-radius:3px;padding:2px 6px;letter-spacing:.08em;text-transform:uppercase;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -202,6 +215,27 @@ header p  { font-size:10px; color:#4a6080; margin-top:1px; font-weight:400; font
       </div>
       <button class="login-btn" onclick="doLogin()">Ingresar</button>
       <div class="login-error" id="loginError">Usuario o contraseña incorrectos</div>
+
+      <!-- Próximamente -->
+      <div class="login-coming">
+        <div class="login-coming-label">Próximamente</div>
+        <div class="coming-btn">
+          <div class="coming-icon aps">🔗</div>
+          <div class="coming-text">
+            <div class="ct-title">Autodesk Platform Services</div>
+            <div class="ct-sub">Acceso directo a BIM 360 / ACC</div>
+          </div>
+          <div class="coming-badge">Beta</div>
+        </div>
+        <div class="coming-btn">
+          <div class="coming-icon bim">⚙️</div>
+          <div class="coming-text">
+            <div class="ct-title">Revisor Revit (.rvt)</div>
+            <div class="ct-sub">Vía Autodesk Model Derivative API</div>
+          </div>
+          <div class="coming-badge">Dev</div>
+        </div>
+      </div>
       </div>
     </div>
   </div>
