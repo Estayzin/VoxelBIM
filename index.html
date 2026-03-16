@@ -792,6 +792,13 @@ var viewer3D = {
             // API web-ifc >= 0.0.68: geometría viene en el placedGeom directamente
             var geomID = placedGeom.geometryExpressID;
             var geom = self.ifcAPI.GetGeometry(self.modelID, geomID);
+            if (!window._geomLogged) {
+              window._geomLogged = true;
+              console.log('geom type:', typeof geom, geom && geom.constructor && geom.constructor.name);
+              try { console.log('geom keys:', Object.keys(geom)); } catch(e) {}
+              try { console.log('geom proto:', Object.getOwnPropertyNames(Object.getPrototypeOf(geom))); } catch(e) {}
+              console.log('geom instanceof:', geom);
+            }
 
             // Intentar obtener punteros WASM (API clásica)
             if (g === 0 && !window._geomLogged) {
