@@ -131,19 +131,24 @@ header p  { font-size:10px; color:#4a6080; margin-top:1px; font-weight:400; font
 #loginScreen.hidden{display:none;}
 .login-card{display:flex;width:100%;max-width:860px;min-height:480px;background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 0 80px rgba(0,212,255,.07),0 0 0 1px rgba(0,212,255,.04);}
 /* Lado izquierdo — branding */
-.login-left{flex:1;padding:56px 52px;display:flex;flex-direction:column;justify-content:center;background:linear-gradient(140deg,var(--navy) 60%,rgba(0,212,255,.04));border-right:1px solid var(--border);position:relative;overflow:hidden;}
+.login-left{flex:2;padding:56px 52px;display:flex;flex-direction:column;justify-content:center;background:linear-gradient(140deg,var(--navy) 60%,rgba(0,212,255,.04));border-right:1px solid var(--border);position:relative;overflow:hidden;}
 .login-left::before{content:'';position:absolute;top:-80px;left:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(0,212,255,.06),transparent 70%);pointer-events:none;}
 .login-left::after{content:'';position:absolute;bottom:-60px;right:-60px;width:220px;height:220px;background:radial-gradient(circle,rgba(124,77,255,.05),transparent 70%);pointer-events:none;}
 .login-badge{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);border-radius:20px;margin-bottom:32px;}
 .login-badge span{font:600 9px var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.15em;}
 .login-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);}
-.login-headline{font:700 38px var(--sans);color:#e8f4ff;line-height:1.1;margin-bottom:14px;letter-spacing:-.02em;}
-.login-headline span{color:var(--accent);}
-.login-desc{font:400 14px var(--sans);color:var(--muted);line-height:1.7;max-width:340px;margin-bottom:36px;}
+.login-headline{font:700 54px var(--sans);color:#e8f4ff;line-height:1.0;margin-bottom:14px;letter-spacing:-.03em;}
+.login-headline span{color:var(--accent);text-shadow:0 0 40px rgba(0,212,255,.4);}
+.login-desc{font:400 13px var(--sans);color:var(--muted);line-height:1.7;max-width:340px;margin-bottom:32px;}
 .login-tags{display:flex;flex-wrap:wrap;gap:8px;}
 .login-tag{padding:4px 10px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:4px;font:500 10px var(--mono);color:var(--muted);letter-spacing:.06em;}
+.login-author{margin-top:36px;padding-top:24px;border-top:1px solid var(--border);}
+.login-author .author-name{font:600 11px var(--mono);color:var(--text);letter-spacing:.05em;}
+.login-author .author-email{font:400 10px var(--mono);color:var(--accent);margin-top:3px;letter-spacing:.03em;opacity:.7;}
+.login-author .author-role{font:400 9px var(--mono);color:var(--muted);margin-top:2px;letter-spacing:.06em;text-transform:uppercase;}
 /* Lado derecho — formulario */
-.login-right{width:340px;flex-shrink:0;padding:52px 44px;display:flex;flex-direction:column;justify-content:center;}
+.login-right{flex:3;padding:52px 44px;display:flex;flex-direction:column;justify-content:center;align-items:center;}
+.login-right-inner{width:100%;max-width:340px;}
 .login-logo{width:40px;height:40px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:24px;box-shadow:0 0 20px rgba(0,212,255,.25);}
 .login-form-title{font:700 18px var(--sans);color:var(--text);margin-bottom:6px;}
 .login-form-sub{font:400 11px var(--mono);color:var(--muted);letter-spacing:.05em;margin-bottom:32px;}
@@ -175,9 +180,15 @@ header p  { font-size:10px; color:#4a6080; margin-top:1px; font-weight:400; font
         <div class="login-tag">PlanBIM</div>
         <div class="login-tag">17 Especialidades</div>
       </div>
+      <div class="login-author">
+        <div class="author-name">Carlos Estay Ruggieri</div>
+        <div class="author-email">c.estay@outlook.com</div>
+        <div class="author-role">Coordinación BIM · MOP Chile</div>
+      </div>
     </div>
     <!-- Derecha: formulario -->
     <div class="login-right">
+      <div class="login-right-inner">
       <div class="login-logo">&#127959;</div>
       <div class="login-form-title">Acceso al sistema</div>
       <div class="login-form-sub">Ingresa tus credenciales para continuar</div>
@@ -191,7 +202,7 @@ header p  { font-size:10px; color:#4a6080; margin-top:1px; font-weight:400; font
       </div>
       <button class="login-btn" onclick="doLogin()">Ingresar</button>
       <div class="login-error" id="loginError">Usuario o contraseña incorrectos</div>
-      <div class="login-footer-txt">Carlos Estay Ruggieri</div>
+      </div>
     </div>
   </div>
 </div>
