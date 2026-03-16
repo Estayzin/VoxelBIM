@@ -778,8 +778,6 @@ var viewer3D = {
       var bbox = new THREE.Box3();
 
       // Detectar qué API expone web-ifc en esta versión
-      var geomApiStyle = null; // se detecta en el primer geom válido
-
       this.ifcAPI.StreamAllMeshes(this.modelID, function(mesh) {
         var placedGeoms = mesh.geometries;
         var isEsp = !!espSet[mesh.expressID];
@@ -795,29 +793,25 @@ var viewer3D = {
           if (!geom) continue;
 
           var verts, indices;
-
-          // Detectar estilo de API una sola vez
-          if (!geomApiStyle) {
-            if (typeof geom.GetIndexSize === 'function') geomApiStyle = 'methods';
-            else if (geom.indexData !== undefined)       geomApiStyle = 'props';
-            else                                         geomApiStyle = 'unknown';
-            console.log('web-ifc geom API style:', geomApiStyle, Object.keys(geom));
-          }
-
           try {
-            if (geomApiStyle === 'methods') {
+            // API web-ifc >= 0.0.57: GetVertexData/GetIndexData devuelven puntero WASM
+            if (typeof geom.GetVertexData === 'function' && typeof geom.GetIndexSize === 'function') {
               verts   = self.ifcAPI.GetVertexArray(geom.GetVertexData(), geom.GetVertexDataSize());
               indices = self.ifcAPI.GetIndexArray(geom.GetIndexData(), geom.GetIndexSize());
-            } else if (geomApiStyle === 'props') {
+            }
+            // API alternativa: propiedades directas
+            else if (geom.vertexData) {
               verts   = geom.vertexData;
               indices = geom.indexData;
-            } else {
-              // Intentar ambos
-              var keys = Object.keys(geom);
-              var vKey = keys.find(function(k){ return k.toLowerCase().includes('vertex'); });
-              var iKey = keys.find(function(k){ return k.toLowerCase().includes('index'); });
-              verts   = vKey ? geom[vKey] : null;
-              indices = iKey ? geom[iKey] : null;
+            }
+            // API web-ifc >= 0.0.68: los datos están en el propio geom como arrays tipados
+            else {
+              var rawVerts = geom.GetVertexData ? geom.GetVertexData() : null;
+              var rawIdx   = geom.GetIndexData  ? geom.GetIndexData()  : null;
+              if (rawVerts && rawIdx) {
+                verts   = rawVerts instanceof Float32Array ? rawVerts : new Float32Array(rawVerts);
+                indices = rawIdx   instanceof Uint32Array  ? rawIdx   : new Uint32Array(rawIdx);
+              }
             }
           } catch(e) {
             if (geom.delete) geom.delete();
