@@ -927,45 +927,46 @@ function hClas(res, ncData){
     +"<span style='color:var(--accent)'>"+res.con_clas+" clasificados ("+pct+"%)</span>"
     +" &nbsp;·&nbsp; "
     +"<span style='color:var(--warn)'>"+totalNoClasif+" sin clasificar ("+pctNoClasif+"%)</span>.";
-  // Tabla de clasificados
-  var fClasif = res.codigos.length ? res.codigos.map(function(c){
-    var desc = descUniformat(c.codigo);
-    var descHtml = desc ? "<span style='font:400 9px var(--mono);color:var(--accent);margin-left:8px;'>"+desc+"</span>" : "";
-    return "<tr><td><code>"+c.codigo+"</code>"+descHtml+"</td><td style='color:var(--muted);font-size:11px;'>"+(c.sistema||"&mdash;")+"</td><td class='cantidad' style='color:var(--accent);'>"+c.cantidad+"</td></tr>";
-  }).join("") : "<tr><td colspan='3' style='text-align:center;color:var(--muted);padding:16px;'>Sin códigos de clasificación</td></tr>";
-  // Acordeón de no clasificados
-  var acordeon = "";
-  if(noClasificados.length){
-    var uid = 'nc_'+Math.random().toString(36).substr(2,6);
-    var filas = noClasificados.map(function(n){
-      var cls=n[0], qty=n[1];
-      var isProxy = cls==="IFCBUILDINGELEMENTPROXY";
-      var badge = isProxy ? "<span style='font:600 8px var(--mono);background:rgba(255,107,53,.1);color:var(--warn);border:1px solid rgba(255,107,53,.3);border-radius:3px;padding:1px 5px;margin-left:6px;'>PROXY</span>" : "";
-      return "<tr class='unclassified'><td><code>"+cls+"</code>"+badge+"</td><td class='cantidad' style='color:var(--warn);'>"+qty+"</td></tr>";
-    }).join("");
-    acordeon = "<div style='margin-top:0;'>"
-      +"<button onclick=\"var d=document.getElementById('"+uid+"');var a=document.getElementById('"+uid+"_arr');if(d.style.display==='none'){d.style.display='block';a.textContent='▾';}else{d.style.display='none';a.textContent='▸';}\" "
-      +"style='width:100%;padding:10px 14px;background:rgba(255,107,53,.06);border:1px solid rgba(255,107,53,.25);border-top:none;border-radius:0 0 6px 6px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font:600 10px var(--mono);color:var(--warn);text-align:left;'>"
-      +"<span>&#9660; Elementos sin clasificar &nbsp;<span style='background:rgba(255,107,53,.15);border-radius:10px;padding:1px 8px;'>"+totalNoClasif+" ("+noClasificados.length+" tipos)</span></span>"
-      +"<span id='"+uid+"_arr'>▸</span>"
-      +"</button>"
-      +"<div id='"+uid+"' style='display:none;'>"
-      +"<table style='border-radius:0;margin-bottom:0;border-top:none;'>"
-      +"<thead><tr><th>Clase IFC</th><th style='text-align:center'>Cantidad</th></tr></thead>"
-      +"<tbody>"+filas+"</tbody>"
-      +"<tfoot><tr><td style='font-weight:bold;padding:9px 14px;color:var(--text);'>Total sin clasificar</td><td class='cantidad' style='color:var(--warn);font-weight:bold;'>"+totalNoClasif+"</td></tr></tfoot>"
-      +"</table></div></div>";
+
+  if(!res.codigos.length){
+    return "<div class='section-wrap'>"
+      +"<div class='seccion-titulo'>&#9632; Clasificacion de Elementos</div>"
+      +"<div class='sec-box sec-box-warn'>"+sub+" No se encontraron codigos de clasificacion.</div>"
+      +"</div>";
   }
-  return "<div class='section-wrap'>"
-    +"<div class='seccion-titulo'>&#9632; Clasificacion de Elementos</div>"
-    +"<div class='sec-box sec-box-warn' style='border-radius:6px 6px 0 0;'>"+sub+"</div>"
-    +"<table style='border-radius:0;margin-bottom:0;border-bottom:"+(noClasificados.length?"none":"1px solid var(--border)")+";'>"
-    +"<thead><tr><th>Codigo</th><th>Sistema</th><th style='text-align:center'>Elementos</th></tr></thead>"
-    +"<tbody>"+fClasif+"</tbody>"
+
+  // Acordeón de clasificados por código — uno por código
+  var uid = 'clas_'+Math.random().toString(36).substr(2,6);
+  var filasClas = res.codigos.map(function(c, idx){
+    var desc = descUniformat(c.codigo);
+    var descHtml = desc ? " <span style='color:var(--accent);'>— "+desc+"</span>" : "";
+    var rowId = uid+'_'+idx;
+    // Buscar elementos de este código (placeholder — el IFC solo da conteo total por código)
+    return "<tr class='present'>"
+      +"<td><code>"+c.codigo+"</code>"+descHtml+"</td>"
+      +"<td style='color:var(--muted);font-size:11px;'>"+(c.sistema||"&mdash;")+"</td>"
+      +"<td class='cantidad' style='color:var(--accent);'>"+c.cantidad+"</td>"
+      +"</tr>";
+  }).join("");
+
+  // Botón acordeón para ver el detalle de clasificados
+  var acordeonClas = "<button onclick=\"var d=document.getElementById('"+uid+"_det');var a=document.getElementById('"+uid+"_arr');if(d.style.display==='none'){d.style.display='block';a.textContent='▾';}else{d.style.display='none';a.textContent='▸';}\" "
+    +"style='width:100%;padding:10px 14px;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.2);border-top:none;border-radius:0 0 6px 6px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font:600 10px var(--mono);color:var(--accent);text-align:left;'>"
+    +"<span>Ver detalle por código Uniformat &nbsp;<span style='background:rgba(0,212,255,.12);border-radius:10px;padding:1px 8px;'>"+res.codigos.length+" códigos · "+res.con_clas+" elementos</span></span>"
+    +"<span id='"+uid+"_arr'>▸</span>"
+    +"</button>"
+    +"<div id='"+uid+"_det' style='display:none;'>"
+    +"<table style='border-radius:0;margin-bottom:0;border-top:none;'>"
+    +"<thead><tr><th>Código</th><th>Sistema</th><th style='text-align:center'>Elementos</th></tr></thead>"
+    +"<tbody>"+filasClas+"</tbody>"
     +"<tfoot><tr><td colspan='2' style='font-weight:bold;padding:9px 14px;color:var(--text);'>Total clasificados</td>"
     +"<td class='cantidad' style='font-weight:bold;color:var(--accent);'>"+res.con_clas+"</td></tr></tfoot>"
-    +"</table>"
-    +acordeon
+    +"</table></div>";
+
+  return "<div class='section-wrap'>"
+    +"<div class='seccion-titulo'>&#9632; Clasificacion de Elementos</div>"
+    +"<div class='sec-box sec-box-warn' style='border-radius:6px;'>"+sub+"</div>"
+    +acordeonClas
     +"</div>";
 }
 
