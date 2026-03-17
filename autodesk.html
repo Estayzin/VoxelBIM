@@ -154,38 +154,51 @@ if (sessionStorage.getItem('ifc_auth') !== '1' && window.location.protocol !== '
 // ============================================================
 var APS_CLIENT_ID = 'kOJ4igA0Lm8a9ZHA3KGkATKASthAdjiWBjY9ventTQBnGVab';
 var APS_CALLBACK  = 'https://revisor-ifc-pages.pages.dev/autodesk.html';
-var APS_SCOPES    = 'data:read data:write viewables:read';
+var APS_SCOPES    = 'data:read viewables:read';
+var APS_PROXY     = 'https://aps-oauth-proxy.zinnarox.workers.dev/token';
 var apsToken      = null;
 var viewer        = null;
 
 // ============================================================
-// OAUTH — Detectar token en URL tras callback
+// OAUTH — Authorization Code Flow
 // ============================================================
 (function detectCallback() {
-  // Intentar extraer access_token de hash (implicit flow) o code (authorization code)
-  var hash   = window.location.hash.substring(1);
-  var params = new URLSearchParams(hash);
-  var token  = params.get('access_token');
+  var params = new URLSearchParams(window.location.search);
+  var code = params.get('code');
 
-  if (token) {
-    apsToken = token;
-    sessionStorage.setItem('aps_token', token);
+  if (code) {
+    // Limpiar code de la URL
     window.history.replaceState({}, document.title, window.location.pathname);
-    onTokenReady();
+    // Intercambiar code por token via proxy Worker
+    mostrarLoading('Autenticando...');
+    fetch(APS_PROXY, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: code })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.access_token) {
+        apsToken = data.access_token;
+        sessionStorage.setItem('aps_token', apsToken);
+        ocultarLoading();
+        onTokenReady();
+      } else {
+        ocultarLoading();
+        mostrarError('Error OAuth: ' + (data.error_description || data.error || JSON.stringify(data)));
+      }
+    })
+    .catch(e => { ocultarLoading(); mostrarError('Error de red: ' + e.message); });
     return;
   }
 
-  // Intentar desde sessionStorage (token ya guardado)
   var stored = sessionStorage.getItem('aps_token');
-  if (stored) {
-    apsToken = stored;
-    onTokenReady();
-  }
+  if (stored) { apsToken = stored; onTokenReady(); }
 })();
 
 function iniciarLogin() {
   var url = 'https://developer.api.autodesk.com/authentication/v2/authorize'
-    + '?response_type=token'
+    + '?response_type=code'
     + '&client_id=' + encodeURIComponent(APS_CLIENT_ID)
     + '&redirect_uri=' + encodeURIComponent(APS_CALLBACK)
     + '&scope=' + encodeURIComponent(APS_SCOPES);
