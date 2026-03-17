@@ -37,7 +37,7 @@ header { background:var(--navy); padding:11px 24px; display:flex; align-items:ce
 </head>
 <body>
 <script>
-if (sessionStorage.getItem('ifc_auth') !== '1') window.location.href = 'index.html';
+if (sessionStorage.getItem('ifc_auth') !== '1' && window.location.protocol !== 'file:') window.location.href = 'index.html';
 </script>
 <header>
   <div class="hicon">🔗</div>

@@ -337,10 +337,11 @@ header p  { font-size:10px; color:#4a6080; margin-top:1px; font-weight:400; font
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script>
 // ============================================================
-// PROTECCIÓN DE SESIÓN
+// PROTECCIÓN DE SESIÓN — solo activa en GitHub Pages
 // ============================================================
 (function(){
-  if (sessionStorage.getItem('ifc_auth') !== '1') {
+  var isLocal = window.location.protocol === 'file:';
+  if (!isLocal && sessionStorage.getItem('ifc_auth') !== '1') {
     window.location.href = 'index.html';
   }
 })();
