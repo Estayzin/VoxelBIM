@@ -125,6 +125,14 @@ header p  { font-size:10px; color:#4a6080; margin-top:1px; font-weight:400; font
 .ent-item input[type=checkbox]{width:13px;height:13px;accent-color:var(--accent);flex-shrink:0;cursor:pointer;}
 .ent-name{font:600 11px var(--mono);color:var(--text);letter-spacing:.02em;}
 .ent-cls{font:400 9px var(--mono);color:var(--muted);margin-top:1px;letter-spacing:.04em;}
+/* CONFIG REVISIONES */
+.cfg-section{background:var(--navy);border:1px solid var(--border);border-radius:5px;padding:8px 10px;}
+.cfg-title{font:600 9px var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.12em;margin-bottom:7px;}
+.cfg-field{flex:1;}
+.cfg-field label,.cfg-field-full label{display:block;font:500 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;}
+.cfg-field input,.cfg-field-full input{width:100%;padding:5px 8px;background:var(--blue);border:1px solid var(--border);border-radius:3px;font:400 11px var(--mono);color:var(--text);outline:none;text-align:center;}
+.cfg-field input:focus,.cfg-field-full input:focus{border-color:var(--accent);}
+.cfg-field-full{width:100%;}
 /* LOGIN */
 /* LOGIN SCREEN */
 #loginScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;padding:40px;}
@@ -332,6 +340,49 @@ header p  { font-size:10px; color:#4a6080; margin-top:1px; font-weight:400; font
           </div>
           <div class="ents-list" id="entsList"></div>
         </div>
+
+        <!-- PASO 4: CONFIGURACIÓN DE REVISIONES -->
+        <div id="configRevBlock" style="display:none;flex-direction:column;gap:8px;">
+          <div class="step-label">4. Configuración de revisiones</div>
+
+          <!-- Origen interno -->
+          <div class="cfg-section">
+            <div class="cfg-title">&#9675; Origen interno (0,0,0)</div>
+            <div style="display:flex;gap:6px;">
+              <div class="cfg-field"><label>X</label><input type="number" id="cfgX" value="0" step="any"></div>
+              <div class="cfg-field"><label>Y</label><input type="number" id="cfgY" value="0" step="any"></div>
+              <div class="cfg-field"><label>Z</label><input type="number" id="cfgZ" value="0" step="any"></div>
+            </div>
+          </div>
+
+          <!-- Nombre Sitio -->
+          <div class="cfg-section">
+            <div class="cfg-title">&#9675; Caracteres IfcSite</div>
+            <div class="cfg-field-full">
+              <label>N° caracteres esperados</label>
+              <input type="number" id="cfgSite" value="3" min="1" max="20">
+            </div>
+          </div>
+
+          <!-- Nombre Edificio -->
+          <div class="cfg-section">
+            <div class="cfg-title">&#9675; Caracteres IfcBuilding</div>
+            <div class="cfg-field-full">
+              <label>N° caracteres esperados</label>
+              <input type="number" id="cfgBuilding" value="2" min="1" max="20">
+            </div>
+          </div>
+
+          <!-- Niveles -->
+          <div class="cfg-section">
+            <div class="cfg-title">&#9675; Caracteres IfcBuildingStorey</div>
+            <div class="cfg-field-full">
+              <label>N° caracteres esperados</label>
+              <input type="number" id="cfgStorey" value="5" min="1" max="20">
+            </div>
+          </div>
+        </div>
+
         <button class="btn-gen" id="btnGen" disabled>&#9654;&nbsp; Generar Reporte</button>
       </div>
 
@@ -624,6 +675,77 @@ function refId(a){
 }
 
 // ============================================================
+// DICCIONARIO UNIFORMAT II — descripciones de códigos
+// ============================================================
+var UNIFORMAT = {
+  // A - Substructure
+  'A':'Substructure','A10':'Foundations','A1010':'Standard Foundations',
+  'A1020':'Special Foundations','A1030':'Slab on Grade','A20':'Basement Construction',
+  'A2010':'Basement Excavation','A2020':'Basement Walls',
+  // B - Shell
+  'B':'Shell','B10':'Superstructure','B1010':'Floor Construction',
+  'B1020':'Roof Construction','B20':'Exterior Enclosure',
+  'B2010':'Exterior Walls','B2020':'Exterior Windows','B2030':'Exterior Doors',
+  'B30':'Roofing','B3010':'Roof Coverings','B3020':'Roof Openings',
+  // C - Interiors
+  'C':'Interiors','C10':'Interior Construction','C1010':'Partitions',
+  'C1020':'Interior Doors','C1030':'Fittings','C20':'Stairs',
+  'C2010':'Stair Construction','C30':'Interior Finishes',
+  'C3010':'Wall Finishes','C3020':'Floor Finishes','C3030':'Ceiling Finishes',
+  // D - Services
+  'D':'Services','D10':'Conveying','D1010':'Elevators & Lifts',
+  'D1020':'Escalators & Moving Walks','D20':'Plumbing',
+  'D2010':'Plumbing Fixtures','D2020':'Domestic Water Distribution',
+  'D2030':'Sanitary Waste','D2040':'Rain Water Drainage',
+  'D2090':'Other Plumbing Systems','D30':'HVAC',
+  'D3010':'Energy Supply','D3020':'Heat Generating Systems',
+  'D3030':'Cooling Generating Systems','D3040':'Distribution Systems',
+  'D3050':'Terminal & Package Units','D3060':'Controls & Instrumentation',
+  'D3070':'Systems Testing & Balancing','D3090':'Other HVAC Systems & Equipment',
+  'D40':'Fire Protection','D4010':'Sprinklers',
+  'D4020':'Standpipes','D4030':'Fire Protection Specialties',
+  'D4090':'Other Fire Protection Systems','D50':'Electrical',
+  'D5010':'Electrical Service & Distribution','D5020':'Lighting & Branch Wiring',
+  'D5030':'Communications & Security','D5040':'Other Electrical Systems',
+  'D5090':'Other Electrical Systems',
+  // E - Equipment & Furnishings
+  'E':'Equipment & Furnishings','E10':'Equipment',
+  'E1010':'Commercial Equipment','E1020':'Institutional Equipment',
+  'E1030':'Vehicular Equipment','E1090':'Other Equipment',
+  'E20':'Furnishings','E2010':'Fixed Furnishings','E2020':'Movable Furnishings',
+  // F - Special Construction
+  'F':'Special Construction & Demolition',
+  'F10':'Special Construction','F1010':'Special Structures',
+  'F1020':'Integrated Construction','F1030':'Special Construction Systems',
+  'F1040':'Special Facilities','F1050':'Special Controls & Instrumentation',
+  'F20':'Selective Building Demolition',
+  // G - Building Sitework
+  'G':'Building Sitework','G10':'Site Preparation',
+  'G1010':'Site Clearing','G1020':'Site Demolition & Relocations',
+  'G1030':'Site Earthwork','G1040':'Hazardous Waste Remediation',
+  'G20':'Site Improvements','G2010':'Roadways','G2020':'Parking Lots',
+  'G2030':'Pedestrian Paving','G2040':'Site Development',
+  'G2050':'Landscaping','G30':'Site Mechanical Utilities',
+  'G3010':'Water Supply','G3020':'Sanitary Sewer','G3030':'Storm Sewer',
+  'G3040':'Heating Distribution','G3050':'Cooling Distribution',
+  'G3060':'Fuel Distribution','G3090':'Other Site Mechanical Utilities',
+  'G40':'Site Electrical Utilities','G4010':'Electrical Distribution',
+  'G4020':'Site Lighting','G4030':'Site Communications & Security',
+  'G4090':'Other Site Electrical Utilities',
+  'G90':'Other Site Construction'
+};
+function descUniformat(code) {
+  if (!code) return null;
+  var c = code.toString().toUpperCase().replace(/[\.\-\s]/g,'');
+  // Buscar desde el código más largo al más corto
+  for (var len = Math.min(c.length, 10); len >= 1; len--) {
+    var key = c.substring(0, len);
+    if (UNIFORMAT[key]) return UNIFORMAT[key];
+  }
+  return null;
+}
+
+// ============================================================
 // VERIFICACIONES
 // ============================================================
 function resolverCoordenadas(inst, texto) {
@@ -666,6 +788,9 @@ function resolverCoordenadas(inst, texto) {
 var instancias = {};
 function verificarOrigen(est) {
   instancias = est.instancias;
+  var ox = parseFloat(document.getElementById('cfgX').value) || 0;
+  var oy = parseFloat(document.getElementById('cfgY').value) || 0;
+  var oz = parseFloat(document.getElementById('cfgZ').value) || 0;
   var resultado = [];
   var tipos = ["IFCSITE","IFCBUILDING"];
   for (var t=0; t<tipos.length; t++) {
@@ -677,7 +802,7 @@ function verificarOrigen(est) {
         var attrs = splitAttrs(raw);
         var nombre = strVal(attrs[2]) || strVal(attrs[1]) || "(sin nombre)";
         var x=coords?coords.x:null, y=coords?coords.y:null, z=coords?coords.z:null;
-        var ok = x===0 && y===0 && z===0;
+        var ok = x===ox && y===oy && z===oz;
         resultado.push({entidad:tipo, nombre:nombre, x:x!==null?x:"N/A", y:y!==null?y:"N/A", z:z!==null?z:"N/A", ok:ok});
         break;
       }
@@ -687,7 +812,12 @@ function verificarOrigen(est) {
 }
 function verificarNombres(est) {
   var resultado = [];
-  var reglas = {IFCSITE:{largo:3,desc:"3 caracteres"}, IFCBUILDING:{largo:2,desc:"2 caracteres"}};
+  var nSite = parseInt(document.getElementById('cfgSite').value) || 3;
+  var nBuilding = parseInt(document.getElementById('cfgBuilding').value) || 2;
+  var reglas = {
+    IFCSITE:    {largo:nSite,     desc:nSite+" caracteres"},
+    IFCBUILDING:{largo:nBuilding, desc:nBuilding+" caracteres"}
+  };
   for (var tipo in reglas) {
     for (var id in est.instancias) {
       if (est.instancias[id].cls === tipo) {
@@ -704,13 +834,14 @@ function verificarNombres(est) {
   return resultado;
 }
 function verificarNiveles(est) {
+  var nStorey = parseInt(document.getElementById('cfgStorey').value) || 5;
   var resultado = [];
   for (var id in est.instancias) {
     if (est.instancias[id].cls === "IFCBUILDINGSTOREY") {
       var raw = extraerRaw(est.texto, est.instancias[id].pos);
       var attrs = splitAttrs(raw);
       var nombre = strVal(attrs[2]) || strVal(attrs[1]) || "";
-      resultado.push({id:"#"+id, nombre:nombre, largo:nombre.length, ok:nombre.length===5});
+      resultado.push({id:"#"+id, nombre:nombre, largo:nombre.length, ok:nombre.length===nStorey});
     }
   }
   return resultado;
@@ -791,7 +922,11 @@ function hClas(res){
   var pct=res.total?Math.round(res.con_clas/res.total*100):0;
   var sub="Del total de "+res.total+" elementos, "+res.con_clas+" tienen clasificacion asignada ("+pct+"%).";
   if(!res.codigos.length)return "<div class='section-wrap'><div class='seccion-titulo'>&#9888; Clasificacion de Elementos</div><div class='sec-box sec-box-warn'>"+sub+" No se encontraron codigos de clasificacion.</div></div>";
-  var f=res.codigos.map(function(c){return "<tr><td><code>"+c.codigo+"</code></td><td style='color:var(--muted);font-size:11px;'>"+(c.sistema||"&mdash;")+"</td><td class='cantidad' style='color:var(--accent);'>"+c.cantidad+"</td></tr>";}).join("");
+  var f=res.codigos.map(function(c){
+    var desc = descUniformat(c.codigo);
+    var descHtml = desc ? "<span style='font:400 9px var(--mono);color:var(--accent);margin-left:8px;'>"+desc+"</span>" : "";
+    return "<tr><td><code>"+c.codigo+"</code>"+descHtml+"</td><td style='color:var(--muted);font-size:11px;'>"+(c.sistema||"&mdash;")+"</td><td class='cantidad' style='color:var(--accent);'>"+c.cantidad+"</td></tr>";
+  }).join("");
   return "<div class='section-wrap'><div class='seccion-titulo'>&#9888; Clasificacion de Elementos</div><div class='sec-box sec-box-warn'>"+sub+"</div><table><thead><tr><th>Codigo</th><th>Sistema</th><th style='text-align:center'>Elementos</th></tr></thead><tbody>"+f+"</tbody><tfoot><tr><td colspan='2' style='font-weight:bold;padding:9px 14px;color:var(--text);'>Total clasificados</td><td class='cantidad' style='font-weight:bold;color:var(--accent);'>"+res.con_clas+"</td></tr></tfoot></table></div>";
 }
 
@@ -1173,6 +1308,7 @@ function actualizarEntidades(){
     })(ents[i]);
   }
   block.style.display="block";
+  document.getElementById("configRevBlock").style.display="flex";
   validarSeleccion();
 }
 
