@@ -15,11 +15,10 @@
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
 html,body { height:100%; }
 body { font-family:var(--sans); background:var(--bg); color:var(--text); display:flex; flex-direction:column; min-height:100vh; }
-/* LOGIN SCREEN */
+/* LOGIN */
 #loginScreen { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:9999; padding:40px; }
 #loginScreen.hidden { display:none; }
 .login-card { display:flex; width:100%; max-width:920px; min-height:520px; background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden; box-shadow:0 0 80px rgba(0,212,255,.07); }
-/* Lado izquierdo */
 .login-left { flex:2; padding:56px 52px; display:flex; flex-direction:column; justify-content:center; background:linear-gradient(140deg,var(--navy) 60%,rgba(0,212,255,.04)); border-right:1px solid var(--border); position:relative; overflow:hidden; }
 .login-left::before { content:''; position:absolute; top:-80px; left:-80px; width:300px; height:300px; background:radial-gradient(circle,rgba(0,212,255,.06),transparent 70%); pointer-events:none; }
 .login-badge { display:inline-flex; align-items:center; gap:8px; padding:5px 12px; background:rgba(0,212,255,.08); border:1px solid rgba(0,212,255,.2); border-radius:20px; margin-bottom:32px; }
@@ -28,14 +27,12 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
 .login-headline { font:700 54px var(--sans); color:#e8f4ff; line-height:1.0; margin-bottom:14px; letter-spacing:-.03em; }
 .login-headline span { color:var(--accent); text-shadow:0 0 40px rgba(0,212,255,.4); }
 .login-desc { font:400 13px var(--sans); color:var(--muted); line-height:1.7; max-width:340px; margin-bottom:28px; }
-.login-tags { display:flex; flex-wrap:wrap; gap:8px; }
+.login-tags { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:0; }
 .login-tag { padding:4px 10px; background:rgba(255,255,255,.04); border:1px solid var(--border); border-radius:4px; font:500 10px var(--mono); color:var(--muted); letter-spacing:.06em; }
 .login-author { margin-top:32px; padding-top:20px; border-top:1px solid var(--border); }
 .author-name { font:600 11px var(--mono); color:var(--text); letter-spacing:.05em; }
 .author-email { font:400 10px var(--mono); color:var(--accent); margin-top:3px; opacity:.7; }
 .author-role { font:400 9px var(--mono); color:var(--muted); margin-top:2px; text-transform:uppercase; letter-spacing:.06em; }
-</style>
-/* Lado derecho */
 .login-right { flex:3; padding:52px 48px; display:flex; flex-direction:column; justify-content:center; align-items:center; }
 .login-right-inner { width:100%; max-width:360px; }
 .login-logo { width:40px; height:40px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px; margin-bottom:24px; box-shadow:0 0 20px rgba(0,212,255,.25); }
@@ -47,32 +44,37 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
 .login-field input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,212,255,.08); }
 .login-btn { width:100%; padding:11px; margin-top:8px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#000; border:none; border-radius:5px; font:700 11px var(--mono); cursor:pointer; letter-spacing:.12em; text-transform:uppercase; transition:all .15s; box-shadow:0 0 20px rgba(0,212,255,.2); }
 .login-btn:hover { box-shadow:0 0 35px rgba(0,212,255,.45); transform:translateY(-1px); }
-.login-error { font:400 10px var(--mono); color:#ff3d57; text-align:center; margin-top:12px; letter-spacing:.05em; display:none; animation:shake .4s ease; }
-.login-error.show { display:block; }
+.login-error { font:400 10px var(--mono); color:#ff3d57; text-align:center; margin-top:12px; letter-spacing:.05em; display:none; }
+.login-error.show { display:block; animation:shake .4s ease; }
 @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
-/* MÓDULOS */
-.modules-section { margin-top:28px; padding-top:20px; border-top:1px solid var(--border); }
-.modules-label { font:600 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.2em; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
-.modules-label::before,.modules-label::after { content:''; flex:1; height:1px; background:var(--border); }
-.module-btn { width:100%; padding:11px 14px; margin-bottom:8px; background:var(--navy); border:1px solid var(--border); border-radius:6px; display:flex; align-items:center; gap:12px; cursor:pointer; transition:all .18s; text-decoration:none; }
-.module-btn:hover { border-color:var(--accent); background:rgba(0,212,255,.05); transform:translateX(3px); }
-.module-btn:last-child { margin-bottom:0; }
-.module-icon { width:32px; height:32px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
-.module-icon.ifc { background:rgba(0,212,255,.12); }
-.module-icon.aps { background:rgba(0,144,255,.12); }
-.module-icon.exp { background:rgba(0,200,83,.12); }
-.module-text { flex:1; text-align:left; }
-.module-title { font:600 11px var(--mono); color:var(--text); letter-spacing:.03em; }
-.module-sub { font:400 9px var(--mono); color:var(--muted); margin-top:2px; letter-spacing:.03em; }
-.module-arrow { font:400 14px var(--mono); color:var(--muted); transition:color .15s; }
-.module-btn:hover .module-arrow { color:var(--accent); }
-.module-badge { font:700 8px var(--mono); padding:2px 6px; border-radius:3px; letter-spacing:.08em; text-transform:uppercase; flex-shrink:0; }
-.badge-live { background:rgba(0,200,83,.1); color:var(--green); border:1px solid rgba(0,200,83,.2); }
-.badge-beta { background:rgba(124,77,255,.1); color:var(--accent2); border:1px solid rgba(124,77,255,.2); }
-.badge-dev { background:rgba(255,107,53,.08); color:var(--warn); border:1px solid rgba(255,107,53,.2); }
+/* PORTAL */
+#portal { display:none; flex-direction:column; min-height:100vh; }
+.portal-header { background:var(--navy); padding:11px 24px; display:flex; align-items:center; gap:14px; border-bottom:2px solid var(--accent); flex-shrink:0; }
+.portal-icon { width:34px; height:34px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:16px; }
+.portal-main { flex:1; display:flex; align-items:center; justify-content:center; padding:40px; }
+.portal-grid { width:100%; max-width:700px; }
+.portal-label { font:700 9px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.2em; margin-bottom:20px; text-align:center; }
+.modules-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+.module-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:28px; text-decoration:none; display:flex; flex-direction:column; gap:14px; transition:all .18s; }
+.module-card:hover { border-color:var(--accent); transform:translateY(-2px); box-shadow:0 8px 30px rgba(0,212,255,.1); }
+.module-card.disabled { opacity:.6; }
+.module-card.disabled:hover { border-color:var(--border); transform:none; box-shadow:none; cursor:default; }
+.mc-icon { width:44px; height:44px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:22px; }
+.mc-title { font:700 14px var(--sans); color:var(--text); margin-bottom:5px; }
+.mc-desc { font:400 11px var(--mono); color:var(--muted); line-height:1.6; }
+.mc-tags { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
+.mc-tag { font:600 8px var(--mono); padding:2px 7px; border-radius:3px; text-transform:uppercase; }
+.tag-live { background:rgba(0,200,83,.1); color:var(--green); border:1px solid rgba(0,200,83,.2); }
+.tag-dev { background:rgba(124,77,255,.1); color:var(--accent2); border:1px solid rgba(124,77,255,.2); }
+.tag-beta { background:rgba(255,107,53,.08); color:var(--warn); border:1px solid rgba(255,107,53,.2); }
+.module-explorer { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:14px 18px; text-decoration:none; display:flex; align-items:center; gap:12px; transition:all .18s; }
+.module-explorer:hover { border-color:var(--accent); background:rgba(0,212,255,.03); }
+.btn-logout { padding:5px 12px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:4px; font:600 9px var(--mono); cursor:pointer; text-transform:uppercase; letter-spacing:.1em; transition:all .15s; margin-left:auto; }
+.btn-logout:hover { border-color:#ff3d57; color:#ff3d57; }
 </style>
 </head>
 <body>
+<!-- LOGIN -->
 <div id="loginScreen">
   <div class="login-card">
     <div class="login-left">
@@ -112,80 +114,72 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
     </div>
   </div>
 </div>
-<!-- PORTAL PRINCIPAL — se muestra después del login -->
-<div id="portal" style="display:none; flex-direction:column; min-height:100vh;">
-  <header style="background:var(--navy); padding:11px 24px; display:flex; align-items:center; gap:14px; border-bottom:2px solid var(--accent); flex-shrink:0;">
-    <div style="width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;">🏗️</div>
+<!-- PORTAL -->
+<div id="portal">
+  <div class="portal-header">
+    <div class="portal-icon">🏗️</div>
     <div>
       <div style="font:600 13px var(--mono);color:#e0f0ff;letter-spacing:.05em;text-transform:uppercase;">Plataforma BIM</div>
       <div style="font:400 10px var(--mono);color:var(--muted);margin-top:1px;">Carlos Estay Ruggieri · MOP Chile</div>
     </div>
-    <div style="margin-left:auto;">
-      <button onclick="cerrarSesion()" style="padding:5px 12px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:4px;font:600 9px var(--mono);cursor:pointer;text-transform:uppercase;letter-spacing:.1em;">Cerrar sesión</button>
-    </div>
-  </header>
-  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:40px;">
-    <div style="width:100%;max-width:680px;">
-      <div style="font:700 11px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.2em;margin-bottom:24px;text-align:center;">Selecciona un módulo</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-        <!-- Módulo IFC -->
-        <a href="revisor.html" class="portal-card" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:28px;text-decoration:none;display:flex;flex-direction:column;gap:14px;transition:all .18s;cursor:pointer;">
-          <div style="width:44px;height:44px;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;">📐</div>
+    <button class="btn-logout" onclick="cerrarSesion()">Cerrar sesión</button>
+  </div>
+  <div class="portal-main">
+    <div class="portal-grid">
+      <div class="portal-label">Selecciona un módulo</div>
+      <div class="modules-grid">
+        <!-- IFC -->
+        <a href="revisor.html" class="module-card">
+          <div class="mc-icon" style="background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.2);">📐</div>
           <div>
-            <div style="font:700 14px var(--sans);color:var(--text);margin-bottom:6px;">Revisor IFC</div>
-            <div style="font:400 11px var(--mono);color:var(--muted);line-height:1.6;">Revisión y reporte de modelos IFC por especialidad según estándares PlanBIM. Incluye visor 3D integrado.</div>
+            <div class="mc-title">Revisor IFC</div>
+            <div class="mc-desc">Revisión y reporte de modelos IFC por especialidad según estándares PlanBIM. Incluye visor 3D integrado.</div>
           </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            <span style="font:600 8px var(--mono);padding:2px 7px;border-radius:3px;background:rgba(0,200,83,.1);color:var(--green);border:1px solid rgba(0,200,83,.2);text-transform:uppercase;">Activo</span>
-            <span style="font:500 8px var(--mono);padding:2px 7px;border-radius:3px;background:rgba(0,212,255,.08);color:var(--accent);border:1px solid var(--border);">IFC2x3 · IFC4</span>
+          <div class="mc-tags">
+            <span class="mc-tag tag-live">Activo</span>
+            <span class="mc-tag" style="background:rgba(0,212,255,.06);color:var(--muted);border:1px solid var(--border);">IFC2x3 · IFC4</span>
           </div>
         </a>
-        <!-- Módulo APS -->
-        <a href="autodesk.html" class="portal-card" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:28px;text-decoration:none;display:flex;flex-direction:column;gap:14px;transition:all .18s;opacity:.7;">
-          <div style="width:44px;height:44px;background:rgba(0,144,255,.1);border:1px solid rgba(0,144,255,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;">🔗</div>
+        <!-- APS -->
+        <a href="autodesk.html" class="module-card disabled">
+          <div class="mc-icon" style="background:rgba(0,144,255,.1);border:1px solid rgba(0,144,255,.2);">🔗</div>
           <div>
-            <div style="font:700 14px var(--sans);color:var(--text);margin-bottom:6px;">Autodesk APS</div>
-            <div style="font:400 11px var(--mono);color:var(--muted);line-height:1.6;">Revisión de modelos Revit (.rvt) y acceso a proyectos BIM 360 / ACC via Autodesk Platform Services.</div>
+            <div class="mc-title">Autodesk APS</div>
+            <div class="mc-desc">Revisión de modelos Revit y acceso a proyectos BIM 360 / ACC via Autodesk Platform Services.</div>
           </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            <span style="font:600 8px var(--mono);padding:2px 7px;border-radius:3px;background:rgba(124,77,255,.1);color:var(--accent2);border:1px solid rgba(124,77,255,.2);text-transform:uppercase;">En desarrollo</span>
-            <span style="font:500 8px var(--mono);padding:2px 7px;border-radius:3px;background:rgba(255,107,53,.08);color:var(--warn);border:1px solid var(--border);">RVT · BIM 360</span>
+          <div class="mc-tags">
+            <span class="mc-tag tag-dev">En desarrollo</span>
+            <span class="mc-tag" style="background:rgba(0,212,255,.06);color:var(--muted);border:1px solid var(--border);">RVT · BIM 360</span>
           </div>
         </a>
       </div>
       <!-- Explorador -->
-      <a href="explorer.html" style="display:flex;align-items:center;gap:12px;margin-top:16px;padding:14px 18px;background:var(--card);border:1px solid var(--border);border-radius:8px;text-decoration:none;transition:all .18s;">
-        <div style="width:34px;height:34px;background:rgba(0,200,83,.08);border:1px solid rgba(0,200,83,.15);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;">🗂️</div>
+      <a href="explorer.html" class="module-explorer">
+        <div style="width:34px;height:34px;background:rgba(0,200,83,.08);border:1px solid rgba(0,200,83,.15);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🗂️</div>
         <div style="flex:1;">
           <div style="font:600 11px var(--mono);color:var(--text);">Explorador de Proyectos BIM</div>
           <div style="font:400 9px var(--mono);color:var(--muted);margin-top:2px;">Navegador de archivos · 3D · Planos · Documentos</div>
         </div>
-        <span style="font:600 8px var(--mono);padding:2px 7px;border-radius:3px;background:rgba(124,77,255,.1);color:var(--accent2);border:1px solid rgba(124,77,255,.2);text-transform:uppercase;">Beta</span>
+        <span class="mc-tag tag-beta" style="flex-shrink:0;">Beta</span>
       </a>
     </div>
   </div>
 </div>
-<style>
-.portal-card:hover { border-color:var(--accent); transform:translateY(-2px); box-shadow:0 8px 30px rgba(0,212,255,.1); opacity:1 !important; }
-</style>
+
 <script>
 async function doLogin() {
   var user = document.getElementById('loginUser').value.trim();
   var pass = document.getElementById('loginPass').value;
   var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(user+':'+pass));
   var hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-  var expected = '4a5afc6a96b43901088eafb3487073444ab492ed53df37ccfa938e25ed0eb279';
-  if (hex === expected) {
+  if (hex === '4a5afc6a96b43901088eafb3487073444ab492ed53df37ccfa938e25ed0eb279') {
     sessionStorage.setItem('ifc_auth','1');
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('loginError').classList.remove('show');
-    var p = document.getElementById('portal');
-    p.style.display = 'flex';
+    document.getElementById('portal').style.display = 'flex';
   } else {
-    var errEl = document.getElementById('loginError');
-    errEl.classList.remove('show');
-    void errEl.offsetWidth;
-    errEl.classList.add('show');
+    var e = document.getElementById('loginError');
+    e.classList.remove('show'); void e.offsetWidth; e.classList.add('show');
     document.getElementById('loginPass').value = '';
     document.getElementById('loginPass').focus();
   }
@@ -203,9 +197,7 @@ function cerrarSesion() {
     document.getElementById('portal').style.display = 'flex';
   }
   ['loginUser','loginPass'].forEach(function(id){
-    document.getElementById(id).addEventListener('keydown', function(e){
-      if (e.key === 'Enter') doLogin();
-    });
+    document.getElementById(id).addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
   });
 })();
 </script>
