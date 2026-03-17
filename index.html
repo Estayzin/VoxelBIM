@@ -945,11 +945,11 @@ var viewer3D = {
         }
         var api = new window._IfcAPI();
         // WASM: intentar local primero, luego CDN
-        var wasmBase = 'https://cdn.jsdelivr.net/npm/web-ifc@0.0.68/';
+        var wasmBase = './wasm/';
         try {
           var wr = await fetch('./wasm/web-ifc.wasm', {method:'HEAD'});
-          if (wr.ok) wasmBase = './wasm/';
-        } catch(e) {}
+          if (!wr.ok) wasmBase = 'https://unpkg.com/web-ifc@0.0.74/';
+        } catch(e) { wasmBase = 'https://unpkg.com/web-ifc@0.0.74/'; }
         api.SetWasmPath(wasmBase);
         await api.Init();
         this.ifcAPI = api;
@@ -1336,8 +1336,8 @@ async function loadWebIfc() {
   if (window._IfcAPI) return; // ya cargado
   var urls = [
     './js/web-ifc-api.js',
-    'https://cdn.jsdelivr.net/npm/web-ifc@0.0.68/web-ifc-api.js',
-    'https://unpkg.com/web-ifc@0.0.68/web-ifc-api.js'
+    'https://unpkg.com/web-ifc@0.0.74/web-ifc-api.js',
+    'https://cdn.jsdelivr.net/npm/web-ifc@0.0.74/web-ifc-api.js'
   ];
   for (var i = 0; i < urls.length; i++) {
     try {

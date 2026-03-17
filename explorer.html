@@ -453,7 +453,7 @@ async function cargarIFC(buffer, nombre) {
     if (!window._IfcAPI) throw new Error('web-ifc no disponible');
     var api = new window._IfcAPI();
     var wasmBase = './wasm/';
-    try { var r = await fetch('./wasm/web-ifc.wasm',{method:'HEAD'}); if(!r.ok) wasmBase='https://cdn.jsdelivr.net/npm/web-ifc@0.0.68/'; } catch(e){ wasmBase='https://cdn.jsdelivr.net/npm/web-ifc@0.0.68/'; }
+    try { var r = await fetch('./wasm/web-ifc.wasm',{method:'HEAD'}); if(!r.ok) wasmBase='https://unpkg.com/web-ifc@0.0.74/'; } catch(e){ wasmBase='https://unpkg.com/web-ifc@0.0.74/'; }
     api.SetWasmPath(wasmBase);
     await api.Init();
     mostrarLoading('Cargando geometría...');
@@ -634,9 +634,10 @@ window.addEventListener('DOMContentLoaded', function() {
 </script>
 <!-- web-ifc ESM -->
 <script type="module">
-  import * as WebIFC from 'https://cdn.jsdelivr.net/npm/web-ifc@0.0.68/web-ifc-api.js';
+  import * as WebIFC from 'https://unpkg.com/web-ifc@0.0.74/web-ifc-api.js';
   window._IfcAPI = WebIFC.IfcAPI;
   window._loadWebIfc = async function() {};
+  console.log('web-ifc 0.0.74 cargado');
 </script>
 </body>
 </html>
