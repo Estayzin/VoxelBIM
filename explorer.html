@@ -159,7 +159,7 @@ header { background:var(--navy); padding:10px 20px; display:flex; align-items:ce
     </div>
     <div class="sb-list" id="sbList">
       <div class="sb-section">Modelos 3D</div>
-      <div class="sb-item active" onclick="selectFile(this,'3d')" data-type="3d">
+      <div class="sb-item active" onclick="selectFile(this,'3d'); cargarDesdeUrl('https://estayzin.github.io/Revisor-IFC/ARQ-Arquitectura.ifc','ARQ-Arquitectura.ifc')" data-type="3d">
         <div class="sb-item-icon">📦</div>
         <div class="sb-item-info">
           <div class="sb-item-name">ARQ-Arquitectura.ifc</div>
@@ -246,9 +246,6 @@ header { background:var(--navy); padding:10px 20px; display:flex; align-items:ce
             <div class="vt-btn" id="btnProps" onclick="toggleProps()">Propiedades</div>
           </div>
           <div class="vt-sep"></div>
-          <div class="vt-btn-group">
-            <div class="vt-btn" onclick="loadDemoIfc()">📂 Cargar IFC</div>
-          </div>
           <div class="vt-label" id="vtLabel">Sin modelo cargado</div>
         </div>
         <div class="viewer-area" id="viewerArea">
@@ -438,6 +435,20 @@ function setCamView(view) {
 // CARGA IFC (web-ifc)
 // ============================================================
 function loadDemoIfc() { document.getElementById('ifcFileInput').click(); }
+async function cargarDesdeUrl(url, nombre) {
+  document.getElementById('vtLabel').textContent = nombre;
+  mostrarLoading('Descargando ' + nombre + '...');
+  try {
+    var resp = await fetch(url);
+    if (!resp.ok) throw new Error('No se pudo descargar: ' + resp.status);
+    var buffer = await resp.arrayBuffer();
+    await cargarIFC(buffer, nombre);
+  } catch(err) {
+    ocultarLoading();
+    document.getElementById('viewerStatusBadge').textContent = 'Error: ' + err.message;
+    console.error(err);
+  }
+}
 function onIfcFile(e) {
   var file = e.target.files[0]; if (!file) return;
   document.getElementById('vtLabel').textContent = file.name;
