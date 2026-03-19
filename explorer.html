@@ -119,10 +119,15 @@ header{background:var(--navy);padding:10px 20px;display:flex;align-items:center;
 /* ══ PANEL REPORTE LATERAL ══ */
 #reportePanel{width:290px;flex-shrink:0;background:var(--blue);border-left:1px solid var(--border);display:none;flex-direction:column;overflow:hidden}
 #reportePanel.show{display:flex}
-.rp-header{padding:9px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:8px}
+.rp-header{padding:9px 12px 8px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;gap:7px}
+.rp-header-row{display:flex;align-items:center;gap:8px}
 .rp-title{font:700 9px var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.18em;flex:1}
 .rp-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 5px;border-radius:3px;line-height:1}
 .rp-close:hover{color:var(--text);background:rgba(255,255,255,.06)}
+.rp-esp-row{display:flex;align-items:center;gap:7px}
+.rp-esp-label{font:400 9px var(--mono);color:var(--muted);white-space:nowrap}
+.rp-esp-sel{flex:1;background:var(--navy);color:var(--text);border:1px solid var(--border);border-radius:4px;font:500 10px var(--mono);padding:4px 8px;cursor:pointer}
+.rp-esp-sel:focus{outline:none;border-color:var(--accent);color:var(--accent)}
 .rp-body{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:10px}
 /* Sección */
 .rp-sec{background:var(--navy);border:1px solid var(--border);border-radius:5px;overflow:hidden}
@@ -149,6 +154,10 @@ header{background:var(--navy);padding:10px 20px;display:flex;align-items:center;
 .ic-ok{color:#00c853}.ic-err{color:var(--red)}
 .rp-msg{padding:8px 10px;font:400 10px var(--mono);color:var(--muted);line-height:1.5}
 .rp-msg.ok{color:#00c853}.rp-msg.err{color:var(--red)}.rp-msg.warn{color:var(--warn)}
+/* Filas clickeables en reporte */
+.rp-row-sel{cursor:pointer;transition:background .12s}
+.rp-row-sel:hover td{background:rgba(0,212,255,.05)}
+.rp-row-sel.rp-active td{background:rgba(0,212,255,.12);border-left:2px solid var(--accent)}
 </style>
 <style>
 /* ══ PANTALLA BIENVENIDA ══ */
@@ -290,8 +299,21 @@ header{background:var(--navy);padding:10px 20px;display:flex;align-items:center;
           <!-- PANEL REPORTE LATERAL -->
           <div id="reportePanel">
             <div class="rp-header">
-              <div class="rp-title">&#128196; Reporte IFC</div>
-              <button class="rp-close" onclick="toggleReporte()" title="Cerrar">&#10005;</button>
+              <div class="rp-header-row">
+                <div class="rp-title">&#128196; Reporte IFC</div>
+                <button class="rp-close" onclick="toggleReporte()" title="Cerrar">&#10005;</button>
+              </div>
+              <div class="rp-esp-row">
+                <span class="rp-esp-label">Especialidad:</span>
+                <select id="espSelect" class="rp-esp-sel" onchange="cambiarEsp(this.value)" title="Especialidad del modelo">
+                  <option value="ARQ">Arquitectura</option>
+                  <option value="EST">Estructura</option>
+                  <option value="MEC">Mecánica / HVAC</option>
+                  <option value="ELE">Eléctrico</option>
+                  <option value="SAN">Sanitario</option>
+                  <option value="COO">Coordinación</option>
+                </select>
+              </div>
             </div>
             <div class="rp-body" id="rpBody">
               <div class="rp-msg">Carga un archivo IFC para ver el reporte.</div>
@@ -428,22 +450,81 @@ function onResize(){
 /* ═══ PARSER IFC + VERIFICACIONES ═══ */
 var CAT_COLORS={IFCWALL:[0.55,0.72,0.95],IFCWALLSTANDARDCASE:[0.55,0.72,0.95],IFCSLAB:[0.65,0.65,0.82],IFCCOLUMN:[1.0,0.82,0.35],IFCBEAM:[1.0,0.65,0.25],IFCDOOR:[0.3,0.95,0.65],IFCWINDOW:[0.3,0.92,1.0],IFCROOF:[0.82,0.45,0.45],IFCSPACE:[0.4,0.8,0.5],IFCSTAIR:[0.9,0.7,0.4],IFCFURNISHINGELEMENT:[0.8,0.6,0.95],DEFAULT:[0.5,0.62,0.72]};
 
-var ESP_ENTS=[
-  ['IFCWALL','Muro'],['IFCWALLSTANDARDCASE','Muro Estándar'],['IFCCURTAINWALL','Muro Cortina'],
-  ['IFCSLAB','Losa'],['IFCSLABSTANDARDCASE','Losa Estándar'],
-  ['IFCCOLUMN','Columna'],['IFCBEAM','Viga'],['IFCFOOTING','Fundación'],
-  ['IFCDOOR','Puerta'],['IFCWINDOW','Ventana'],
-  ['IFCROOF','Cubierta'],['IFCSTAIR','Escalera'],['IFCRAILING','Baranda'],
-  ['IFCCOVERING','Revestimiento'],['IFCSPACE','Espacio'],['IFCSITE','Sitio'],
-  ['IFCBUILDING','Edificio'],['IFCBUILDINGSTOREY','Nivel'],
-  ['IFCPIPESEGMENT','Tubería'],['IFCPIPEFITTING','Fitting Tubería'],
-  ['IFCDUCTSEGMENT','Ducto'],['IFCDUCTFITTING','Fitting Ducto'],
-  ['IFCPUMP','Bomba'],['IFCTANK','Estanque'],['IFCVALVE','Válvula'],
-  ['IFCLIGHTFIXTURE','Luminaria'],['IFCSENSOR','Sensor'],
-  ['IFCELECTRICDISTRIBUTIONBOARD','Tablero Eléctrico'],
-  ['IFCFURNITURE','Mobiliario'],['IFCSANITARYTERMINAL','Aparato Sanitario'],
-  ['IFCFIRESUPPRESSIONTERMINAL','Supresión Incendio'],['IFCALARM','Alarma'],
-];
+/* ── Entidades por especialidad ── */
+var ENTS_POR_ESP={
+  ARQ:[
+    ['IFCWALL','Muro'],['IFCWALLSTANDARDCASE','Muro Estándar'],['IFCCURTAINWALL','Muro Cortina'],
+    ['IFCSLAB','Losa'],['IFCSLABSTANDARDCASE','Losa Estándar'],
+    ['IFCDOOR','Puerta'],['IFCWINDOW','Ventana'],
+    ['IFCROOF','Cubierta'],['IFCSTAIR','Escalera'],['IFCRAILING','Baranda'],
+    ['IFCCOVERING','Revestimiento'],['IFCSPACE','Espacio'],
+    ['IFCFURNITURE','Mobiliario'],['IFCPLATE','Placa'],['IFCMEMBER','Miembro'],
+    ['IFCSITE','Sitio'],['IFCBUILDING','Edificio'],['IFCBUILDINGSTOREY','Nivel'],
+  ],
+  EST:[
+    ['IFCCOLUMN','Columna'],['IFCBEAM','Viga'],['IFCFOOTING','Fundación'],
+    ['IFCSLAB','Losa'],['IFCSLABSTANDARDCASE','Losa Estándar'],
+    ['IFCWALL','Muro'],['IFCWALLSTANDARDCASE','Muro Estándar'],
+    ['IFCPILE','Pilote'],['IFCPLATE','Placa'],['IFCMEMBER','Miembro'],
+    ['IFCREINFORCINGBAR','Armadura'],['IFCREINFORCINGELEMENT','Elemento Armado'],
+    ['IFCBUILDINGSTOREY','Nivel'],
+  ],
+  MEC:[
+    ['IFCDUCTSEGMENT','Ducto'],['IFCDUCTFITTING','Fitting Ducto'],
+    ['IFCPIPESEGMENT','Tubería'],['IFCPIPEFITTING','Fitting Tubería'],
+    ['IFCAIRTERMINAL','Terminal Aire'],['IFCUNITARYEQUIPMENT','Equipo Unitario'],
+    ['IFCPUMP','Bomba'],['IFCFAN','Ventilador'],['IFCFILTER','Filtro'],
+    ['IFCFLOWCONTROLLER','Controlador Flujo'],['IFCFLOWMETER','Medidor Flujo'],
+    ['IFCVALVE','Válvula'],['IFCTANK','Estanque'],['IFCBOILER','Caldera'],
+    ['IFCCHILLER','Enfriadora'],['IFCCOIL','Serpentín'],
+    ['IFCBUILDINGSTOREY','Nivel'],
+  ],
+  ELE:[
+    ['IFCLIGHTFIXTURE','Luminaria'],['IFCELECTRICDISTRIBUTIONBOARD','Tablero Eléctrico'],
+    ['IFCCABLECARRIERFITTING','Fitting Bandeja'],['IFCCABLECARRIERSEGMENT','Bandeja Cable'],
+    ['IFCELECTRICAPPLIANCE','Artefacto Eléctrico'],['IFCELECTRICMOTOR','Motor Eléctrico'],
+    ['IFCELECTRICGENERATOR','Generador'],['IFCTRANSFORMER','Transformador'],
+    ['IFCSENSOR','Sensor'],['IFCALARM','Alarma'],['IFCACTUATOR','Actuador'],
+    ['IFCPROTECTIVEDEVICE','Dispositivo Protección'],['IFCSWITCHINGDEVICE','Interruptor'],
+    ['IFCBUILDINGSTOREY','Nivel'],
+  ],
+  SAN:[
+    ['IFCPIPESEGMENT','Tubería'],['IFCPIPEFITTING','Fitting Tubería'],
+    ['IFCSANITARYTERMINAL','Aparato Sanitario'],['IFCVALVE','Válvula'],
+    ['IFCPUMP','Bomba'],['IFCTANK','Estanque'],['IFCWASTETERMINAL','Terminal Desagüe'],
+    ['IFCFLOWMETER','Medidor Flujo'],['IFCINTERCEPTOR','Interceptor'],
+    ['IFCFIRESUPPRESSIONTERMINAL','Supresión Incendio'],
+    ['IFCBUILDINGSTOREY','Nivel'],
+  ],
+};
+/* Coordinación = unión de todas las especialidades sin duplicados */
+(function(){
+  var visto={},todas=[];
+  ['ARQ','EST','MEC','ELE','SAN'].forEach(function(esp){
+    ENTS_POR_ESP[esp].forEach(function(e){
+      if(!visto[e[0]]){visto[e[0]]=true;todas.push(e);}
+    });
+  });
+  ENTS_POR_ESP.COO=todas;
+})();
+
+var LABEL_ESP={ARQ:'Arquitectura',EST:'Estructura',MEC:'Mecánica / HVAC',ELE:'Eléctrico',SAN:'Sanitario',COO:'Coordinación'};
+var _espActual='ARQ';
+
+function detectarEspecialidad(nombreArchivo){
+  var n=(nombreArchivo||'').toUpperCase();
+  if(/\bCOO\b|COORD/.test(n)) return 'COO';
+  if(/\bEST\b|ESTRUCT|STRUCTURAL/.test(n)) return 'EST';
+  if(/\bMEC\b|HVAC|MECAN|MECHANICAL/.test(n)) return 'MEC';
+  if(/\bELE\b|ELECT|ELECTRICAL/.test(n)) return 'ELE';
+  if(/\bSAN\b|SANIT|PLUMB|FONTANER/i.test(n)) return 'SAN';
+  return 'ARQ';
+}
+
+function cambiarEsp(val){
+  _espActual=val;
+  if(_estActual) renderReporte(_estActual);
+}
 
 function parsearIFC(texto){
   var conteo={},instancias={},schema='IFC2X3',proy='—';
@@ -455,7 +536,44 @@ function parsearIFC(texto){
   }
   var ms=texto.match(/FILE_SCHEMA\s*\(\s*\(\s*'([^']+)'/);if(ms)schema=ms[1];
   var mp=texto.match(/IFCPROJECT\s*\([^,]*,[^,]*,\s*'([^']*)'/);if(mp)proy=mp[1];
-  return{conteo:conteo,instancias:instancias,schema:schema,proy:proy,texto:texto};
+
+  /* Extraer familias/tipos: IFCTYPEPRODUCT y subtipos */
+  var tipos=[];
+  var reTipo=/#(\d+)\s*=\s*(IFC[A-Z0-9]*TYPE[A-Z0-9]*)\s*\(/g,mt;
+  while((mt=reTipo.exec(texto))!==null){
+    var tid=mt[1],tcls=mt[2];
+    var tpos=mt.index+mt[0].length;
+    var traw=extraerRaw(texto,tpos),tattrs=splitAttrs(traw);
+    var nombre=strVal(tattrs[2])||strVal(tattrs[1])||'(sin nombre)';
+    tipos.push({id:'#'+tid,cls:tcls,nombre:nombre});
+  }
+
+  /* IFCRELCONTAINEDINSPATIALSTRUCTURE → elementos por nivel */
+  var elemsPorNivel={};
+  var reRel=/#(\d+)\s*=\s*IFCRELCONTAINEDINSPATIALSTRUCTURE\s*\(/g,mr;
+  while((mr=reRel.exec(texto))!==null){
+    var rpos=mr.index+mr[0].length;
+    var rraw=extraerRaw(texto,rpos),rattrs=splitAttrs(rraw);
+    /* attr[4]=lista de elementos, attr[5]=nivel */
+    var listaRaw=rattrs[4]||'',nivelRef=refId(rattrs[5]);
+    if(!nivelRef)continue;
+    var ids=listaRaw.replace(/[\(\)]/g,'').split(',').map(function(s){return refId(s.trim());}).filter(Boolean);
+    elemsPorNivel[nivelRef]=ids;
+  }
+
+  /* IFCRELDEFINESBYTYPE → elementos por tipo */
+  var elemsPorTipo={};
+  var reRDT=/#(\d+)\s*=\s*IFCRELDEFINESBYTYPE\s*\(/g,mrt;
+  while((mrt=reRDT.exec(texto))!==null){
+    var rtpos=mrt.index+mrt[0].length;
+    var rtraw=extraerRaw(texto,rtpos),rtattrs=splitAttrs(rtraw);
+    var listaRawT=rtattrs[4]||'',tipoRef=refId(rtattrs[5]);
+    if(!tipoRef)continue;
+    var idsT=listaRawT.replace(/[\(\)]/g,'').split(',').map(function(s){return refId(s.trim());}).filter(Boolean);
+    elemsPorTipo[tipoRef]=idsT;
+  }
+
+  return{conteo:conteo,instancias:instancias,schema:schema,proy:proy,texto:texto,tipos:tipos,elemsPorNivel:elemsPorNivel,elemsPorTipo:elemsPorTipo};
 }
 
 function extraerRaw(texto,pos){var depth=1,i=pos,out='';while(i<texto.length&&depth>0){var c=texto[i];if(c==='(')depth++;else if(c===')'){depth--;if(!depth)break;}out+=c;i++;}return out;}
@@ -542,28 +660,52 @@ function rpToggle(uid){
   arr.textContent=open?'▾':'▸';
 }
 
+/* ── Destacar elementos en 3D ── */
+var _estActual=null;
+var _claseDestacada=null;
+
+function destacar3D(clases){
+  /* clases: array de strings IFC o null para resetear */
+  if(!meshes.length)return;
+  if(!clases||!clases.length){
+    _claseDestacada=null;
+    meshes.forEach(function(m){
+      m.material.color.copy(m.userData.baseColor);
+      m.material.opacity=1;m.material.transparent=false;
+    });
+    return;
+  }
+  _claseDestacada=clases;
+  meshes.forEach(function(m){
+    var activo=clases.indexOf(m.userData.cls)>=0;
+    if(activo){
+      m.material.color.copy(m.userData.baseColor);
+      m.material.opacity=1;m.material.transparent=false;
+    } else {
+      m.material.color.set(0x1a2a40);
+      m.material.opacity=0.18;m.material.transparent=true;
+    }
+  });
+}
+
+function rpSelRow(tr,clases){
+  /* Marca fila activa y destaca en 3D; clic de nuevo resetea */
+  var eraActiva=tr.classList.contains('rp-active');
+  document.querySelectorAll('.rp-active').forEach(function(r){r.classList.remove('rp-active');});
+  if(eraActiva){
+    destacar3D(null);
+  } else {
+    tr.classList.add('rp-active');
+    destacar3D(clases);
+  }
+}
+
 function renderReporte(est){
+  _estActual=est;
   var html='';
   var conteo=est.conteo;
 
-  /* 1. Conteo de entidades */
-  var filas='',totalEnts=0,presentes=0;
-  ESP_ENTS.forEach(function(e){
-    var cls=e[0],nom=e[1],qty=conteo[cls]||0;
-    if(qty>0)presentes++;
-    totalEnts+=qty;
-    filas+='<tr>'+
-      '<td class="td-name">'+nom+'<div class="td-cls">'+cls.charAt(0)+cls.slice(1).toLowerCase()+'</div></td>'+
-      '<td class="td-qty'+(qty===0?' zero':'')+'">'+qty+'</td>'+
-      '<td class="td-ok">'+(qty>0?'<span class="ic-ok">✓</span>':'<span class="ic-err">✗</span>')+'</td>'+
-      '</tr>';
-  });
-  var pctPres=ESP_ENTS.length?Math.round(presentes/ESP_ENTS.length*100):0;
-  var bCls=pctPres===100?'rp-ok':pctPres>50?'rp-warn':'rp-err';
-  html+=rpSec('Entidades IFC',presentes+'/'+ESP_ENTS.length+' presentes',bCls,
-    '<table class="rp-table">'+filas+'</table>',true);
-
-  /* 2. Origen */
+  /* 1. Origen */
   var orig=verificarOrigen(est);
   if(orig.length){
     var origOk=orig.every(function(r){return r.ok;});
@@ -575,11 +717,11 @@ function renderReporte(est){
         '<td class="td-ok">'+(r.ok?'<span class="ic-ok">✓</span>':'<span class="ic-err">✗</span>')+'</td>'+
         '</tr>';
     }).join('');
-    html+=rpSec('Origen (0,0,0)',origOk?'OK':'Error',origOk?'rp-ok':'rp-err',
+    html+=rpSec('1.Origen (0,0,0)',origOk?'OK':'Error',origOk?'rp-ok':'rp-err',
       '<table class="rp-table">'+origFilas+'</table>',!origOk);
   }
 
-  /* 3. Nombres Sitio/Edificio */
+  /* 2. Nombres Sitio/Edificio */
   var noms=verificarNombres(est);
   if(noms.length){
     var nomsOk=noms.every(function(r){return r.ok;});
@@ -590,25 +732,78 @@ function renderReporte(est){
         '<td class="td-ok">'+(r.ok?'<span class="ic-ok">✓</span>':'<span class="ic-err">✗</span>')+'</td>'+
         '</tr>';
     }).join('');
-    html+=rpSec('Nombres Sitio/Edificio',nomsOk?'OK':'Error',nomsOk?'rp-ok':'rp-err',
+    html+=rpSec('2.Nombres Sitio/Edificio',nomsOk?'OK':'Error',nomsOk?'rp-ok':'rp-err',
       '<div class="rp-msg" style="color:var(--muted);padding-bottom:0">Sitio: 3 car. · Edificio: 2 car.</div>'+
       '<table class="rp-table">'+nomsFilas+'</table>',!nomsOk);
   }
 
-  /* 4. Niveles */
+  /* 3. Niveles */
   var nivs=verificarNiveles(est);
   if(nivs.length){
     var nivsOk=nivs.every(function(r){return r.ok;});
     var nOk=nivs.filter(function(r){return r.ok;}).length;
     var nivsFilas=nivs.map(function(r){
-      return '<tr>'+
+      var ids=est.elemsPorNivel[r.id.replace('#','')]||[];
+      /* obtener clases únicas de los elementos del nivel */
+      var clases=ids.map(function(id){return est.instancias[id]?est.instancias[id].cls:null;}).filter(function(c,i,a){return c&&a.indexOf(c)===i;});
+      var clasesJson=JSON.stringify(clases).replace(/"/g,"'").replace(/'/g,"\\'");
+      return '<tr class="rp-row-sel" onclick="rpSelRow(this,'+JSON.stringify(clases)+')" title="Clic para destacar en 3D">'+
         '<td class="td-name">'+esc(r.nombre||'(sin nombre)')+'</td>'+
         '<td style="text-align:center;font:400 9px var(--mono);color:var(--muted)">'+r.largo+' car.</td>'+
-        '<td class="td-ok">'+(r.ok?'<span class="ic-ok">✓</span>':'<span class="ic-err">✗</span>')+'</td>'+
+        '<td class="td-ok">'+(r.ok?'<span class="ic-ok">✓</span>':'<span class="ic-err">✗</span>')+
+        ' <span style="font:400 8px var(--mono);color:var(--muted)">'+ids.length+'&#9656;</span></td>'+
         '</tr>';
     }).join('');
-    html+=rpSec('Niveles (5 car.)',nOk+'/'+nivs.length+' OK',nivsOk?'rp-ok':nOk>0?'rp-warn':'rp-err',
+    html+=rpSec('3.Niveles (5 car.)',nOk+'/'+nivs.length+' OK',nivsOk?'rp-ok':nOk>0?'rp-warn':'rp-err',
       '<table class="rp-table">'+nivsFilas+'</table>',!nivsOk);
+  }
+
+  /* 4. Entidades IFC */
+  var espEnts=ENTS_POR_ESP[_espActual]||ENTS_POR_ESP.ARQ;
+  var filas='',totalEnts=0,presentes=0;
+  espEnts.forEach(function(e){
+    var cls=e[0],nom=e[1],qty=conteo[cls]||0;
+    if(qty>0)presentes++;
+    totalEnts+=qty;
+    filas+='<tr class="rp-row-sel" onclick="rpSelRow(this,'+JSON.stringify([cls])+')" title="Clic para destacar en 3D">'+
+      '<td class="td-name">'+nom+'<div class="td-cls">'+cls.charAt(0)+cls.slice(1).toLowerCase()+'</div></td>'+
+      '<td class="td-qty'+(qty===0?' zero':'')+'">'+qty+'</td>'+
+      '<td class="td-ok">'+(qty>0?'<span class="ic-ok">✓</span>':'<span class="ic-err">✗</span>')+'</td>'+
+      '</tr>';
+  });
+  var pctPres=espEnts.length?Math.round(presentes/espEnts.length*100):0;
+  var bCls=pctPres===100?'rp-ok':pctPres>50?'rp-warn':'rp-err';
+  html+=rpSec('4.Entidades IFC',presentes+'/'+espEnts.length+' presentes',bCls,
+    '<table class="rp-table">'+filas+'</table>',true);
+
+  /* 5. Familias y Tipos */
+  var tipos=est.tipos||[];
+  if(tipos.length){
+    var grupos={};
+    tipos.forEach(function(t){
+      var g=t.cls.charAt(0)+t.cls.slice(1).toLowerCase();
+      if(!grupos[g])grupos[g]=[];
+      grupos[g].push(t);
+    });
+    var tiposFilas='';
+    Object.keys(grupos).sort().forEach(function(g){
+      grupos[g].forEach(function(t,i){
+        var rawId=t.id.replace('#','');
+        var ids=est.elemsPorTipo[rawId]||[];
+        /* clase base: IFCWALLTYPE → IFCWALL */
+        var claseBase=t.cls.replace(/TYPE$/,'');
+        tiposFilas+='<tr class="rp-row-sel" onclick="rpSelRow(this,'+JSON.stringify([claseBase])+')" title="Clic para destacar en 3D">'+
+          '<td class="td-name" style="color:var(--accent);font-size:9px">'+(i===0?g:'')+'</td>'+
+          '<td style="font:400 10px var(--mono);color:var(--text)">'+esc(t.nombre)+'</td>'+
+          '<td class="td-qty" style="font-size:9px">'+ids.length+'</td>'+
+          '</tr>';
+      });
+    });
+    html+=rpSec('5.Familias y Tipos',tipos.length+' tipos','rp-info',
+      '<table class="rp-table">'+tiposFilas+'</table>',false);
+  } else {
+    html+=rpSec('5.Familias y Tipos','Sin datos','rp-info',
+      '<div class="rp-msg">No se encontraron tipos IFC en este archivo.</div>',false);
   }
 
   document.getElementById('rpBody').innerHTML=html;
@@ -683,6 +878,11 @@ async function cargarIFC(f){
     else cg.style.display='none';
     document.getElementById('metaStrip').classList.add('show');
 
+    /* Detectar especialidad por nombre de archivo */
+    _espActual=detectarEspecialidad(f.name);
+    var sel=document.getElementById('espSelect');
+    if(sel)sel.value=_espActual;
+
     /* Reporte */
     renderReporte(est);
     /* Abrir reporte automáticamente al cargar */
@@ -745,6 +945,8 @@ function mostrarError(msg){
 }
 function cerrarError(){ovHide('ovError');ovShow('ovWelcome');}
 function limpiarVisor(){
+  destacar3D(null);
+  document.querySelectorAll('.rp-active').forEach(function(r){r.classList.remove('rp-active');});
   meshes.forEach(function(m){m.geometry.dispose();m.material.dispose();scene.remove(m)});
   meshes=[];selectedMesh=null;
   document.getElementById('vtLabel').textContent='Sin modelo';
