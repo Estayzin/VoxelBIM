@@ -1,22 +1,12 @@
 <!--
-  ============================================================
-  Explorador BIM — Módulo de navegación de proyectos
-  Autor:    Carlos Estay Ruggieri
-  Contacto: c.estay@outlook.com
-  Rol:      Coordinación BIM
-  Versión:  2.0 | 2026
-  Repo:     https://github.com/Estayzin/Revisor-IFC
-  Licencia: MIT — ver LICENSE en el repositorio
-  ============================================================
+  Explorador BIM — Carlos Estay Ruggieri · v4.0 | 2026
+  Visor nativo Three.js + web-ifc, sin iframe
 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="author" content="Carlos Estay Ruggieri">
-<meta name="description" content="Explorador BIM — Navegador de proyectos con visor 3D, planos y documentos.">
-<meta name="copyright" content="Carlos Estay Ruggieri, 2026">
 <title>Explorador BIM &mdash; Carlos Estay Ruggieri</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -26,123 +16,120 @@
   --mono:'JetBrains Mono',monospace; --sans:'Inter',sans-serif;
   --accent2:#7c4dff; --warn:#ff6b35;
 }
-*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
-html,body { height:100%; overflow:hidden; }
-body { font-family:var(--sans); background:var(--bg); color:var(--text); display:flex; flex-direction:column; height:100vh; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex;flex-direction:column;height:100vh}
 /* HEADER */
-header { background:var(--navy); padding:10px 20px; display:flex; align-items:center; gap:12px; border-bottom:2px solid var(--accent); flex-shrink:0; }
-.hicon { width:30px; height:30px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
-.htitle { font:600 12px var(--mono); color:#e0f0ff; letter-spacing:.08em; text-transform:uppercase; }
-.hsub { font:400 10px var(--mono); color:var(--muted); margin-top:1px; letter-spacing:.05em; }
-.hback { margin-left:auto; padding:5px 12px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:4px; font:600 9px var(--mono); cursor:pointer; text-transform:uppercase; letter-spacing:.1em; text-decoration:none; transition:all .15s; }
-.hback:hover { border-color:var(--accent); color:var(--accent); }
-/* LAYOUT */
-.main { display:flex; flex:1; overflow:hidden; }
-/* SIDEBAR */
-.sidebar { width:260px; flex-shrink:0; background:var(--blue); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
-.sb-header { padding:12px 14px; border-bottom:1px solid var(--border); flex-shrink:0; }
-.sb-title { font:700 9px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.2em; }
-.sb-search { margin-top:8px; position:relative; }
-.sb-search input { width:100%; padding:6px 10px 6px 28px; background:var(--navy); border:1px solid var(--border); border-radius:4px; font:400 11px var(--mono); color:var(--text); outline:none; }
-.sb-search input:focus { border-color:var(--accent); }
-.sb-search::before { content:'&#9906;'; position:absolute; left:8px; top:6px; font-size:13px; color:var(--muted); pointer-events:none; }
-.sb-tabs { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; }
-.sb-tab { flex:1; padding:8px 4px; text-align:center; font:600 9px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.1em; cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; }
-.sb-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
-.sb-list { flex:1; overflow-y:auto; padding:8px 0; }
-.sb-section { padding:6px 14px 3px; font:700 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.2em; }
-.sb-item { display:flex; align-items:center; gap:8px; padding:7px 14px; cursor:pointer; transition:background .12s; border-left:2px solid transparent; }
-.sb-item:hover { background:rgba(0,212,255,.04); }
-.sb-item.active { background:rgba(0,212,255,.07); border-left-color:var(--accent); }
-.sb-item-icon { font-size:13px; flex-shrink:0; opacity:.7; }
-.sb-item-info { flex:1; min-width:0; }
-.sb-item-name { font:500 11px var(--mono); color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.sb-item-meta { font:400 9px var(--mono); color:var(--muted); margin-top:1px; }
-.sb-item-badge { font:700 8px var(--mono); padding:2px 5px; border-radius:3px; text-transform:uppercase; letter-spacing:.06em; flex-shrink:0; }
-.badge-ifc { background:rgba(0,212,255,.1); color:var(--accent); }
-.badge-pdf { background:rgba(255,107,53,.1); color:var(--warn); }
-.badge-dwg { background:rgba(124,77,255,.1); color:var(--accent2); }
-.badge-rvt { background:rgba(0,200,83,.1); color:var(--green); }
-/* CONTENIDO */
-.content { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-.view-tabs { display:flex; align-items:center; padding:0 16px; background:var(--navy); border-bottom:1px solid var(--border); flex-shrink:0; gap:2px; }
-.view-tab { display:flex; align-items:center; gap:6px; padding:10px 16px; font:600 10px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.1em; cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; }
-.view-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
-.view-tab:hover:not(.active) { color:var(--text); }
-.tab-count { font:600 8px var(--mono); background:rgba(0,212,255,.1); color:var(--accent); padding:1px 5px; border-radius:10px; }
-.view-panel { display:none; flex:1; overflow:hidden; flex-direction:column; }
-.view-panel.active { display:flex; }
-/* PANEL 3D */
-.panel-3d { display:flex; flex-direction:column; flex:1; overflow:hidden; }
-.viewer-toolbar { display:flex; align-items:center; gap:8px; padding:7px 14px; background:var(--blue); border-bottom:1px solid var(--border); flex-shrink:0; flex-wrap:wrap; }
-.vt-btn-group { display:flex; gap:2px; background:rgba(0,212,255,.05); border:1px solid var(--border); border-radius:4px; padding:2px; }
-.vt-btn { padding:4px 10px; border:none; border-radius:3px; font:600 9px var(--mono); cursor:pointer; background:transparent; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; transition:all .15s; }
-.vt-btn.active { background:var(--accent); color:#000; }
-.vt-btn:hover:not(.active) { background:rgba(0,212,255,.1); color:var(--text); }
-.vt-sep { width:1px; background:var(--border); margin:0 4px; align-self:stretch; }
-.vt-label { font:400 10px var(--mono); color:var(--muted); margin-left:auto; }
-.viewer-area { flex:1; position:relative; background:#050b14; overflow:hidden; }
-#viewerCanvas { width:100%; height:100%; display:block; }
-.viewer-overlay-top { position:absolute; top:12px; right:12px; display:flex; gap:6px; z-index:10; pointer-events:none; }
-.viewer-badge { background:rgba(0,212,255,.1); border:1px solid rgba(0,212,255,.2); border-radius:4px; padding:5px 10px; font:600 9px var(--mono); color:var(--accent); letter-spacing:.1em; }
-.viewer-status { background:rgba(6,13,24,.85); border:1px solid var(--border); border-radius:4px; padding:5px 10px; font:600 9px var(--mono); color:var(--muted); }
-.viewer-coords { position:absolute; bottom:12px; left:12px; background:rgba(6,13,24,.85); border:1px solid var(--border); border-radius:4px; padding:5px 10px; font:400 9px var(--mono); color:var(--muted); z-index:10; }
-.viewer-stats { position:absolute; bottom:12px; right:12px; background:rgba(6,13,24,.85); border:1px solid var(--border); border-radius:4px; padding:5px 10px; text-align:right; z-index:10; }
-.viewer-stats div { font:400 9px var(--mono); color:var(--muted); }
-.viewer-stats span { color:var(--accent); }
-/* PANELES LATERALES */
-.props-panel { position:absolute; top:0; right:0; width:240px; height:100%; background:var(--blue); border-left:1px solid var(--border); display:none; flex-direction:column; z-index:20; }
-.props-panel.show { display:flex; }
-.props-header { padding:10px 12px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
-.props-title { font:600 9px var(--mono); color:var(--accent); text-transform:uppercase; letter-spacing:.15em; }
-.props-close { background:none; border:none; color:var(--muted); cursor:pointer; font-size:14px; padding:0; }
-.props-close:hover { color:var(--text); }
-.props-body { flex:1; overflow-y:auto; padding:10px 0; }
-.prop-group { padding:0 12px 10px; }
-.prop-group-title { font:700 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.15em; margin-bottom:6px; }
-.prop-row { display:flex; gap:6px; padding:4px 0; border-bottom:1px solid rgba(26,42,64,.5); }
-.prop-key { font:400 9px var(--mono); color:var(--muted); flex:1; min-width:0; }
-.prop-val { font:600 9px var(--mono); color:var(--text); flex:1; min-width:0; text-align:right; word-break:break-all; }
-.cats-panel { position:absolute; top:0; left:0; width:200px; height:100%; background:var(--blue); border-right:1px solid var(--border); display:none; flex-direction:column; z-index:20; }
-.cats-panel.show { display:flex; }
-.cats-header { padding:10px 12px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
-.cats-title { font:600 9px var(--mono); color:var(--accent); text-transform:uppercase; letter-spacing:.15em; }
-.cats-body { flex:1; overflow-y:auto; padding:8px 0; }
-.cat-item { display:flex; align-items:center; gap:8px; padding:6px 12px; cursor:pointer; transition:background .12s; }
-.cat-item:hover { background:rgba(0,212,255,.05); }
-.cat-item input { accent-color:var(--accent); cursor:pointer; }
-.cat-label { font:400 10px var(--mono); color:var(--text); flex:1; }
-.cat-count { font:400 9px var(--mono); color:var(--muted); }
-/* PLANOS */
-.panel-plans { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-.plans-toolbar { display:flex; align-items:center; gap:8px; padding:7px 14px; background:var(--blue); border-bottom:1px solid var(--border); flex-shrink:0; }
-.plans-grid { flex:1; overflow-y:auto; padding:16px; display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; align-content:start; }
-.plan-card { background:var(--card); border:1px solid var(--border); border-radius:6px; overflow:hidden; cursor:pointer; transition:all .15s; }
-.plan-card:hover { border-color:var(--accent); box-shadow:0 0 15px rgba(0,212,255,.1); }
-.plan-thumb { height:120px; background:linear-gradient(135deg,#0d1a2e,#0a1220); display:flex; align-items:center; justify-content:center; font-size:36px; opacity:.4; }
-.plan-info { padding:9px 10px; }
-.plan-name { font:600 10px var(--mono); color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.plan-meta { font:400 9px var(--mono); color:var(--muted); margin-top:2px; }
-/* DOCUMENTOS */
-.panel-docs { flex:1; overflow-y:auto; padding:16px; }
-.docs-group { margin-bottom:20px; }
-.docs-group-title { font:700 9px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.2em; margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid var(--border); }
-.doc-row { display:flex; align-items:center; gap:10px; padding:8px 10px; background:var(--card); border:1px solid var(--border); border-radius:5px; margin-bottom:4px; cursor:pointer; transition:all .15s; }
-.doc-row:hover { border-color:var(--accent); background:rgba(0,212,255,.03); }
-.doc-icon { font-size:18px; flex-shrink:0; }
-.doc-info { flex:1; min-width:0; }
-.doc-name { font:500 11px var(--mono); color:var(--text); }
-.doc-meta { font:400 9px var(--mono); color:var(--muted); margin-top:1px; }
-.doc-size { font:400 9px var(--mono); color:var(--muted); flex-shrink:0; }
-.doc-badge { font:700 8px var(--mono); padding:2px 6px; border-radius:3px; flex-shrink:0; }
-/* LOADING */
-#viewerLoading { position:absolute; inset:0; background:rgba(5,11,20,.9); display:none; flex-direction:column; align-items:center; justify-content:center; gap:14px; z-index:30; }
-#viewerLoading.show { display:flex; }
-.load-spinner { width:32px; height:32px; border:2px solid rgba(0,212,255,.2); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; }
-.load-text { font:400 10px var(--mono); color:var(--muted); letter-spacing:.1em; text-transform:uppercase; }
-@keyframes spin { to { transform:rotate(360deg); } }
+header{background:var(--navy);padding:10px 20px;display:flex;align-items:center;gap:12px;border-bottom:2px solid var(--accent);flex-shrink:0}
+.hicon{width:30px;height:30px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.htitle{font:600 12px var(--mono);color:#e0f0ff;letter-spacing:.08em;text-transform:uppercase}
+.hsub{font:400 10px var(--mono);color:var(--muted);margin-top:1px}
+.hback{margin-left:auto;padding:5px 12px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:4px;font:600 9px var(--mono);text-transform:uppercase;letter-spacing:.1em;text-decoration:none;transition:all .15s}
+.hback:hover{border-color:var(--accent);color:var(--accent)}
+.main{display:flex;flex:1;overflow:hidden}
 </style>
-</head>
+<style>
+/* SIDEBAR */
+.sidebar{width:260px;flex-shrink:0;background:var(--blue);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sb-header{padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sb-title{font:700 9px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.2em;margin-bottom:8px}
+.sb-dropzone{border:1px dashed var(--border);border-radius:5px;padding:10px;text-align:center;cursor:pointer;transition:all .15s;background:rgba(0,212,255,.02)}
+.sb-dropzone:hover,.sb-dropzone.drag-over{border-color:var(--accent);background:rgba(0,212,255,.06)}
+.sb-dz-label{font:600 9px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+.sb-dz-sub{font:400 9px var(--mono);color:var(--muted);opacity:.5;margin-top:2px}
+.sb-search{margin:8px 0 0;position:relative}
+.sb-search input{width:100%;padding:6px 10px 6px 26px;background:var(--navy);border:1px solid var(--border);border-radius:4px;font:400 11px var(--mono);color:var(--text);outline:none}
+.sb-search input:focus{border-color:var(--accent)}
+.sb-search::before{content:'⚲';position:absolute;left:8px;top:6px;font-size:13px;color:var(--muted);pointer-events:none}
+.sb-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.sb-tab{flex:1;padding:8px 4px;text-align:center;font:600 9px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.sb-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.sb-list{flex:1;overflow-y:auto;padding:8px 0}
+.sb-empty{padding:28px 14px;text-align:center}
+.sb-empty-icon{font-size:28px;opacity:.2;display:block;margin-bottom:8px}
+.sb-empty-text{font:400 10px var(--mono);color:var(--muted);line-height:1.7}
+.sb-section{padding:6px 14px 3px;font:700 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.2em}
+.sb-item{display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;transition:background .12s;border-left:2px solid transparent;position:relative}
+.sb-item:hover{background:rgba(0,212,255,.04)}
+.sb-item.active{background:rgba(0,212,255,.08);border-left-color:var(--accent)}
+.sb-item-icon{font-size:13px;flex-shrink:0;opacity:.7}
+.sb-item-info{flex:1;min-width:0}
+.sb-item-name{font:500 11px var(--mono);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-item-meta{font:400 9px var(--mono);color:var(--muted);margin-top:1px}
+.sb-item-badge{font:700 8px var(--mono);padding:2px 5px;border-radius:3px;text-transform:uppercase;flex-shrink:0}
+.sb-item-del{display:none;position:absolute;right:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;padding:2px 5px;border-radius:3px}
+.sb-item:hover .sb-item-del{display:block}
+.sb-item-del:hover{color:#ff3d57;background:rgba(255,61,87,.1)}
+.badge-ifc{background:rgba(0,212,255,.1);color:var(--accent)}
+.badge-pdf{background:rgba(255,107,53,.1);color:var(--warn)}
+.badge-dwg{background:rgba(124,77,255,.1);color:var(--accent2)}
+</style>
+<style>
+/* CONTENIDO */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.view-tabs{display:flex;padding:0 16px;background:var(--navy);border-bottom:1px solid var(--border);flex-shrink:0;gap:2px}
+.view-tab{display:flex;align-items:center;gap:6px;padding:10px 16px;font:600 10px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.1em;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.view-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.view-tab:hover:not(.active){color:var(--text)}
+.view-panel{display:none;flex:1;overflow:hidden;flex-direction:column}
+.view-panel.active{display:flex}
+/* TOOLBAR */
+.panel-3d{display:flex;flex-direction:column;flex:1;overflow:hidden}
+.viewer-toolbar{display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--blue);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+.vt-group{display:flex;gap:2px;background:rgba(0,212,255,.04);border:1px solid var(--border);border-radius:4px;padding:2px}
+.vt-btn{padding:4px 10px;border:none;border-radius:3px;font:600 9px var(--mono);cursor:pointer;background:transparent;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;transition:all .15s;white-space:nowrap}
+.vt-btn:hover{background:rgba(0,212,255,.1);color:var(--text)}
+.vt-btn.active{background:var(--accent);color:#000}
+.vt-sep{width:1px;background:var(--border);margin:0 2px;align-self:stretch}
+.vt-label{font:400 10px var(--mono);color:var(--muted);margin-left:auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
+/* VISOR — canvas nativo */
+.viewer-area{flex:1;position:relative;background:#050b14;overflow:hidden}
+#viewerCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}
+#viewerCanvas:active{cursor:grabbing}
+/* Overlays */
+.overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:20}
+#ovLoading{background:rgba(5,11,20,.9);pointer-events:none}
+#ovLoading.hidden,#ovWelcome.hidden,#ovError.hidden{display:none}
+#ovWelcome{background:#050b14;pointer-events:none}
+#ovError{background:rgba(5,11,20,.96);padding:32px;text-align:center}
+.ov-spinner{width:32px;height:32px;border:2px solid rgba(0,212,255,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+.ov-text{font:400 10px var(--mono);color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.ov-icon{font-size:44px;opacity:.2}
+.ov-title{font:700 13px var(--sans);color:var(--muted)}
+.ov-sub{font:400 10px var(--mono);color:var(--muted);opacity:.5;text-align:center;max-width:220px;line-height:1.7}
+.ov-err-title{font:700 13px var(--sans);color:var(--warn)}
+.ov-err-desc{font:400 10px var(--mono);color:var(--muted);max-width:300px;line-height:1.6}
+.btn-close-err{padding:6px 14px;background:transparent;border:1px solid var(--accent);border-radius:4px;font:600 9px var(--mono);color:var(--accent);cursor:pointer;text-transform:uppercase;letter-spacing:.1em}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* HUD esquina */
+.hud{position:absolute;bottom:10px;right:12px;z-index:10;text-align:right;pointer-events:none}
+.hud div{font:400 9px var(--mono);color:rgba(100,150,180,.6);margin-top:2px}
+.hud span{color:var(--accent)}
+/* Panel de propiedades (selección) */
+#propsPanel{position:absolute;top:10px;right:10px;width:210px;background:rgba(6,13,24,.92);border:1px solid var(--border);border-radius:6px;z-index:15;display:none;flex-direction:column;overflow:hidden}
+#propsPanel.show{display:flex}
+.pp-header{padding:8px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.pp-title{font:600 9px var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.12em}
+.pp-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0}
+.pp-body{padding:8px 10px;overflow-y:auto;max-height:300px}
+.pp-row{display:flex;gap:6px;padding:3px 0;border-bottom:1px solid rgba(26,42,64,.4)}
+.pp-key{font:400 9px var(--mono);color:var(--muted);flex:1}
+.pp-val{font:600 9px var(--mono);color:var(--text);flex:1;text-align:right;word-break:break-word}
+/* Meta strip */
+#metaStrip{display:none;flex-shrink:0;background:rgba(6,13,24,.8);border-top:1px solid var(--border);padding:6px 14px;gap:16px;overflow-x:auto;align-items:center}
+#metaStrip.show{display:flex}
+.meta-group{flex-shrink:0}
+.meta-label{font:700 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.15em;margin-bottom:3px}
+.meta-chips{display:flex;gap:4px;flex-wrap:nowrap}
+.chip{padding:2px 7px;border-radius:3px;background:rgba(0,212,255,.06);border:1px solid var(--border);font:400 9px var(--mono);color:var(--text);white-space:nowrap}
+.chip b{color:var(--accent)}
+/* Docs */
+.docs-panel{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:5px}
+.doc-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--card);border:1px solid var(--border);border-radius:5px;cursor:pointer;transition:all .15s}
+.doc-row:hover{border-color:var(--accent)}
+.doc-name{font:500 11px var(--mono);color:var(--text)}
+.doc-meta{font:400 9px var(--mono);color:var(--muted);margin-top:1px}
+</style>
 <body>
 <header>
   <div class="hicon">&#127959;</div>
@@ -156,432 +143,600 @@ header { background:var(--navy); padding:10px 20px; display:flex; align-items:ce
   <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="sb-header">
-      <div class="sb-title">Archivos del Proyecto</div>
-      <div class="sb-search"><input type="text" id="sbSearch" placeholder="Buscar archivo..." oninput="filtrarSidebar()"></div>
+      <div class="sb-title">Mis Archivos</div>
+      <div class="sb-dropzone" id="sbDropzone"
+           onclick="document.getElementById('fileInput').click()"
+           ondragover="sbDragOver(event)" ondragleave="sbDragLeave(event)" ondrop="sbDrop(event)">
+        <div class="sb-dz-label">&#8593; Subir archivos</div>
+        <div class="sb-dz-sub">IFC · PDF · DWG · DXF</div>
+      </div>
+      <div class="sb-search">
+        <input type="text" id="sbSearch" placeholder="Buscar..." oninput="renderSidebar()">
+      </div>
     </div>
     <div class="sb-tabs">
       <div class="sb-tab active" onclick="sbTab(this,'all')">Todo</div>
-      <div class="sb-tab" onclick="sbTab(this,'3d')">3D</div>
-      <div class="sb-tab" onclick="sbTab(this,'plans')">Planos</div>
-      <div class="sb-tab" onclick="sbTab(this,'docs')">Docs</div>
+      <div class="sb-tab" onclick="sbTab(this,'ifc')">IFC</div>
+      <div class="sb-tab" onclick="sbTab(this,'plan')">Planos</div>
+      <div class="sb-tab" onclick="sbTab(this,'doc')">Docs</div>
     </div>
     <div class="sb-list" id="sbList">
-      <div class="sb-section">Modelos 3D</div>
-      <div class="sb-item active" onclick="selectFile(this,'3d'); cargarDesdeUrl('https://estayzin.github.io/Revisor-IFC/ARQ-Arquitectura.ifc','ARQ-Arquitectura.ifc')" data-type="3d">
-        <div class="sb-item-icon">&#128230;</div>
-        <div class="sb-item-info">
-          <div class="sb-item-name">ARQ-Arquitectura.ifc</div>
-          <div class="sb-item-meta">13.6 MB &middot; IFC2x3</div>
-        </div>
-        <div class="sb-item-badge badge-ifc">IFC</div>
-      </div>
-      <div class="sb-item" onclick="selectFile(this,'3d')" data-type="3d">
-        <div class="sb-item-icon">&#128230;</div>
-        <div class="sb-item-info">
-          <div class="sb-item-name">EST-Estructural.ifc</div>
-          <div class="sb-item-meta">8.2 MB &middot; IFC2x3</div>
-        </div>
-        <div class="sb-item-badge badge-ifc">IFC</div>
-      </div>
-      <div class="sb-item" onclick="selectFile(this,'3d')" data-type="3d">
-        <div class="sb-item-icon">&#128208;</div>
-        <div class="sb-item-info">
-          <div class="sb-item-name">COO-Coordinacion.rvt</div>
-          <div class="sb-item-meta">45.1 MB &middot; Revit 2024</div>
-        </div>
-        <div class="sb-item-badge badge-rvt">RVT</div>
-      </div>
-      <div class="sb-section">Planos</div>
-      <div class="sb-item" onclick="selectFile(this,'plans')" data-type="plans">
-        <div class="sb-item-icon">&#128203;</div>
-        <div class="sb-item-info">
-          <div class="sb-item-name">PL-ARQ-001_Planta.pdf</div>
-          <div class="sb-item-meta">2.1 MB &middot; A1</div>
-        </div>
-        <div class="sb-item-badge badge-pdf">PDF</div>
-      </div>
-      <div class="sb-item" onclick="selectFile(this,'plans')" data-type="plans">
-        <div class="sb-item-icon">&#128203;</div>
-        <div class="sb-item-info">
-          <div class="sb-item-name">PL-ARQ-002_Cortes.dwg</div>
-          <div class="sb-item-meta">5.4 MB &middot; AutoCAD</div>
-        </div>
-        <div class="sb-item-badge badge-dwg">DWG</div>
-      </div>
-      <div class="sb-section">Documentos</div>
-      <div class="sb-item" onclick="selectFile(this,'docs')" data-type="docs">
-        <div class="sb-item-icon">&#128196;</div>
-        <div class="sb-item-info">
-          <div class="sb-item-name">BEP-v2.1.pdf</div>
-          <div class="sb-item-meta">1.3 MB &middot; BIM Execution Plan</div>
-        </div>
-        <div class="sb-item-badge badge-pdf">PDF</div>
-      </div>
-      <div class="sb-item" onclick="selectFile(this,'docs')" data-type="docs">
-        <div class="sb-item-icon">&#128202;</div>
-        <div class="sb-item-info">
-          <div class="sb-item-name">Reporte-ARQ.html</div>
-          <div class="sb-item-meta">0.4 MB &middot; Reporte IFC</div>
-        </div>
-        <div class="sb-item-badge badge-ifc">IFC</div>
+      <div class="sb-empty">
+        <span class="sb-empty-icon">&#128230;</span>
+        <div class="sb-empty-text">Aún no hay archivos.<br>Haz clic arriba o arrastra aquí.</div>
       </div>
     </div>
   </div>
   <!-- CONTENIDO -->
   <div class="content">
     <div class="view-tabs">
-      <div class="view-tab active" onclick="viewTab(this,'v3d')">&#11035; 3D <span class="tab-count">3</span></div>
-      <div class="view-tab" onclick="viewTab(this,'vplans')">&#128203; Planos <span class="tab-count">2</span></div>
-      <div class="view-tab" onclick="viewTab(this,'vdocs')">&#128193; Documentos <span class="tab-count">2</span></div>
+      <div class="view-tab active" id="tab3d" onclick="viewTab('v3d')">&#11035; 3D</div>
+      <div class="view-tab" id="tabDocs" onclick="viewTab('vdocs')">&#128193; Documentos</div>
     </div>
     <!-- PANEL 3D -->
     <div class="view-panel active" id="v3d">
       <div class="panel-3d">
         <div class="viewer-toolbar">
-          <div class="vt-btn-group">
-            <div class="vt-btn active" onclick="setNavMode(this,'orbit')">Orbitar</div>
-            <div class="vt-btn" onclick="setNavMode(this,'pan')">Pan</div>
+          <div class="vt-group">
+            <button class="vt-btn" onclick="document.getElementById('fileInput').click()">&#128194; Abrir</button>
           </div>
           <div class="vt-sep"></div>
-          <div class="vt-btn-group">
-            <div class="vt-btn" onclick="setCamView('top')">Planta</div>
-            <div class="vt-btn" onclick="setCamView('front')">Frente</div>
-            <div class="vt-btn" onclick="setCamView('iso')">Iso</div>
+          <div class="vt-group">
+            <button class="vt-btn" onclick="camView('top')">Planta</button>
+            <button class="vt-btn" onclick="camView('front')">Frente</button>
+            <button class="vt-btn" onclick="camView('iso')">Iso</button>
           </div>
           <div class="vt-sep"></div>
-          <div class="vt-btn-group">
-            <div class="vt-btn active" id="btnCats" onclick="toggleCats()">Categor&iacute;as</div>
-            <div class="vt-btn" id="btnProps" onclick="toggleProps()">Propiedades</div>
+          <div class="vt-group">
+            <button class="vt-btn" id="btnWire" onclick="toggleWire()">Alambre</button>
+            <button class="vt-btn" id="btnGhost" onclick="toggleGhost()">Transparente</button>
           </div>
           <div class="vt-sep"></div>
-          <div class="vt-label" id="vtLabel">Sin modelo cargado</div>
+          <div class="vt-group">
+            <button class="vt-btn" onclick="resetCam()">&#8634; Reset</button>
+          </div>
+          <div class="vt-label" id="vtLabel">Sin modelo</div>
         </div>
-        <div class="viewer-area" id="viewerArea">
+        <div class="viewer-area" id="viewerArea"
+             ondragover="vaDragOver(event)" ondragleave="vaDragLeave(event)" ondrop="vaDrop(event)">
           <canvas id="viewerCanvas"></canvas>
-          <div id="viewerLoading">
-            <div class="load-spinner"></div>
-            <div class="load-text" id="loadText">Cargando modelo...</div>
+          <div class="overlay" id="ovLoading">
+            <div class="ov-spinner"></div>
+            <div class="ov-text" id="ovLoadText">Cargando...</div>
           </div>
-          <div class="viewer-overlay-top">
-            <div class="viewer-badge" id="viewerBadge">&#11035; 3D VIEWER</div>
-            <div class="viewer-status" id="viewerStatusBadge">Sin modelo</div>
+          <div class="overlay" id="ovWelcome">
+            <div class="ov-icon">&#128230;</div>
+            <div class="ov-title">Explorador BIM</div>
+            <div class="ov-sub">Sube un archivo .ifc desde el panel izquierdo o arrástralo aquí.</div>
           </div>
-          <div class="viewer-coords" id="viewerCoords">X: 0 &middot; Y: 0</div>
-          <div class="viewer-stats">
-            <div>Elementos: <span id="statElems">&mdash;</span></div>
-            <div>Tri&aacute;ngulos: <span id="statTris">&mdash;</span></div>
+          <div class="overlay" id="ovError">
+            <div style="font-size:28px">&#9888;&#65039;</div>
+            <div class="ov-err-title">Error al cargar</div>
+            <div class="ov-err-desc" id="ovErrDesc"></div>
+            <button class="btn-close-err" onclick="cerrarError()">Cerrar</button>
           </div>
-          <!-- Panel Categorias -->
-          <div class="cats-panel" id="catsPanel">
-            <div class="cats-header">
-              <div class="cats-title">Categor&iacute;as</div>
-              <button class="props-close" onclick="toggleCats()">&#10005;</button>
+          <div class="hud">
+            <div>Elementos: <span id="hudElems">&mdash;</span></div>
+            <div>Tri&aacute;ngulos: <span id="hudTris">&mdash;</span></div>
+            <div>Motor: <span>Three.js + web-ifc</span></div>
+          </div>
+          <div id="propsPanel">
+            <div class="pp-header">
+              <div class="pp-title">Propiedades</div>
+              <button class="pp-close" onclick="cerrarProps()">&#10005;</button>
             </div>
-            <div class="cats-body" id="catsBody"></div>
-          </div>
-          <!-- Panel Propiedades -->
-          <div class="props-panel" id="propsPanel">
-            <div class="props-header">
-              <div class="props-title">Propiedades BIM</div>
-              <button class="props-close" onclick="toggleProps()">&#10005;</button>
-            </div>
-            <div class="props-body" id="propsBody">
-              <div class="prop-group">
-                <div class="prop-group-title">Selecciona un elemento</div>
-                <div style="font:400 10px var(--mono);color:var(--muted);padding:4px 0;">Haz clic sobre un elemento del modelo para ver sus propiedades BIM.</div>
-              </div>
-            </div>
+            <div class="pp-body" id="propsBody"></div>
           </div>
         </div>
-      </div>
-    </div>
-    <!-- PANEL PLANOS -->
-    <div class="view-panel" id="vplans">
-      <div class="panel-plans">
-        <div class="plans-toolbar">
-          <div class="vt-btn-group">
-            <div class="vt-btn active">Grilla</div>
-            <div class="vt-btn">Lista</div>
+        <div id="metaStrip">
+          <div class="meta-group">
+            <div class="meta-label">Proyecto</div>
+            <div class="meta-chips"><div class="chip" id="metaProy">&mdash;</div></div>
           </div>
-        </div>
-        <div class="plans-grid">
-          <div class="plan-card"><div class="plan-thumb">&#128203;</div><div class="plan-info"><div class="plan-name">PL-ARQ-001_Planta.pdf</div><div class="plan-meta">Planta General &middot; A1 &middot; 2.1 MB</div></div></div>
-          <div class="plan-card"><div class="plan-thumb">&#128208;</div><div class="plan-info"><div class="plan-name">PL-ARQ-002_Cortes.dwg</div><div class="plan-meta">Cortes &middot; AutoCAD &middot; 5.4 MB</div></div></div>
-          <div class="plan-card" style="opacity:.35;pointer-events:none;"><div class="plan-thumb" style="opacity:.3">+</div><div class="plan-info"><div class="plan-name" style="color:var(--muted)">Agregar plano...</div><div class="plan-meta">PDF &middot; DWG &middot; DXF</div></div></div>
+          <div class="meta-group">
+            <div class="meta-label">Esquema</div>
+            <div class="meta-chips"><div class="chip" id="metaEsq">&mdash;</div></div>
+          </div>
+          <div class="meta-group" id="metaCatsGroup" style="display:none">
+            <div class="meta-label">Categor&iacute;as</div>
+            <div class="meta-chips" id="metaCats"></div>
+          </div>
         </div>
       </div>
     </div>
     <!-- PANEL DOCS -->
     <div class="view-panel" id="vdocs">
-      <div class="panel-docs">
-        <div class="docs-group">
-          <div class="docs-group-title">BIM</div>
-          <div class="doc-row"><div class="doc-icon">&#128196;</div><div class="doc-info"><div class="doc-name">BEP-v2.1.pdf</div><div class="doc-meta">BIM Execution Plan &middot; Rev 2.1</div></div><div class="doc-size">1.3 MB</div><div class="doc-badge badge-pdf" style="background:rgba(255,107,53,.1);color:var(--warn)">PDF</div></div>
-          <div class="doc-row"><div class="doc-icon">&#128202;</div><div class="doc-info"><div class="doc-name">Reporte-ARQ.html</div><div class="doc-meta">Reporte IFC &middot; Arquitectura</div></div><div class="doc-size">0.4 MB</div><div class="doc-badge badge-ifc" style="background:rgba(0,212,255,.1);color:var(--accent)">IFC</div></div>
+      <div class="docs-panel" id="docsPanel">
+        <div class="sb-empty" style="padding:40px;align-self:center">
+          <span class="sb-empty-icon">&#128196;</span>
+          <div class="sb-empty-text">Sube documentos PDF o DWG<br>desde el panel izquierdo.</div>
         </div>
       </div>
     </div>
   </div>
 </div>
-<input type="file" id="ifcFileInput" accept=".ifc" style="display:none" onchange="onIfcFile(event)">
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-<script>
-function viewTab(el, panelId) {
-  document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById(panelId).classList.add('active');
-}
-function sbTab(el, filter) {
-  document.querySelectorAll('.sb-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  currentFilter = filter;
-  filtrarSidebar();
-}
-var currentFilter = 'all';
-function filtrarSidebar() {
-  var q = document.getElementById('sbSearch').value.toLowerCase();
-  document.querySelectorAll('.sb-item').forEach(item => {
-    var type = item.dataset.type || '';
-    var name = item.querySelector('.sb-item-name') ? item.querySelector('.sb-item-name').textContent.toLowerCase() : '';
-    var matchFilter = currentFilter === 'all' || type === currentFilter;
-    var matchSearch = !q || name.includes(q);
-    item.style.display = matchFilter && matchSearch ? '' : 'none';
-  });
-}
-function selectFile(el, view) {
-  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
-  el.classList.add('active');
-  var tabMap = { '3d':'v3d', 'plans':'vplans', 'docs':'vdocs' };
-  var tabEl = document.querySelector('.view-tab[onclick*="' + tabMap[view] + '"]');
-  if (tabEl) viewTab(tabEl, tabMap[view]);
-  var nameEl = el.querySelector('.sb-item-name');
-  document.getElementById('vtLabel').textContent = nameEl ? nameEl.textContent : '';
-}
-// VISOR 3D
-var renderer, scene, camera, controls, raycaster, mouse;
-var meshes = [], selectedMesh = null, categories = {};
-function initViewer() {
-  var canvas = document.getElementById('viewerCanvas');
-  var area = document.getElementById('viewerArea');
-  renderer = new THREE.WebGLRenderer({ canvas:canvas, antialias:true });
-  renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setClearColor(0x050b14);
-  scene = new THREE.Scene();
-  var w = area.clientWidth, h = area.clientHeight;
-  renderer.setSize(w, h);
-  camera = new THREE.PerspectiveCamera(45, w/h, 0.1, 5000);
-  camera.position.set(20, 15, 20);
-  controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.07;
-  scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-  var dir = new THREE.DirectionalLight(0xffffff, 0.8);
-  dir.position.set(50, 100, 50);
-  scene.add(dir);
-  scene.add(new THREE.GridHelper(100, 50, 0x1a2a40, 0x1a2a40));
-  raycaster = new THREE.Raycaster();
-  mouse = new THREE.Vector2();
-  renderer.domElement.addEventListener('click', onCanvasClick);
-  renderer.domElement.addEventListener('mousemove', onCanvasMouseMove);
-  window.addEventListener('resize', onViewerResize);
-  animate();
-}
-function animate() {
-  requestAnimationFrame(animate);
-  if (controls) controls.update();
-  if (renderer && scene && camera) renderer.render(scene, camera);
-}
-function onViewerResize() {
-  var area = document.getElementById('viewerArea');
-  if (!renderer || !area) return;
-  var w = area.clientWidth, h = area.clientHeight;
-  renderer.setSize(w, h);
-  camera.aspect = w/h;
-  camera.updateProjectionMatrix();
-}
-function setNavMode(el, mode) {
-  document.querySelectorAll('.viewer-toolbar .vt-btn-group:first-child .vt-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  if (controls) { controls.enableRotate = mode==='orbit'; controls.enablePan = mode==='pan'; }
-}
-function setCamView(view) {
-  if (!camera || !controls) return;
-  var bbox = new THREE.Box3();
-  meshes.forEach(m => bbox.expandByObject(m));
-  var center = new THREE.Vector3();
-  if (!bbox.isEmpty()) bbox.getCenter(center);
-  var size = bbox.isEmpty() ? 30 : bbox.getSize(new THREE.Vector3()).length();
-  var d = size * 1.5;
-  if (view==='top') camera.position.set(center.x, center.y+d, center.z);
-  else if (view==='front') camera.position.set(center.x, center.y, center.z+d);
-  else camera.position.set(center.x+d*0.6, center.y+d*0.5, center.z+d*0.6);
-  controls.target.copy(center);
-  controls.update();
-}
-// CARGA IFC
-async function cargarDesdeUrl(url, nombre) {
-  document.getElementById('vtLabel').textContent = nombre;
-  mostrarLoading('Descargando ' + nombre + '...');
-  try {
-    var resp = await fetch(url);
-    if (!resp.ok) throw new Error('Error al descargar: ' + resp.status);
-    var buffer = await resp.arrayBuffer();
-    await cargarIFC(buffer, nombre);
-  } catch(err) {
-    ocultarLoading();
-    document.getElementById('viewerStatusBadge').textContent = 'Error: ' + err.message;
-    console.error(err);
-  }
-}
-function onIfcFile(e) {
-  var file = e.target.files[0]; if (!file) return;
-  document.getElementById('vtLabel').textContent = file.name;
-  var reader = new FileReader();
-  reader.onload = async function(ev) { await cargarIFC(ev.target.result, file.name); };
-  reader.readAsArrayBuffer(file);
-  e.target.value = '';
-}
-async function cargarIFC(buffer, nombre) {
-  mostrarLoading('Inicializando web-ifc...');
-  try {
-    if (!window._IfcAPI && window._loadWebIfc) await window._loadWebIfc();
-    if (!window._IfcAPI) throw new Error('web-ifc no disponible');
-    var api = new window._IfcAPI();
-    var wasmBase = './wasm/';
-    try { var r = await fetch('./wasm/web-ifc.wasm',{method:'HEAD'}); if(!r.ok) wasmBase='https://unpkg.com/web-ifc@0.0.74/'; } catch(e){ wasmBase='https://unpkg.com/web-ifc@0.0.74/'; }
-    api.SetWasmPath(wasmBase);
-    await api.Init();
-    mostrarLoading('Cargando geometr\u00eda...');
-    meshes.forEach(m => { m.geometry.dispose(); scene.remove(m); });
-    meshes = []; categories = {};
-    var modelID = api.OpenModel(new Uint8Array(buffer), {COORDINATE_TO_ORIGIN:true, OPTIMIZE_PROFILES:false});
-    var catColors = {
-      IFCWALL:[0.4,0.7,1], IFCWALLSTANDARDCASE:[0.4,0.7,1],
-      IFCSLAB:[0.6,0.6,0.8], IFCCOLUMN:[1,0.8,0.3],
-      IFCBEAM:[1,0.6,0.2], IFCDOOR:[0.3,1,0.6],
-      IFCWINDOW:[0.2,0.9,1], IFCROOF:[0.8,0.4,0.4],
-      DEFAULT:[0.5,0.6,0.7]
-    };
-    var catMeshData = {};
-    api.StreamAllMeshes(modelID, function(mesh) {
-      var geoms = mesh.geometries;
-      var cls = 'DEFAULT';
-      try { var line = api.GetLine(modelID, mesh.expressID, false); if (line && line.constructor && line.constructor.name) cls = line.constructor.name.toUpperCase(); } catch(e){}
-      if (!catMeshData[cls]) catMeshData[cls] = {positions:[], normals:[], ids:[]};
-      for (var g=0; g<geoms.size(); g++) {
-        var pg = geoms.get(g);
-        if (!pg || !pg.geometryExpressID) continue;
-        try {
-          var geom = api.GetGeometry(modelID, pg.geometryExpressID);
-          var vPtr=geom.GetVertexData(), vSize=geom.GetVertexDataSize();
-          var iPtr=geom.GetIndexData(), iSize=geom.GetIndexSize();
-          if (vSize>0 && iSize>0) {
-            var verts=api.GetVertexArray(vPtr,vSize), idx=api.GetIndexArray(iPtr,iSize);
-            var mat=new THREE.Matrix4(); mat.fromArray(pg.flatTransformation);
-            for (var i=0;i<idx.length;i+=3) for (var j=0;j<3;j++) {
-              var vi=idx[i+j]*6;
-              var v=new THREE.Vector3(verts[vi],verts[vi+1],verts[vi+2]).applyMatrix4(mat);
-              catMeshData[cls].positions.push(v.x,v.y,v.z);
-              catMeshData[cls].normals.push(verts[vi+3],verts[vi+4],verts[vi+5]);
-            }
-          }
-          if (geom.delete) geom.delete();
-        } catch(e){}
-      }
-      catMeshData[cls].ids.push(mesh.expressID);
-    });
-    var catKeys = Object.keys(catMeshData);
-    for (var ci=0; ci<catKeys.length; ci++) {
-      var cls = catKeys[ci], cd = catMeshData[cls];
-      if (!cd.positions.length) continue;
-      var col = catColors[cls] || catColors.DEFAULT;
-      var geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.Float32BufferAttribute(cd.positions, 3));
-      geo.setAttribute('normal', new THREE.Float32BufferAttribute(cd.normals, 3));
-      var mat = new THREE.MeshLambertMaterial({color:new THREE.Color(col[0],col[1],col[2]), side:THREE.DoubleSide});
-      var mesh = new THREE.Mesh(geo, mat);
-      mesh.userData = { cls:cls, ids:cd.ids, originalColor:new THREE.Color(col[0],col[1],col[2]) };
-      scene.add(mesh); meshes.push(mesh);
-      categories[cls] = { mesh:mesh, visible:true, count:cd.ids.length };
-    }
-    api.CloseModel(modelID);
-    var bbox = new THREE.Box3(); meshes.forEach(m => bbox.expandByObject(m));
-    if (!bbox.isEmpty()) {
-      var center = bbox.getCenter(new THREE.Vector3());
-      var size = bbox.getSize(new THREE.Vector3()).length();
-      controls.target.copy(center);
-      camera.position.set(center.x+size*0.7, center.y+size*0.5, center.z+size*0.7);
-      controls.update();
-    }
-    document.getElementById('statElems').textContent = meshes.length;
-    document.getElementById('statTris').textContent = meshes.reduce((s,m)=>s+(m.geometry.attributes.position.count/3|0),0).toLocaleString();
-    document.getElementById('viewerStatusBadge').textContent = nombre;
-    actualizarPanelCategorias();
-    ocultarLoading();
-  } catch(err) {
-    ocultarLoading();
-    document.getElementById('viewerStatusBadge').textContent = 'Error: ' + err.message;
-    console.error(err);
-  }
-}
-function mostrarLoading(msg) {
-  document.getElementById('loadText').textContent = msg || 'Cargando...';
-  document.getElementById('viewerLoading').classList.add('show');
-}
-function ocultarLoading() { document.getElementById('viewerLoading').classList.remove('show'); }
-// SELECCION
-function onCanvasClick(e) {
-  if (!renderer || !meshes.length) return;
-  var rect = renderer.domElement.getBoundingClientRect();
-  mouse.x = ((e.clientX-rect.left)/rect.width)*2-1;
-  mouse.y = -((e.clientY-rect.top)/rect.height)*2+1;
-  raycaster.setFromCamera(mouse, camera);
-  var hits = raycaster.intersectObjects(meshes);
-  if (selectedMesh) { selectedMesh.material.color.copy(selectedMesh.userData.originalColor); selectedMesh.material.emissive=new THREE.Color(0,0,0); selectedMesh=null; }
-  if (hits.length > 0) {
-    selectedMesh = hits[0].object;
-    selectedMesh.material.emissive = new THREE.Color(0,0.3,0.4);
-    mostrarPropiedades(selectedMesh);
-    document.getElementById('propsPanel').classList.add('show');
-  }
-}
-function onCanvasMouseMove(e) {
-  var rect = renderer.domElement.getBoundingClientRect();
-  document.getElementById('viewerCoords').textContent = 'X: '+(e.clientX-rect.left|0)+' \u00b7 Y: '+(e.clientY-rect.top|0);
-}
-function mostrarPropiedades(mesh) {
-  var cls = mesh.userData.cls || 'Desconocido';
-  var ids = mesh.userData.ids || [];
-  var html = '<div class="prop-group"><div class="prop-group-title">Entidad IFC</div>';
-  html += '<div class="prop-row"><div class="prop-key">Clase</div><div class="prop-val">'+cls+'</div></div>';
-  html += '<div class="prop-row"><div class="prop-key">Elementos</div><div class="prop-val">'+ids.length+'</div></div>';
-  html += '</div><div class="prop-group"><div class="prop-group-title">Propiedades</div>';
-  var props = {'Material':'Hormig\u00f3n Armado','Nivel':'N+0.00','Estado':'Existente','Fase':'Dise\u00f1o B\u00e1sico'};
-  Object.entries(props).forEach(([k,v]) => { html+='<div class="prop-row"><div class="prop-key">'+k+'</div><div class="prop-val">'+v+'</div></div>'; });
-  html += '</div>';
-  document.getElementById('propsBody').innerHTML = html;
-}
-function toggleCats() { document.getElementById('catsPanel').classList.toggle('show'); }
-function toggleProps() { document.getElementById('propsPanel').classList.toggle('show'); }
-function actualizarPanelCategorias() {
-  var html = '';
-  Object.entries(categories).forEach(([cls, cat]) => {
-    html += '<div class="cat-item"><input type="checkbox" checked onchange="toggleCategoria(\''+cls+'\',this.checked)"><div class="cat-label">'+cls+'</div><div class="cat-count">'+cat.count+'</div></div>';
-  });
-  document.getElementById('catsBody').innerHTML = html || '<div style="padding:10px 12px;font:400 10px var(--mono);color:var(--muted)">Sin categor\u00edas</div>';
-}
-function toggleCategoria(cls, visible) { if (categories[cls]) { categories[cls].mesh.visible=visible; categories[cls].visible=visible; } }
-window.addEventListener('DOMContentLoaded', function() { initViewer(); });
-</script>
-<script type="module">
-  import * as WebIFC from 'https://unpkg.com/web-ifc@0.0.74/web-ifc-api.js';
-  window._IfcAPI = WebIFC.IfcAPI;
-  window._loadWebIfc = async function() {};
-</script>
-<footer style="text-align:center;padding:6px;font:400 9px var(--mono);color:var(--muted);border-top:1px solid var(--border);letter-spacing:.08em;flex-shrink:0;">
+<input type="file" id="fileInput" accept=".ifc,.pdf,.dwg,.dxf" multiple style="display:none" onchange="onFilesInput(event)">
+<footer style="text-align:center;padding:5px;font:400 9px var(--mono);color:var(--muted);border-top:1px solid var(--border);letter-spacing:.08em;flex-shrink:0">
   &copy; 2026 Carlos Estay Ruggieri &mdash; Coordinaci&oacute;n BIM &mdash; MIT License
 </footer>
+<!-- Three.js + OrbitControls — locales -->
+<script src="js/three.min.js"></script>
+<script src="js/OrbitControls.js"></script>
+<!-- web-ifc single-thread (ST) — sin SharedArrayBuffer, compatible con file:// y Edge -->
+<!-- Si no tienes web-ifc-api-st.js, descárgalo manualmente:
+     https://unpkg.com/web-ifc@0.0.74/web-ifc-api-iife.js  → guárdalo como js/web-ifc-api-st.js
+     https://unpkg.com/web-ifc@0.0.74/web-ifc.wasm         → guárdalo en wasm/web-ifc.wasm (ya existe) -->
+<script src="js/web-ifc-api-st.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════
+   ESTADO GLOBAL
+═══════════════════════════════════════════════════ */
+var FILES = [], sbFilter = 'all';
+var currentFile = null;
+var wireMode = false, ghostMode = false;
+
+/* Three.js */
+var renderer3, scene, camera, controls, raycaster, mouse;
+var meshes = [], selectedMesh = null;
+var animId = null;
+
+/* ═══════════════════════════════════════════════════
+   UTILIDADES
+═══════════════════════════════════════════════════ */
+function ext(n){ return (n.split('.').pop()||'').toLowerCase(); }
+function tipo(e){ return e==='ifc'?'ifc':['pdf','dwg','dxf'].includes(e)?'plan':'doc'; }
+function fmtSize(b){ return b<1048576?(b/1024).toFixed(1)+' KB':(b/1048576).toFixed(1)+' MB'; }
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function badgeCls(e){ return e==='ifc'?'badge-ifc':e==='pdf'?'badge-pdf':'badge-dwg'; }
+function icon(e){ return e==='ifc'?'📦':e==='pdf'?'📄':['dwg','dxf'].includes(e)?'📐':'📋'; }
+
+/* ═══════════════════════════════════════════════════
+   ARCHIVOS
+═══════════════════════════════════════════════════ */
+function agregarArchivos(list){
+  Array.from(list).forEach(function(f){
+    var e=ext(f.name);
+    if(!['ifc','pdf','dwg','dxf'].includes(e)) return;
+    var idx=FILES.findIndex(function(x){return x.name===f.name});
+    if(idx>=0){URL.revokeObjectURL(FILES[idx].url);FILES.splice(idx,1);}
+    FILES.push({id:Date.now()+Math.random(),name:f.name,ext:e,tipo:tipo(e),size:f.size,url:URL.createObjectURL(f),file:f});
+  });
+  renderSidebar(); renderDocs();
+}
+
+/* ═══════════════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════════════ */
+function renderSidebar(){
+  var q=(document.getElementById('sbSearch').value||'').toLowerCase();
+  var shown=FILES.filter(function(f){
+    return (sbFilter==='all'||f.tipo===sbFilter)&&(!q||f.name.toLowerCase().includes(q));
+  });
+  var list=document.getElementById('sbList');
+  if(!shown.length){
+    list.innerHTML='<div class="sb-empty"><span class="sb-empty-icon">📂</span><div class="sb-empty-text">'+(q?'Sin resultados.':'Sin archivos.')+'</div></div>';
+    return;
+  }
+  var grupos={};
+  shown.forEach(function(f){
+    var g=f.tipo==='ifc'?'Modelos 3D':f.tipo==='plan'?'Planos':'Documentos';
+    if(!grupos[g])grupos[g]=[];grupos[g].push(f);
+  });
+  var html='';
+  Object.keys(grupos).forEach(function(g){
+    html+='<div class="sb-section">'+g+'</div>';
+    grupos[g].forEach(function(f){
+      var active=currentFile&&currentFile.id===f.id?' active':'';
+      html+='<div class="sb-item'+active+'" id="si-'+f.id+'" onclick="selectFile(\''+f.id+'\')">'+
+        '<div class="sb-item-icon">'+icon(f.ext)+'</div>'+
+        '<div class="sb-item-info"><div class="sb-item-name">'+esc(f.name)+'</div>'+
+        '<div class="sb-item-meta">'+fmtSize(f.size)+' · '+f.ext.toUpperCase()+'</div></div>'+
+        '<div class="sb-item-badge '+badgeCls(f.ext)+'">'+f.ext.toUpperCase()+'</div>'+
+        '<button class="sb-item-del" onclick="eliminar(event,\''+f.id+'\')">✕</button>'+
+      '</div>';
+    });
+  });
+  list.innerHTML=html;
+}
+function sbTab(el,filter){
+  document.querySelectorAll('.sb-tab').forEach(function(t){t.classList.remove('active')});
+  el.classList.add('active'); sbFilter=filter; renderSidebar();
+}
+function eliminar(e,id){
+  e.stopPropagation();
+  var f=FILES.find(function(x){return String(x.id)===String(id)});
+  if(!f)return;
+  URL.revokeObjectURL(f.url);
+  FILES=FILES.filter(function(x){return String(x.id)!==String(id)});
+  if(currentFile&&currentFile.id===f.id){currentFile=null;limpiarVisor();}
+  renderSidebar();renderDocs();
+}
+function selectFile(id){
+  var f=FILES.find(function(x){return String(x.id)===String(id)});
+  if(!f)return;
+  if(f.tipo==='ifc'){viewTab('v3d');cargarIFC(f);}
+  else{viewTab('vdocs');}
+}
+</script>
+<script>
+/* ═══════════════════════════════════════════════════
+   TABS / PANEL
+═══════════════════════════════════════════════════ */
+function viewTab(id){
+  document.querySelectorAll('.view-panel').forEach(function(p){p.classList.remove('active')});
+  document.querySelectorAll('.view-tab').forEach(function(t){t.classList.remove('active')});
+  document.getElementById(id).classList.add('active');
+  document.getElementById(id==='v3d'?'tab3d':'tabDocs').classList.add('active');
+}
+
+/* ═══════════════════════════════════════════════════
+   INIT THREE.JS — corre una sola vez
+═══════════════════════════════════════════════════ */
+function initViewer(){
+  var canvas=document.getElementById('viewerCanvas');
+  var area=document.getElementById('viewerArea');
+  renderer3=new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:false});
+  renderer3.setPixelRatio(window.devicePixelRatio);
+  renderer3.setClearColor(0x050b14,1);
+  renderer3.shadowMap.enabled=false;
+  var w=area.clientWidth, h=area.clientHeight;
+  renderer3.setSize(w,h);
+
+  scene=new THREE.Scene();
+  camera=new THREE.PerspectiveCamera(45,w/h,0.01,10000);
+  camera.position.set(20,15,20);
+
+  controls=new THREE.OrbitControls(camera,renderer3.domElement);
+  controls.enableDamping=true; controls.dampingFactor=0.07;
+  controls.screenSpacePanning=true;
+
+  /* Luces */
+  scene.add(new THREE.AmbientLight(0xffffff,0.55));
+  var dir=new THREE.DirectionalLight(0xffffff,0.9);
+  dir.position.set(50,100,50); scene.add(dir);
+  var dir2=new THREE.DirectionalLight(0x8080ff,0.25);
+  dir2.position.set(-50,-30,-50); scene.add(dir2);
+
+  /* Grid */
+  var grid=new THREE.GridHelper(200,100,0x1a2a40,0x1a2a40);
+  scene.add(grid);
+
+  raycaster=new THREE.Raycaster();
+  mouse=new THREE.Vector2();
+
+  canvas.addEventListener('click',onCanvasClick);
+  window.addEventListener('resize',onResize);
+  animate();
+  ovHide('ovLoading'); ovShow('ovWelcome');
+}
+
+function animate(){
+  animId=requestAnimationFrame(animate);
+  controls.update();
+  renderer3.render(scene,camera);
+}
+
+function onResize(){
+  var area=document.getElementById('viewerArea');
+  var w=area.clientWidth, h=area.clientHeight;
+  renderer3.setSize(w,h);
+  camera.aspect=w/h; camera.updateProjectionMatrix();
+}
+</script>
+<script>
+/* ═══════════════════════════════════════════════════
+   CARGA IFC — web-ifc vía CDN
+═══════════════════════════════════════════════════ */
+var CAT_COLORS={
+  IFCWALL:[0.55,0.72,0.95], IFCWALLSTANDARDCASE:[0.55,0.72,0.95],
+  IFCSLAB:[0.65,0.65,0.82], IFCCOLUMN:[1.0,0.82,0.35],
+  IFCBEAM:[1.0,0.65,0.25], IFCDOOR:[0.3,0.95,0.65],
+  IFCWINDOW:[0.3,0.92,1.0], IFCROOF:[0.82,0.45,0.45],
+  IFCSPACE:[0.4,0.8,0.5], IFCSTAIR:[0.9,0.7,0.4],
+  IFCFURNISHINGELEMENT:[0.8,0.6,0.95], DEFAULT:[0.5,0.62,0.72]
+};
+
+/* Instancia única de web-ifc (ST = single-thread, sin SharedArrayBuffer)
+   Inicializada una sola vez, reutilizada para todos los modelos */
+var _IFC_API_INSTANCE = null;
+var _IFC_API_READY = false;
+var _IFC_OPEN_MODEL = -1;
+
+async function getIfcApi(){
+  if(_IFC_API_READY) return _IFC_API_INSTANCE;
+
+  /* web-ifc-api-iife.js (ST) expone WebIFC como global IIFE */
+  var ns = window.WebIFC || window.WEBIFC || window;
+  var IfcAPI = ns.IfcAPI;
+  if(!IfcAPI) throw new Error('web-ifc-api-st.js no cargado — descarga https://unpkg.com/web-ifc@0.0.74/web-ifc-api-iife.js y guárdalo como js/web-ifc-api-st.js');
+
+  window._WIFC = ns;
+  _IFC_API_INSTANCE = new IfcAPI();
+  _IFC_API_INSTANCE.SetWasmPath('./wasm/');
+  await _IFC_API_INSTANCE.Init();
+  _IFC_API_READY = true;
+  return _IFC_API_INSTANCE;
+}
+
+async function cargarIFC(f){
+  if(currentFile&&currentFile.id===f.id) return;
+  currentFile=f;
+  renderSidebar();
+  ovHide('ovWelcome'); ovHide('ovError'); ovShow('ovLoading');
+  setLoadText('Iniciando web-ifc...');
+  document.getElementById('vtLabel').textContent=f.name;
+  cerrarProps();
+  document.getElementById('metaStrip').classList.remove('show');
+
+  try {
+    var api = await getIfcApi();
+
+    /* Cerrar modelo anterior si había uno abierto */
+    if(_IFC_OPEN_MODEL >= 0){
+      try{ api.CloseModel(_IFC_OPEN_MODEL); }catch(e){}
+      _IFC_OPEN_MODEL = -1;
+    }
+
+    setLoadText('Parseando geometría...');
+    var buf=await f.file.arrayBuffer();
+    var mid=api.OpenModel(new Uint8Array(buf),{COORDINATE_TO_ORIGIN:true,OPTIMIZE_PROFILES:false});
+    _IFC_OPEN_MODEL = mid;
+
+    /* Limpiar escena anterior */
+    meshes.forEach(function(m){m.geometry.dispose();m.material.dispose();scene.remove(m)});
+    meshes=[]; selectedMesh=null;
+
+    /* Agrupar por categoría para crear un mesh por tipo */
+    var cats={};
+    api.StreamAllMeshes(mid,function(mesh){
+      var cls='DEFAULT';
+      try{
+        var ln=api.GetLine(mid,mesh.expressID,false);
+        if(ln&&ln.constructor&&ln.constructor.name) cls=ln.constructor.name.toUpperCase();
+      }catch(e){}
+      if(!cats[cls])cats[cls]={positions:[],normals:[],ids:[]};
+      var geoms=mesh.geometries;
+      for(var g=0;g<geoms.size();g++){
+        var pg=geoms.get(g);
+        if(!pg||!pg.geometryExpressID)continue;
+        try{
+          var geo=api.GetGeometry(mid,pg.geometryExpressID);
+          var vSize=geo.GetVertexDataSize(),iSize=geo.GetIndexSize();
+          if(vSize>0&&iSize>0){
+            var verts=api.GetVertexArray(geo.GetVertexData(),vSize);
+            var idx=api.GetIndexArray(geo.GetIndexData(),iSize);
+            var mat4=new THREE.Matrix4(); mat4.fromArray(pg.flatTransformation);
+            for(var i=0;i<idx.length;i+=3){
+              for(var j=0;j<3;j++){
+                var vi=idx[i+j]*6;
+                var v=new THREE.Vector3(verts[vi],verts[vi+1],verts[vi+2]).applyMatrix4(mat4);
+                cats[cls].positions.push(v.x,v.y,v.z);
+                cats[cls].normals.push(verts[vi+3],verts[vi+4],verts[vi+5]);
+              }
+            }
+          }
+          if(geo.delete)geo.delete();
+        }catch(e){}
+      }
+      cats[cls].ids.push(mesh.expressID);
+    });
+
+    setLoadText('Construyendo geometría 3D...');
+    var totalTris=0;
+    Object.keys(cats).forEach(function(cls){
+      var cd=cats[cls];
+      if(!cd.positions.length)return;
+      var col=CAT_COLORS[cls]||CAT_COLORS.DEFAULT;
+      var geo=new THREE.BufferGeometry();
+      geo.setAttribute('position',new THREE.Float32BufferAttribute(cd.positions,3));
+      geo.setAttribute('normal',new THREE.Float32BufferAttribute(cd.normals,3));
+      var mat=new THREE.MeshLambertMaterial({color:new THREE.Color(col[0],col[1],col[2]),side:THREE.DoubleSide});
+      var m=new THREE.Mesh(geo,mat);
+      m.userData={cls:cls,ids:cd.ids,baseColor:new THREE.Color(col[0],col[1],col[2])};
+      scene.add(m); meshes.push(m);
+      totalTris+=cd.positions.length/9;
+    });
+
+    /* Centrar cámara */
+    var bbox=new THREE.Box3(); meshes.forEach(function(m){bbox.expandByObject(m)});
+    if(!bbox.isEmpty()){
+      var center=bbox.getCenter(new THREE.Vector3());
+      var size=bbox.getSize(new THREE.Vector3()).length();
+      controls.target.copy(center);
+      camera.position.set(center.x+size*.7,center.y+size*.5,center.z+size*.7);
+      controls.update();
+    }
+
+    document.getElementById('hudElems').textContent=meshes.length;
+    document.getElementById('hudTris').textContent=Math.round(totalTris).toLocaleString();
+    /* NO cerramos el modelo aquí — lo necesita extraerMeta */
+
+    /* Metadatos — usando la misma instancia y mismo modelID */
+    extraerMeta(api, mid);
+    ovHide('ovLoading');
+
+  } catch(err){
+    ovHide('ovLoading');
+    mostrarError('Error al procesar el IFC: '+err.message);
+    console.error(err);
+  }
+}
+</script>
+<script>
+/* ═══════════════════════════════════════════════════
+   METADATOS IFC — misma instancia, mismo modelID
+═══════════════════════════════════════════════════ */
+function extraerMeta(api, mid){
+  try {
+    var mod = window._WIFC;
+
+    var schema='—';
+    try{ schema=api.GetModelSchema(mid)||'—'; }catch(e){}
+
+    var proy='—';
+    try{
+      var ids=api.GetLineIDsWithType(mid,mod.IFCPROJECT);
+      if(ids.size()>0){
+        var p=api.GetLine(mid,ids.get(0));
+        if(p&&p.Name&&p.Name.value) proy=p.Name.value;
+      }
+    }catch(e){}
+
+    var CAT_MAP={
+      IFCWALL:'Muros',IFCWALLSTANDARDCASE:'Muros',IFCSLAB:'Losas',
+      IFCCOLUMN:'Columnas',IFCBEAM:'Vigas',IFCDOOR:'Puertas',
+      IFCWINDOW:'Ventanas',IFCROOF:'Techos',IFCSPACE:'Espacios',
+      IFCSTAIR:'Escaleras',IFCFURNISHINGELEMENT:'Mobiliario'
+    };
+    var cats={};
+    Object.keys(CAT_MAP).forEach(function(k){
+      try{
+        var tid=mod[k]; if(tid==null) return;
+        var n=api.GetLineIDsWithType(mid,tid).size();
+        if(n>0) cats[CAT_MAP[k]]=(cats[CAT_MAP[k]]||0)+n;
+      }catch(e){}
+    });
+
+    /* Ahora sí cerramos el modelo — ya terminamos con él */
+    try{ api.CloseModel(mid); }catch(e){}
+    _IFC_OPEN_MODEL = -1;
+
+    document.getElementById('metaProy').textContent=proy;
+    document.getElementById('metaEsq').textContent=schema;
+    var cg=document.getElementById('metaCatsGroup');
+    if(Object.keys(cats).length){
+      document.getElementById('metaCats').innerHTML=Object.entries(cats).map(function(kv){
+        return '<div class="chip">'+kv[0]+' <b>'+kv[1]+'</b></div>';
+      }).join('');
+      cg.style.display='';
+    } else { cg.style.display='none'; }
+    document.getElementById('metaStrip').classList.add('show');
+  }catch(e){ console.warn('meta:',e); }
+}
+
+/* ═══════════════════════════════════════════════════
+   SELECCIÓN DE ELEMENTOS (click en el canvas)
+═══════════════════════════════════════════════════ */
+function onCanvasClick(e){
+  if(!meshes.length||!renderer3)return;
+  var rect=renderer3.domElement.getBoundingClientRect();
+  mouse.x=((e.clientX-rect.left)/rect.width)*2-1;
+  mouse.y=-((e.clientY-rect.top)/rect.height)*2+1;
+  raycaster.setFromCamera(mouse,camera);
+  var hits=raycaster.intersectObjects(meshes);
+
+  /* Deseleccionar anterior */
+  if(selectedMesh){
+    selectedMesh.material.emissive=new THREE.Color(0,0,0);
+    selectedMesh=null;
+  }
+  if(!hits.length){cerrarProps();return;}
+
+  selectedMesh=hits[0].object;
+  selectedMesh.material.emissive=new THREE.Color(0,0.25,0.35);
+
+  var cls=selectedMesh.userData.cls||'Desconocido';
+  var ids=selectedMesh.userData.ids||[];
+  var html='<div class="pp-row"><div class="pp-key">Clase IFC</div><div class="pp-val">'+esc(cls)+'</div></div>'+
+    '<div class="pp-row"><div class="pp-key">Elementos</div><div class="pp-val">'+ids.length+'</div></div>';
+  document.getElementById('propsBody').innerHTML=html;
+  document.getElementById('propsPanel').classList.add('show');
+}
+function cerrarProps(){
+  if(selectedMesh){selectedMesh.material.emissive=new THREE.Color(0,0,0);selectedMesh=null;}
+  document.getElementById('propsPanel').classList.remove('show');
+}
+
+/* ═══════════════════════════════════════════════════
+   CONTROLES DE CÁMARA Y MODOS
+═══════════════════════════════════════════════════ */
+function camView(v){
+  if(!meshes.length)return;
+  var bbox=new THREE.Box3();meshes.forEach(function(m){bbox.expandByObject(m)});
+  var c=bbox.getCenter(new THREE.Vector3()),s=bbox.getSize(new THREE.Vector3()).length(),d=s*1.4;
+  controls.target.copy(c);
+  if(v==='top')    camera.position.set(c.x,c.y+d,c.z+0.001);
+  else if(v==='front') camera.position.set(c.x,c.y,c.z+d);
+  else             camera.position.set(c.x+d*.6,c.y+d*.5,c.z+d*.6);
+  controls.update();
+}
+function resetCam(){ if(meshes.length)camView('iso'); }
+
+function toggleWire(){
+  wireMode=!wireMode;
+  document.getElementById('btnWire').classList.toggle('active',wireMode);
+  meshes.forEach(function(m){m.material.wireframe=wireMode;});
+}
+function toggleGhost(){
+  ghostMode=!ghostMode;
+  document.getElementById('btnGhost').classList.toggle('active',ghostMode);
+  meshes.forEach(function(m){
+    m.material.transparent=ghostMode;
+    m.material.opacity=ghostMode?0.35:1;
+  });
+}
+
+/* ═══════════════════════════════════════════════════
+   OVERLAYS
+═══════════════════════════════════════════════════ */
+function ovShow(id){document.getElementById(id).classList.remove('hidden');}
+function ovHide(id){document.getElementById(id).classList.add('hidden');}
+function setLoadText(t){document.getElementById('ovLoadText').textContent=t;}
+function mostrarError(msg){document.getElementById('ovErrDesc').textContent=msg;ovShow('ovError');}
+function cerrarError(){ovHide('ovError');ovShow('ovWelcome');}
+
+function limpiarVisor(){
+  meshes.forEach(function(m){m.geometry.dispose();m.material.dispose();scene.remove(m)});
+  meshes=[];selectedMesh=null;
+  document.getElementById('vtLabel').textContent='Sin modelo';
+  document.getElementById('hudElems').textContent='—';
+  document.getElementById('hudTris').textContent='—';
+  document.getElementById('metaStrip').classList.remove('show');
+  cerrarProps(); ovHide('ovLoading'); ovHide('ovError'); ovShow('ovWelcome');
+}
+
+/* ═══════════════════════════════════════════════════
+   DOCS
+═══════════════════════════════════════════════════ */
+function renderDocs(){
+  var docs=FILES.filter(function(f){return f.tipo!=='ifc'});
+  var panel=document.getElementById('docsPanel');
+  if(!docs.length){
+    panel.innerHTML='<div class="sb-empty" style="padding:40px;align-self:center"><span class="sb-empty-icon">📄</span><div class="sb-empty-text">Sube documentos PDF o DWG.</div></div>';
+    return;
+  }
+  panel.innerHTML=docs.map(function(f){
+    return '<div class="doc-row" onclick="window.open(\''+f.url+'\',\'_blank\')">'+
+      '<div style="font-size:18px">'+icon(f.ext)+'</div>'+
+      '<div style="flex:1;min-width:0"><div class="doc-name">'+esc(f.name)+'</div><div class="doc-meta">'+fmtSize(f.size)+'</div></div>'+
+      '<div class="sb-item-badge '+badgeCls(f.ext)+'">'+f.ext.toUpperCase()+'</div></div>';
+  }).join('');
+}
+
+/* ═══════════════════════════════════════════════════
+   INPUTS Y DRAG & DROP
+═══════════════════════════════════════════════════ */
+function onFilesInput(e){agregarArchivos(e.target.files);e.target.value='';}
+function sbDragOver(e){e.preventDefault();document.getElementById('sbDropzone').classList.add('drag-over');}
+function sbDragLeave(){document.getElementById('sbDropzone').classList.remove('drag-over');}
+function sbDrop(e){e.preventDefault();document.getElementById('sbDropzone').classList.remove('drag-over');agregarArchivos(e.dataTransfer.files);}
+function vaDragOver(e){e.preventDefault();document.getElementById('viewerArea').style.outline='2px dashed #00d4ff';}
+function vaDragLeave(){document.getElementById('viewerArea').style.outline='';}
+function vaDrop(e){
+  e.preventDefault();document.getElementById('viewerArea').style.outline='';
+  var ifc=Array.from(e.dataTransfer.files).filter(function(f){return ext(f.name)==='ifc'});
+  if(!ifc.length){mostrarError('Solo se admiten archivos .ifc aquí.');return;}
+  agregarArchivos(e.dataTransfer.files);
+  var found=FILES.find(function(f){return f.name===ifc[0].name});
+  if(found){viewTab('v3d');cargarIFC(found);}
+}
+
+/* ═══════════════════════════════════════════════════
+   INICIO
+═══════════════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded',function(){
+  initViewer();
+});
+</script>
 </body>
 </html>
