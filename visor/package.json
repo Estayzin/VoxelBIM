@@ -1,0 +1,19 @@
+{
+  "name": "visor-bim",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite"
+  },
+  "dependencies": {
+    "@thatopen/components": "*",
+    "@thatopen/components-front": "*",
+    "@thatopen/ui": "*",
+    "@thatopen/ui-obc": "*",
+    "three": "*",
+    "stats.js": "*"
+  },
+  "devDependencies": {
+    "vite": "*"
+  }
+}

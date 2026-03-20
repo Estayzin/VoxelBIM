@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visor BIM — Carlos Estay Ruggieri</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#060d18; --blue:#0a1628; --accent:#00d4ff; --green:#00c853;
+  --bg:#0a0f1e; --card:#0d1526; --text:#c8d8f0; --muted:#4a6080;
+  --border:#1a2a40; --mono:'JetBrains Mono',monospace; --sans:'Inter',sans-serif;
+  --accent2:#7c4dff; --warn:#ff6b35; --red:#ff3d57;
+}
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html,body { height:100%; overflow:hidden; }
+body { font-family:var(--sans); background:var(--bg); color:var(--text); display:flex; flex-direction:column; height:100vh; font-size:13px; }
+
+/* HEADER */
+header { background:var(--navy); padding:10px 20px; display:flex; align-items:center; gap:12px; border-bottom:2px solid var(--accent); flex-shrink:0; box-shadow:0 2px 20px rgba(0,212,255,.08); }
+.hicon { width:30px; height:30px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+.htitle { font:600 12px var(--mono); color:#e0f0ff; letter-spacing:.08em; text-transform:uppercase; }
+.hsub { font:400 10px var(--mono); color:var(--muted); margin-top:1px; }
+.hback { margin-left:auto; padding:5px 12px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:4px; font:600 9px var(--mono); text-transform:uppercase; letter-spacing:.1em; text-decoration:none; transition:all .15s; cursor:pointer; }
+.hback:hover { border-color:var(--accent); color:var(--accent); }
+
+/* LAYOUT */
+.main { display:flex; flex:1; overflow:hidden; }
+
+/* SIDEBAR */
+.sidebar { width:260px; flex-shrink:0; background:var(--blue); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+.sb-header { padding:12px; border-bottom:1px solid var(--border); flex-shrink:0; display:flex; flex-direction:column; gap:10px; }
+.sb-title { font:700 9px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.2em; }
+
+/* Dropzone */
+.dropzone { border:1px dashed var(--border); border-radius:6px; padding:16px 12px; text-align:center; cursor:pointer; transition:all .2s; background:rgba(0,212,255,.02); }
+.dropzone:hover,.dropzone.over { border-color:var(--accent); background:rgba(0,212,255,.06); }
+.dz-icon { font-size:24px; opacity:.5; margin-bottom:4px; }
+.dz-label { font:600 10px var(--mono); color:var(--text); text-transform:uppercase; letter-spacing:.08em; }
+.dz-sub { font:400 9px var(--mono); color:var(--muted); margin-top:2px; }
+
+/* Progreso */
+.progress-wrap { display:none; flex-direction:column; gap:5px; }
+.progress-wrap.show { display:flex; }
+.progress-label { font:400 9px var(--mono); color:var(--accent); letter-spacing:.05em; }
+.progress-bar-bg { height:3px; background:rgba(255,255,255,.08); border-radius:2px; }
+.progress-bar-fill { height:100%; background:linear-gradient(90deg,var(--accent),#00bcd4); width:0%; transition:width .3s ease; border-radius:2px; }
+</style>
+<style>
+/* INFO MODELO */
+.model-info { display:none; background:var(--card); border-radius:5px; border-left:3px solid var(--accent); padding:8px 10px; }
+.model-info.show { display:block; }
+.mi-name { font:600 10px var(--mono); color:var(--accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mi-meta { font:400 9px var(--mono); color:var(--muted); margin-top:2px; }
+
+/* CONTROLES */
+.sb-controls { padding:10px 12px; display:flex; flex-direction:column; gap:8px; flex:1; overflow-y:auto; }
+.ctrl-title { font:700 9px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.15em; margin-bottom:2px; }
+.ctrl-btn { width:100%; padding:7px 10px; background:transparent; color:var(--text); border:1px solid var(--border); border-radius:4px; font:600 10px var(--mono); cursor:pointer; transition:all .15s; text-align:left; text-transform:uppercase; letter-spacing:.08em; display:flex; align-items:center; gap:7px; }
+.ctrl-btn:hover { border-color:var(--accent); color:var(--accent); background:rgba(0,212,255,.04); }
+.ctrl-btn.active { border-color:var(--accent); color:#000; background:var(--accent); }
+.ctrl-btn .icon { font-size:14px; }
+.ctrl-sep { height:1px; background:var(--border); margin:4px 0; }
+
+/* TOOLTIP */
+#tooltip { display:none; position:fixed; pointer-events:none; z-index:9999;
+  background:rgba(6,13,24,.92); border:1px solid var(--accent); border-radius:5px;
+  padding:5px 10px; font:600 10px var(--mono); color:var(--accent);
+  letter-spacing:.08em; white-space:nowrap; box-shadow:0 0 12px rgba(0,212,255,.2); }
+#tooltip .tt-sub { font:400 9px var(--mono); color:var(--muted); margin-top:2px; }
+
+/* VISOR */
+.viewer-wrap { flex:1; position:relative; background:#050b14; overflow:hidden; }
+#container { position:absolute; inset:0; width:100%; height:100%; }
+
+/* OVERLAY WELCOME */
+#overlay { position:absolute; inset:0; background:#050b14; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; z-index:20; pointer-events:none; }
+#overlay.hidden { display:none; }
+.ov-icon { font-size:40px; opacity:.15; }
+.ov-text { font:400 10px var(--mono); color:var(--muted); letter-spacing:.1em; text-transform:uppercase; }
+
+/* PANEL REPORTE */
+#reportePanel { width:290px; flex-shrink:0; background:var(--blue); border-left:1px solid var(--border); display:none; flex-direction:column; overflow:hidden; }
+#reportePanel.show { display:flex; }
+.rp-header { padding:9px 12px 8px; border-bottom:1px solid var(--border); flex-shrink:0; display:flex; align-items:center; gap:8px; }
+.rp-title { font:700 9px var(--mono); color:var(--accent); text-transform:uppercase; letter-spacing:.18em; flex:1; }
+.rp-esp-row { padding:7px 12px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:7px; flex-shrink:0; }
+.rp-esp-label { font:400 9px var(--mono); color:var(--muted); white-space:nowrap; }
+.rp-esp-sel { flex:1; background:var(--navy); color:var(--text); border:1px solid var(--border); border-radius:4px; font:500 10px var(--mono); padding:4px 8px; cursor:pointer; outline:none; }
+.rp-esp-sel:focus { border-color:var(--accent); }
+.rp-body { flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:8px; }
+.rp-sec { background:var(--navy); border:1px solid var(--border); border-radius:5px; overflow:hidden; }
+.rp-sec-hdr { padding:6px 10px; display:flex; align-items:center; gap:6px; cursor:pointer; }
+.rp-sec-hdr:hover { background:rgba(255,255,255,.02); }
+.rp-sec-title { font:700 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.15em; flex:1; }
+.rp-badge { font:700 8px var(--mono); padding:2px 6px; border-radius:3px; }
+.rp-ok { background:rgba(0,200,83,.12); color:#00c853; }
+.rp-err { background:rgba(255,61,87,.12); color:#ff3d57; }
+.rp-warn { background:rgba(255,107,53,.12); color:#ff6b35; }
+.rp-info { background:rgba(0,212,255,.08); color:var(--accent); }
+.rp-content { border-top:1px solid var(--border); max-height:300px; overflow-y:auto; }
+.rp-table { width:100%; border-collapse:collapse; }
+.rp-table td { padding:5px 10px; border-bottom:1px solid rgba(26,42,64,.4); font:400 10px var(--mono); color:var(--text); vertical-align:middle; }
+.rp-table tr:last-child td { border-bottom:none; }
+.td-name { max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.td-cls { font-size:8px; color:var(--muted); }
+.td-qty { text-align:right; font-weight:700; color:var(--accent); }
+.td-qty.zero { color:var(--muted); font-weight:400; }
+.td-ok { text-align:center; width:24px; }
+.ic-ok { color:#00c853; } .ic-err { color:#ff3d57; }
+.rp-msg { padding:8px 10px; font:400 10px var(--mono); color:var(--muted); line-height:1.5; }
+.rp-arr { font-size:10px; color:var(--muted); transition:transform .15s; }
+.rp-arr.open { transform:rotate(90deg); }
+/* Botón hider por fila */
+.btn-hide-row { padding:2px 6px; background:transparent; border:1px solid var(--border); border-radius:3px; font:600 8px var(--mono); color:var(--muted); cursor:pointer; transition:all .15s; white-space:nowrap; }
+.btn-hide-row:hover { border-color:var(--accent); color:var(--accent); }
+.btn-hide-row.isolated { border-color:var(--green); color:var(--green); background:rgba(0,200,83,.08); }
+</style>
+</head>
+<body>
+  <header>
+    <div class="hicon">🏗️</div>
+    <div>
+      <div class="htitle">Visor BIM</div>
+      <div class="hsub">Carlos Estay Ruggieri · v1.0 | 2026</div>
+    </div>
+    <a class="hback" href="../explorer.html">← Volver al Revisor</a>
+  </header>
+
+  <div class="main">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sb-header">
+        <div class="sb-title">Modelo IFC</div>
+
+        <div class="dropzone" id="dropzone">
+          <input type="file" id="fileInput" accept=".ifc" style="display:none">
+          <div class="dz-icon">📂</div>
+          <div class="dz-label">Arrastra tu IFC aquí</div>
+          <div class="dz-sub">o haz clic para seleccionar</div>
+        </div>
+
+        <div class="progress-wrap" id="progressWrap">
+          <div class="progress-label" id="progressLabel">Convirtiendo IFC... 0%</div>
+          <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+        </div>
+
+        <div class="model-info" id="modelInfo">
+          <div class="mi-name" id="modelName">—</div>
+          <div class="mi-meta" id="modelMeta">—</div>
+        </div>
+      </div>
+
+      <div class="sb-controls">
+        <div class="ctrl-title">Navegación</div>
+        <button class="ctrl-btn" id="btnFit"><span class="icon">🎯</span> Centrar modelo</button>
+        <button class="ctrl-btn" id="btnOrbit"><span class="icon">🔄</span> Modo órbita</button>
+        <button class="ctrl-btn" id="btnPlan"><span class="icon">📐</span> Vista planta</button>
+
+        <div class="ctrl-sep"></div>
+        <div class="ctrl-title">Herramientas</div>
+        <button class="ctrl-btn" id="btnProps"><span class="icon">📋</span> Propiedades</button>
+        <button class="ctrl-btn" id="btnClip"><span class="icon">✂️</span> Plano de corte</button>
+        <button class="ctrl-btn" id="btnMeasure"><span class="icon">📏</span> Medir distancia</button>
+
+        <div class="ctrl-sep"></div>
+        <div class="ctrl-title">Visibilidad</div>
+        <button class="ctrl-btn" id="btnResetVis"><span class="icon">👁️</span> Mostrar todo</button>
+      </div>
+    </div>
+
+    <!-- VISOR 3D -->
+    <div class="viewer-wrap">
+      <div id="container"></div>
+      <div id="overlay">
+        <div class="ov-icon">🏗️</div>
+        <div class="ov-text">Carga un archivo IFC para comenzar</div>
+      </div>
+      <div id="tooltip"><div id="tt-class"></div><div class="tt-sub" id="tt-name"></div></div>
+    </div>
+
+    <!-- PANEL PROPIEDADES -->
+    <div id="propsPanel">
+      <div class="pp-header">
+        <div class="pp-title">Propiedades</div>
+        <button class="pp-close" id="propsClose">✕</button>
+      </div>
+      <div class="pp-body" id="propsBody"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
