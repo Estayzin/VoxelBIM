@@ -133,6 +133,7 @@ header{background:var(--navy);padding:10px 20px;display:flex;align-items:center;
 .rp-sec{background:var(--navy);border:1px solid var(--border);border-radius:5px;overflow:hidden}
 .rp-sec-hdr{padding:6px 10px;display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
 .rp-sec-hdr:hover{background:rgba(255,255,255,.02)}
+.rp-content{max-height:220px;overflow-y:auto}
 .rp-sec-title{font:700 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.15em;flex:1}
 .rp-badge{font:700 8px var(--mono);padding:2px 6px;border-radius:3px}
 .rp-ok{background:rgba(0,200,83,.12);color:#00c853}
@@ -158,6 +159,16 @@ header{background:var(--navy);padding:10px 20px;display:flex;align-items:center;
 .rp-row-sel{cursor:pointer;transition:background .12s}
 .rp-row-sel:hover td{background:rgba(0,212,255,.05)}
 .rp-row-sel.rp-active td{background:rgba(0,212,255,.12);border-left:2px solid var(--accent)}
+/* Categorías sección 5 */
+.rp-cat-hdr{cursor:pointer;background:rgba(0,212,255,.04)}
+.rp-cat-hdr:hover td{background:rgba(0,212,255,.08)}
+.rp-cat-hdr.open td{background:rgba(0,212,255,.06)}
+.rp-cat-hdr td{padding:5px 10px;font:700 9px var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.1em}
+.rp-cat-arrow{float:right;transition:transform .15s;display:inline-block}
+.rp-cat-hdr.open .rp-cat-arrow{transform:rotate(90deg)}
+.rp-tipo-row{display:none}
+.rp-tipo-row.visible{display:table-row}
+.rp-tipo-row td{padding:4px 10px 4px 20px;font:400 10px var(--mono);color:var(--text);background:rgba(0,0,0,.15)}
 </style>
 <style>
 /* ══ PANTALLA BIENVENIDA ══ */
@@ -307,11 +318,23 @@ header{background:var(--navy);padding:10px 20px;display:flex;align-items:center;
                 <span class="rp-esp-label">Especialidad:</span>
                 <select id="espSelect" class="rp-esp-sel" onchange="cambiarEsp(this.value)" title="Especialidad del modelo">
                   <option value="ARQ">Arquitectura</option>
-                  <option value="EST">Estructura</option>
-                  <option value="MEC">Mecánica / HVAC</option>
-                  <option value="ELE">Eléctrico</option>
-                  <option value="SAN">Sanitario</option>
-                  <option value="COO">Coordinación</option>
+                  <option value="EST">Estructural</option>
+                  <option value="SIT">Sitio</option>
+                  <option value="VOL">Volumetrico</option>
+                  <option value="APO">Agua Potable</option>
+                  <option value="ATR">Aguas Tratadas</option>
+                  <option value="ALC">Alcantarillado</option>
+                  <option value="ALL">Aguas Lluvias</option>
+                  <option value="CLI">Climatizacion</option>
+                  <option value="COM">Combustible</option>
+                  <option value="ELE">Electricidad</option>
+                  <option value="ILU">Iluminacion</option>
+                  <option value="CEC">Corrientes Debiles</option>
+                  <option value="CCT">Control Centralizado</option>
+                  <option value="PCI">Proteccion Incendios</option>
+                  <option value="GCL">Gases Clinicos</option>
+                  <option value="COR">Correo Neumatico</option>
+                  <option value="COO">Coordinacion</option>
                 </select>
               </div>
             </div>
@@ -450,75 +473,53 @@ function onResize(){
 /* ═══ PARSER IFC + VERIFICACIONES ═══ */
 var CAT_COLORS={IFCWALL:[0.55,0.72,0.95],IFCWALLSTANDARDCASE:[0.55,0.72,0.95],IFCSLAB:[0.65,0.65,0.82],IFCCOLUMN:[1.0,0.82,0.35],IFCBEAM:[1.0,0.65,0.25],IFCDOOR:[0.3,0.95,0.65],IFCWINDOW:[0.3,0.92,1.0],IFCROOF:[0.82,0.45,0.45],IFCSPACE:[0.4,0.8,0.5],IFCSTAIR:[0.9,0.7,0.4],IFCFURNISHINGELEMENT:[0.8,0.6,0.95],DEFAULT:[0.5,0.62,0.72]};
 
-/* ── Entidades por especialidad ── */
-var ENTS_POR_ESP={
-  ARQ:[
-    ['IFCWALL','Muro'],['IFCWALLSTANDARDCASE','Muro Estándar'],['IFCCURTAINWALL','Muro Cortina'],
-    ['IFCSLAB','Losa'],['IFCSLABSTANDARDCASE','Losa Estándar'],
-    ['IFCDOOR','Puerta'],['IFCWINDOW','Ventana'],
-    ['IFCROOF','Cubierta'],['IFCSTAIR','Escalera'],['IFCRAILING','Baranda'],
-    ['IFCCOVERING','Revestimiento'],['IFCSPACE','Espacio'],
-    ['IFCFURNITURE','Mobiliario'],['IFCPLATE','Placa'],['IFCMEMBER','Miembro'],
-    ['IFCSITE','Sitio'],['IFCBUILDING','Edificio'],['IFCBUILDINGSTOREY','Nivel'],
-  ],
-  EST:[
-    ['IFCCOLUMN','Columna'],['IFCBEAM','Viga'],['IFCFOOTING','Fundación'],
-    ['IFCSLAB','Losa'],['IFCSLABSTANDARDCASE','Losa Estándar'],
-    ['IFCWALL','Muro'],['IFCWALLSTANDARDCASE','Muro Estándar'],
-    ['IFCPILE','Pilote'],['IFCPLATE','Placa'],['IFCMEMBER','Miembro'],
-    ['IFCREINFORCINGBAR','Armadura'],['IFCREINFORCINGELEMENT','Elemento Armado'],
-    ['IFCBUILDINGSTOREY','Nivel'],
-  ],
-  MEC:[
-    ['IFCDUCTSEGMENT','Ducto'],['IFCDUCTFITTING','Fitting Ducto'],
-    ['IFCPIPESEGMENT','Tubería'],['IFCPIPEFITTING','Fitting Tubería'],
-    ['IFCAIRTERMINAL','Terminal Aire'],['IFCUNITARYEQUIPMENT','Equipo Unitario'],
-    ['IFCPUMP','Bomba'],['IFCFAN','Ventilador'],['IFCFILTER','Filtro'],
-    ['IFCFLOWCONTROLLER','Controlador Flujo'],['IFCFLOWMETER','Medidor Flujo'],
-    ['IFCVALVE','Válvula'],['IFCTANK','Estanque'],['IFCBOILER','Caldera'],
-    ['IFCCHILLER','Enfriadora'],['IFCCOIL','Serpentín'],
-    ['IFCBUILDINGSTOREY','Nivel'],
-  ],
-  ELE:[
-    ['IFCLIGHTFIXTURE','Luminaria'],['IFCELECTRICDISTRIBUTIONBOARD','Tablero Eléctrico'],
-    ['IFCCABLECARRIERFITTING','Fitting Bandeja'],['IFCCABLECARRIERSEGMENT','Bandeja Cable'],
-    ['IFCELECTRICAPPLIANCE','Artefacto Eléctrico'],['IFCELECTRICMOTOR','Motor Eléctrico'],
-    ['IFCELECTRICGENERATOR','Generador'],['IFCTRANSFORMER','Transformador'],
-    ['IFCSENSOR','Sensor'],['IFCALARM','Alarma'],['IFCACTUATOR','Actuador'],
-    ['IFCPROTECTIVEDEVICE','Dispositivo Protección'],['IFCSWITCHINGDEVICE','Interruptor'],
-    ['IFCBUILDINGSTOREY','Nivel'],
-  ],
-  SAN:[
-    ['IFCPIPESEGMENT','Tubería'],['IFCPIPEFITTING','Fitting Tubería'],
-    ['IFCSANITARYTERMINAL','Aparato Sanitario'],['IFCVALVE','Válvula'],
-    ['IFCPUMP','Bomba'],['IFCTANK','Estanque'],['IFCWASTETERMINAL','Terminal Desagüe'],
-    ['IFCFLOWMETER','Medidor Flujo'],['IFCINTERCEPTOR','Interceptor'],
-    ['IFCFIRESUPPRESSIONTERMINAL','Supresión Incendio'],
-    ['IFCBUILDINGSTOREY','Nivel'],
-  ],
+/* ── Especialidades (listado oficial) ── */
+var ESP={
+  "Coordinacion"        :{cod:"COO",ents:[["IFCGRID","Grilla"],["IFCSITE","Sitio"],["IFCBUILDING","Edificio"],["IFCBUILDINGSTOREY","Nivel"],["IFCSPACE","Espacio"],["IFCZONE","Zona"],["IFCWALL","Muro"],["IFCCURTAINWALL","Muro Cortina"],["IFCWINDOW","Ventana"],["IFCDOOR","Puerta"],["IFCROOF","Cubierta"],["IFCCOVERING","Cielo Falso / Piso"],["IFCBEAM","Viga"],["IFCCOLUMN","Columna"],["IFCFOOTING","Fundacion"],["IFCSLAB","Losa"],["IFCSTAIR","Escalera"],["IFCRAMP","Rampa"],["IFCRAILING","Baranda"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCDUCTSEGMENT","Segmento de Ducto"],["IFCDUCTFITTING","Fitting de Ducto"],["IFCCABLECARRIERSEGMENT","Bandeja de Cable"],["IFCCABLECARRIERFITTING","Fitting Bandeja de Cable"],["IFCELECTRICDISTRIBUTIONBOARD","Tablero Electrico"],["IFCAIRTERMINAL","Terminal de Aire"],["IFCDAMPER","Compuerta"],["IFCPUMP","Bomba"],["IFCTANK","Estanque"],["IFCVALVE","Valvula"],["IFCLIGHTFIXTURE","Luminaria"],["IFCSENSOR","Sensor"],["IFCFIRESUPPRESSIONTERMINAL","Terminal Supresion Incendio"],["IFCALARM","Alarma"],["IFCMEDICALDEVICE","Dispositivo Medico"],["IFCFURNITURE","Mobiliario"],["IFCTRANSPORTELEMENT","Elemento de Transporte"],["IFCSANITARYTERMINAL","Aparato Sanitario"],["IFCWASTETERMINAL","Terminal de Residuos"],["IFCOUTLET","Salida Electrica"],["IFCSWITCHINGDEVICE","Interruptor"],["IFCUNITARYEQUIPMENT","Equipo Unitario"],["IFCCHILLER","Enfriador"],["IFCDISTRIBUTIONCHAMBERELEME","Camara de Distribucion"],["IFCDISTRIBUTIONELEMENT","Elemento de Distribucion"],["IFCAUDIOVISUALAPPLIANCE","Equipo Audiovisual"],["IFCCOMMUNICATIONSAPPLIANCE","Equipo de Comunicaciones"]]},
+  "Sitio"               :{cod:"SIT",ents:[["IFCGRID","Grilla"],["IFCSITE","Sitio"],["IFCCIVILELEMENT","Elemento Civil"],["IFCGEOGRAPHICELEMENT","Elemento Geografico"],["IFCSLAB","Losa"],["IFCWALL","Muro"]]},
+  "Arquitectura"        :{cod:"ARQ",ents:[["IFCGRID","Grilla"],["IFCWALL","Muro"],["IFCCURTAINWALL","Muro Cortina"],["IFCWINDOW","Ventana"],["IFCDOOR","Puerta"],["IFCROOF","Cubierta"],["IFCCOVERING","Cielo Falso / Piso"],["IFCSANITARYTERMINAL","Aparato Sanitario"],["IFCRAILING","Baranda"],["IFCFURNITURE","Mobiliario"],["IFCVALVE","Valvula"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCWASTETERMINAL","Terminal de Residuos"],["IFCTRANSPORTELEMENT","Elemento de Transporte"],["IFCSPACE","Espacio"],["IFCZONE","Zona"]]},
+  "Volumetrico"         :{cod:"VOL",ents:[["IFCGRID","Grilla"],["IFCZONE","Zona"],["IFCSPACE","Espacio"]]},
+  "Estructural"         :{cod:"EST",ents:[["IFCGRID","Grilla"],["IFCBEAM","Viga"],["IFCCOLUMN","Columna"],["IFCFOOTING","Fundacion"],["IFCSLAB","Losa"],["IFCWALL","Muro"]]},
+  "Agua Potable"        :{cod:"APO",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCPUMP","Bomba"],["IFCTANK","Estanque"],["IFCVALVE","Valvula"]]},
+  "Aguas Tratadas"      :{cod:"ATR",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCPUMP","Bomba"],["IFCTANK","Estanque"],["IFCVALVE","Valvula"]]},
+  "Alcantarillado"      :{cod:"ALC",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCDISTRIBUTIONCHAMBERELEME","Camara de Distribucion"]]},
+  "Corrientes Debiles"  :{cod:"CEC",ents:[["IFCGRID","Grilla"],["IFCCABLECARRIERSEGMENT","Bandeja de Cable"],["IFCCABLECARRIERFITTING","Fitting Bandeja de Cable"],["IFCDISTRIBUTIONCHAMBERELEME","Camara de Distribucion"],["IFCOUTLET","Salida Electrica"],["IFCSENSOR","Sensor"],["IFCAUDIOVISUALAPPLIANCE","Equipo Audiovisual"],["IFCCOMMUNICATIONSAPPLIANCE","Equipo de Comunicaciones"],["IFCELECTRICDISTRIBUTIONBOARD","Tablero Electrico"]]},
+  "Climatizacion"       :{cod:"CLI",ents:[["IFCGRID","Grilla"],["IFCAIRTERMINAL","Terminal de Aire"],["IFCDAMPER","Compuerta"],["IFCDUCTFITTING","Fitting de Ducto"],["IFCDUCTSEGMENT","Segmento de Ducto"],["IFCUNITARYEQUIPMENT","Equipo Unitario"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCPUMP","Bomba"],["IFCSOLARDEVICE","Equipo Solar"],["IFCTANK","Estanque"],["IFCCHILLER","Enfriador"],["IFCVALVE","Valvula"]]},
+  "Combustible"         :{cod:"COM",ents:[["IFCGRID","Grilla"],["IFCTANK","Estanque"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCVALVE","Valvula"]]},
+  "Control Centralizado":{cod:"CCT",ents:[["IFCGRID","Grilla"],["IFCELECTRICDISTRIBUTIONBOARD","Tablero Electrico"],["IFCDISTRIBUTIONCONTROLELEMENT","Elemento de Control"]]},
+  "Correo Neumatico"    :{cod:"COR",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCDISTRIBUTIONELEMENT","Elemento de Distribucion"]]},
+  "Aguas Lluvias"       :{cod:"ALL",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCDISTRIBUTIONCHAMBERELEME","Camara de Distribucion"]]},
+  "Gases Clinicos"      :{cod:"GCL",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCVALVE","Valvula"],["IFCUNITARYCONTROLELEMENT","Elemento de Control Unitario"],["IFCTANK","Estanque"],["IFCMEDICALDEVICE","Dispositivo Medico"]]},
+  "Iluminacion"         :{cod:"ILU",ents:[["IFCGRID","Grilla"],["IFCLIGHTFIXTURE","Luminaria"],["IFCSWITCHINGDEVICE","Interruptor"]]},
+  "Proteccion Incendios":{cod:"PCI",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCSENSOR","Sensor"],["IFCTANK","Estanque"],["IFCPUMP","Bomba"],["IFCFIRESUPPRESSIONTERMINAL","Terminal Supresion Incendio"],["IFCALARM","Alarma"],["IFCVALVE","Valvula"]]},
+  "Electricidad"        :{cod:"ELE",ents:[["IFCGRID","Grilla"],["IFCCABLECARRIERSEGMENT","Bandeja de Cable"],["IFCCABLECARRIERFITTING","Fitting Bandeja de Cable"],["IFCDISTRIBUTIONCHAMBERELEME","Camara de Distribucion"],["IFCELECTRICDISTRIBUTIONBOARD","Tablero Electrico"]]}
 };
-/* Coordinación = unión de todas las especialidades sin duplicados */
-(function(){
-  var visto={},todas=[];
-  ['ARQ','EST','MEC','ELE','SAN'].forEach(function(esp){
-    ENTS_POR_ESP[esp].forEach(function(e){
-      if(!visto[e[0]]){visto[e[0]]=true;todas.push(e);}
-    });
-  });
-  ENTS_POR_ESP.COO=todas;
-})();
 
-var LABEL_ESP={ARQ:'Arquitectura',EST:'Estructura',MEC:'Mecánica / HVAC',ELE:'Eléctrico',SAN:'Sanitario',COO:'Coordinación'};
+/* Adaptar ESP al formato ENTS_POR_ESP[cod] para compatibilidad */
+var ENTS_POR_ESP={};
+for(var k in ESP){ ENTS_POR_ESP[ESP[k].cod]=ESP[k].ents; }
+
+var LABEL_ESP={};
+for(var k in ESP){ LABEL_ESP[ESP[k].cod]=k; }
 var _espActual='ARQ';
+var _estActual=null;
 
-function detectarEspecialidad(nombreArchivo){
-  var n=(nombreArchivo||'').toUpperCase();
-  if(/\bCOO\b|COORD/.test(n)) return 'COO';
-  if(/\bEST\b|ESTRUCT|STRUCTURAL/.test(n)) return 'EST';
-  if(/\bMEC\b|HVAC|MECAN|MECHANICAL/.test(n)) return 'MEC';
-  if(/\bELE\b|ELECT|ELECTRICAL/.test(n)) return 'ELE';
-  if(/\bSAN\b|SANIT|PLUMB|FONTANER/i.test(n)) return 'SAN';
-  return 'ARQ';
+var COD_PRIO={SIT:1,VOL:1};
+function detectarEspecialidad(nombre){
+  var upper=(nombre||'').toUpperCase();
+  var partes=upper.split(/[_\-\s\.]+/);
+  for(var i=0;i<partes.length;i++){
+    for(var k in ESP){if(ESP[k].cod===partes[i])return ESP[k].cod;}
+  }
+  var prioCod=null;
+  for(var k in ESP){
+    var cod=ESP[k].cod;
+    if(upper.indexOf(cod)!==-1){
+      if(COD_PRIO[cod]){prioCod=cod;break;}
+      if(!prioCod)prioCod=cod;
+    }
+  }
+  return prioCod||'ARQ';
 }
 
 function cambiarEsp(val){
@@ -615,13 +616,16 @@ function verificarOrigen(est){
 function verificarNombres(est){
   var res=[];
   [{t:'IFCSITE',n:3},{t:'IFCBUILDING',n:2}].forEach(function(r){
+    var encontrado=false;
     for(var id in est.instancias){
       if(est.instancias[id].cls===r.t){
         var raw=extraerRaw(est.texto,est.instancias[id].pos),attrs=splitAttrs(raw);
         var nombre=strVal(attrs[2])||strVal(attrs[1])||'';
-        res.push({tipo:r.t,nombre:nombre,largo:nombre.length,esperado:r.n,ok:nombre.length===r.n});break;
+        res.push({tipo:r.t,nombre:nombre,largo:nombre.length,esperado:r.n,ok:nombre.length===r.n});
+        encontrado=true;break;
       }
     }
+    if(!encontrado) res.push({tipo:r.t,nombre:'(no encontrado)',largo:0,esperado:r.n,ok:false});
   });
   return res;
 }
@@ -660,12 +664,35 @@ function rpToggle(uid){
   arr.textContent=open?'▾':'▸';
 }
 
+function toggleCat(uid){
+  var hdr=document.getElementById('hdr_'+uid);
+  var isOpen=hdr.classList.contains('open');
+  /* cerrar todos los grupos de la misma tabla */
+  var tabla=hdr.closest('table');
+  if(tabla){
+    tabla.querySelectorAll('.rp-cat-hdr.open').forEach(function(h){
+      h.classList.remove('open');
+    });
+    tabla.querySelectorAll('.rp-tipo-row.visible').forEach(function(r){
+      r.classList.remove('visible');
+    });
+  }
+  if(!isOpen){
+    hdr.classList.add('open');
+    var i=0;
+    while(true){
+      var row=document.getElementById('tipo_'+uid+'_'+i);
+      if(!row)break;
+      row.classList.add('visible');
+      i++;
+    }
+  }
+}
+
 /* ── Destacar elementos en 3D ── */
-var _estActual=null;
 var _claseDestacada=null;
 
 function destacar3D(clases){
-  /* clases: array de strings IFC o null para resetear */
   if(!meshes.length)return;
   if(!clases||!clases.length){
     _claseDestacada=null;
@@ -676,16 +703,34 @@ function destacar3D(clases){
     return;
   }
   _claseDestacada=clases;
+  var activosMeshes=[];
   meshes.forEach(function(m){
     var activo=clases.indexOf(m.userData.cls)>=0;
     if(activo){
       m.material.color.copy(m.userData.baseColor);
       m.material.opacity=1;m.material.transparent=false;
+      activosMeshes.push(m);
     } else {
       m.material.color.set(0x1a2a40);
       m.material.opacity=0.18;m.material.transparent=true;
     }
   });
+  /* Enfocar cámara en los meshes activos */
+  if(activosMeshes.length&&camera&&controls){
+    var bbox=new THREE.Box3();
+    activosMeshes.forEach(function(m){bbox.expandByObject(m);});
+    if(!bbox.isEmpty()){
+      var center=bbox.getCenter(new THREE.Vector3());
+      var size=bbox.getSize(new THREE.Vector3()).length();
+      controls.target.copy(center);
+      camera.position.set(
+        center.x+size*0.6,
+        center.y+size*0.5,
+        center.z+size*0.6
+      );
+      controls.update();
+    }
+  }
 }
 
 function rpSelRow(tr,clases){
@@ -704,6 +749,26 @@ function renderReporte(est){
   _estActual=est;
   var html='';
   var conteo=est.conteo;
+  /* Mapa clase IFC → nombre legible e ícono (disponible en todas las secciones) */
+  var IFC_NOM={};
+  for(var k in ESP){ESP[k].ents.forEach(function(e){if(!IFC_NOM[e[0]])IFC_NOM[e[0]]=e[1];});}
+  var IFC_ICO={
+    IFCWALL:'🧱',IFCWALLSTANDARDCASE:'🧱',IFCCURTAINWALL:'🪟',
+    IFCSLAB:'⬜',IFCSLABSTANDARDCASE:'⬜',IFCROOF:'🏠',
+    IFCCOLUMN:'🏛️',IFCBEAM:'📐',IFCFOOTING:'⚓',IFCPILE:'📌',
+    IFCDOOR:'🚪',IFCWINDOW:'🪟',IFCRAILING:'🔩',
+    IFCSTAIR:'🪜',IFCRAMP:'↗️',IFCCOVERING:'🪵',
+    IFCFURNITURE:'🪑',IFCTRANSPORTELEMENT:'🛗',IFCSANITARYTERMINAL:'🚿',
+    IFCWASTETERMINAL:'🗑️',IFCPIPESEGMENT:'💧',IFCPIPEFITTING:'🔧',
+    IFCDUCTSEGMENT:'💨',IFCDUCTFITTING:'🔧',IFCPUMP:'⚙️',
+    IFCTANK:'🛢️',IFCVALVE:'🔩',IFCAIRTERMINAL:'💨',IFCDAMPER:'🔲',
+    IFCUNITARYEQUIPMENT:'❄️',IFCCHILLER:'❄️',
+    IFCLIGHTFIXTURE:'💡',IFCSWITCHINGDEVICE:'🔌',IFCOUTLET:'🔌',
+    IFCELECTRICDISTRIBUTIONBOARD:'⚡',IFCCABLECARRIERSEGMENT:'📡',
+    IFCSENSOR:'📡',IFCALARM:'🚨',IFCFIRESUPPRESSIONTERMINAL:'🔥',
+    IFCMEDICALDEVICE:'🏥',IFCSITE:'🌍',IFCBUILDING:'🏢',IFCBUILDINGSTOREY:'📊',
+    IFCGRID:'#',IFCZONE:'🗺️',IFCSPACE:'🔵',
+  };
 
   /* 1. Origen */
   var orig=verificarOrigen(est);
@@ -746,8 +811,8 @@ function renderReporte(est){
       var ids=est.elemsPorNivel[r.id.replace('#','')]||[];
       /* obtener clases únicas de los elementos del nivel */
       var clases=ids.map(function(id){return est.instancias[id]?est.instancias[id].cls:null;}).filter(function(c,i,a){return c&&a.indexOf(c)===i;});
-      var clasesJson=JSON.stringify(clases).replace(/"/g,"'").replace(/'/g,"\\'");
-      return '<tr class="rp-row-sel" onclick="rpSelRow(this,'+JSON.stringify(clases)+')" title="Clic para destacar en 3D">'+
+      var clasesStr=clases.map(function(c){return "'"+c+"'";}).join(',');
+      return '<tr class="rp-row-sel" onclick="rpSelRow(this,['+clasesStr+'])" title="Clic para destacar en 3D">'+
         '<td class="td-name">'+esc(r.nombre||'(sin nombre)')+'</td>'+
         '<td style="text-align:center;font:400 9px var(--mono);color:var(--muted)">'+r.largo+' car.</td>'+
         '<td class="td-ok">'+(r.ok?'<span class="ic-ok">✓</span>':'<span class="ic-err">✗</span>')+
@@ -765,42 +830,58 @@ function renderReporte(est){
     var cls=e[0],nom=e[1],qty=conteo[cls]||0;
     if(qty>0)presentes++;
     totalEnts+=qty;
-    filas+='<tr class="rp-row-sel" onclick="rpSelRow(this,'+JSON.stringify([cls])+')" title="Clic para destacar en 3D">'+
-      '<td class="td-name">'+nom+'<div class="td-cls">'+cls.charAt(0)+cls.slice(1).toLowerCase()+'</div></td>'+
+    filas+='<tr class="rp-row-sel" onclick="rpSelRow(this,[\'' + cls + '\'])" title="Clic para destacar en 3D">'+
+      '<td class="td-name">'+(IFC_ICO&&IFC_ICO[cls]?IFC_ICO[cls]+' ':'')+nom+'<div class="td-cls">'+cls.charAt(0)+cls.slice(1).toLowerCase()+'</div></td>'+
       '<td class="td-qty'+(qty===0?' zero':'')+'">'+qty+'</td>'+
       '<td class="td-ok">'+(qty>0?'<span class="ic-ok">✓</span>':'<span class="ic-err">✗</span>')+'</td>'+
       '</tr>';
   });
   var pctPres=espEnts.length?Math.round(presentes/espEnts.length*100):0;
   var bCls=pctPres===100?'rp-ok':pctPres>50?'rp-warn':'rp-err';
+  /* Entidades sin clasificar: IFCBUILDINGELEMENTPROXY */
+  var qtyProxy=conteo['IFCBUILDINGELEMENTPROXY']||0;
+  if(qtyProxy>0){
+    filas+='<tr class="rp-row-sel" onclick="rpSelRow(this,[\'IFCBUILDINGELEMENTPROXY\'])" title="Elementos sin clasificar">'+
+      '<td class="td-name" style="color:var(--warn)">⚠️ Sin clasificar<div class="td-cls">Ifcbuildingelementproxy</div></td>'+
+      '<td class="td-qty" style="color:var(--warn)">'+qtyProxy+'</td>'+
+      '<td class="td-ok"><span style="color:var(--warn)">⚠</span></td>'+
+      '</tr>';
+  }
   html+=rpSec('4.Entidades IFC',presentes+'/'+espEnts.length+' presentes',bCls,
     '<table class="rp-table">'+filas+'</table>',true);
 
   /* 5. Familias y Tipos */
   var tipos=est.tipos||[];
   if(tipos.length){
-    var grupos={};
+    /* Agrupar por clase base */
+    var catGrupos={};
     tipos.forEach(function(t){
-      var g=t.cls.charAt(0)+t.cls.slice(1).toLowerCase();
-      if(!grupos[g])grupos[g]=[];
-      grupos[g].push(t);
+      var claseBase=t.cls.replace(/TYPE[A-Z0-9]*$/,'');
+      if(!catGrupos[claseBase])catGrupos[claseBase]={claseBase:claseBase,tipos:[]};
+      var ids=est.elemsPorTipo[t.id.replace('#','')]||[];
+      catGrupos[claseBase].tipos.push({nombre:t.nombre,ids:ids,claseBase:claseBase});
     });
-    var tiposFilas='';
-    Object.keys(grupos).sort().forEach(function(g){
-      grupos[g].forEach(function(t,i){
-        var rawId=t.id.replace('#','');
-        var ids=est.elemsPorTipo[rawId]||[];
-        /* clase base: IFCWALLTYPE → IFCWALL */
-        var claseBase=t.cls.replace(/TYPE$/,'');
-        tiposFilas+='<tr class="rp-row-sel" onclick="rpSelRow(this,'+JSON.stringify([claseBase])+')" title="Clic para destacar en 3D">'+
-          '<td class="td-name" style="color:var(--accent);font-size:9px">'+(i===0?g:'')+'</td>'+
-          '<td style="font:400 10px var(--mono);color:var(--text)">'+esc(t.nombre)+'</td>'+
-          '<td class="td-qty" style="font-size:9px">'+ids.length+'</td>'+
-          '</tr>';
+    var tiposHtml='<table class="rp-table" style="width:100%">';
+    Object.keys(catGrupos).sort().forEach(function(claseBase,ci){
+      var cat=catGrupos[claseBase];
+      var uid='cat'+ci;
+      var total=cat.tipos.reduce(function(s,t){return s+t.ids.length;},0);
+      var nomLeg=IFC_NOM[claseBase]||'';
+      var ico=IFC_ICO[claseBase]||'📦';
+      tiposHtml+='<tr class="rp-cat-hdr" id="hdr_'+uid+'" onclick="toggleCat(\''+uid+'\')">' +
+        '<td colspan="2">'+ico+' '+
+        (nomLeg?nomLeg+'<div class="td-cls">'+claseBase+'</div>':claseBase)+
+        ' <span style="color:var(--muted);font-weight:400">('+cat.tipos.length+' · '+total+' inst.)</span>'+
+        '<span class="rp-cat-arrow">&#9656;</span></td></tr>';
+      cat.tipos.forEach(function(t,ti){
+        tiposHtml+='<tr class="rp-tipo-row rp-row-sel" id="tipo_'+uid+'_'+ti+'" '+
+          'onclick="rpSelRow(this,[\'' + t.claseBase + '\'])">'+
+          '<td style="padding-left:24px;font:400 10px var(--mono)">'+esc(t.nombre)+'</td>'+
+          '<td class="td-qty" style="text-align:right">'+t.ids.length+'</td></tr>';
       });
     });
-    html+=rpSec('5.Familias y Tipos',tipos.length+' tipos','rp-info',
-      '<table class="rp-table">'+tiposFilas+'</table>',false);
+    tiposHtml+='</table>';
+    html+=rpSec('5.Familias y Tipos',tipos.length+' tipos','rp-info',tiposHtml,false);
   } else {
     html+=rpSec('5.Familias y Tipos','Sin datos','rp-info',
       '<div class="rp-msg">No se encontraron tipos IFC en este archivo.</div>',false);
@@ -829,6 +910,25 @@ async function cargarIFC(f){
     var est=parsearIFC(texto);
 
     /* Construir cajas 3D */
+    /* Dimensiones representativas por clase IFC [ancho, alto, prof] */
+    var CAT_DIMS={
+      IFCWALL:[0.3,3.0,4.0],IFCWALLSTANDARDCASE:[0.3,3.0,4.0],IFCCURTAINWALL:[0.15,3.5,4.0],
+      IFCSLAB:[4.0,0.3,4.0],IFCSLABSTANDARDCASE:[4.0,0.3,4.0],IFCROOF:[5.0,0.25,5.0],
+      IFCCOLUMN:[0.4,3.5,0.4],IFCCOLUMNSTANDARDCASE:[0.4,3.5,0.4],
+      IFCBEAM:[3.0,0.4,0.3],IFCBEAMSTANDARDCASE:[3.0,0.4,0.3],
+      IFCFOOTING:[1.5,0.4,1.5],IFCPILE:[0.3,3.0,0.3],
+      IFCDOOR:[1.0,2.2,0.15],IFCWINDOW:[1.2,1.2,0.15],
+      IFCSTAIR:[1.5,0.2,3.0],IFCRAMP:[2.0,0.15,4.0],IFCRAILING:[0.08,1.0,3.0],
+      IFCCOVERING:[3.0,0.1,3.0],IFCSPACE:[4.0,2.8,4.0],
+      IFCFURNITURE:[0.8,0.8,0.8],IFCSANITARYTERMINAL:[0.6,0.8,0.6],
+      IFCPIPESEGMENT:[0.15,0.15,3.0],IFCPIPEFITTING:[0.2,0.2,0.2],
+      IFCDUCTSEGMENT:[0.5,0.3,3.0],IFCDUCTFITTING:[0.4,0.4,0.4],
+      IFCPUMP:[0.6,0.8,0.6],IFCTANK:[1.0,1.5,1.0],IFCVALVE:[0.2,0.3,0.2],
+      IFCAIRTERMINAL:[0.6,0.1,0.6],IFCDAMPER:[0.5,0.3,0.1],
+      IFCLIGHTFIXTURE:[0.3,0.1,0.6],IFCELECTRICDISTRIBUTIONBOARD:[0.6,1.2,0.2],
+      IFCCABLECARRIERSEGMENT:[0.3,0.1,3.0],IFCSENSOR:[0.1,0.1,0.1],
+      IFCALARM:[0.15,0.15,0.1],IFCFIRESUPPRESSIONTERMINAL:[0.1,0.5,0.1],
+    };
     setLoadText('Construyendo visualización...');
     var categorias=Object.keys(est.conteo).filter(function(c){return c.indexOf('IFC')===0;});
     var totalElems=0,col_idx=0;
@@ -836,12 +936,13 @@ async function cargarIFC(f){
       var qty=est.conteo[cls];if(!qty)return;
       totalElems+=qty;
       var col=CAT_COLORS[cls]||CAT_COLORS.DEFAULT;
+      var dims=CAT_DIMS[cls]||[1.5,1.5,1.5];
       var cols_n=Math.ceil(Math.sqrt(Math.min(qty,200)));
       var positions=[],normals=[];
       for(var i=0;i<Math.min(qty,200);i++){
         var row=Math.floor(i/cols_n),c=i%cols_n;
-        var geo=new THREE.BoxGeometry(3,0.3+Math.random()*2,3);
-        geo.translate(col_idx*12+c*4,0,row*4);
+        var geo=new THREE.BoxGeometry(dims[0],dims[1],dims[2]);
+        geo.translate(col_idx*12+c*(dims[0]+1),0,row*(dims[2]+1));
         Array.from(geo.attributes.position.array).forEach(function(v){positions.push(v);});
         Array.from(geo.attributes.normal.array).forEach(function(v){normals.push(v);});
         geo.dispose();
