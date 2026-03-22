@@ -604,7 +604,7 @@ function renderSecTipos(est, filtrarCls) {
         const idx = window._tiposIdx.length;
         window._tiposIdx.push({ cls, fam, tip, nombre: `${fam}:${tip}` });
         const rowId = 'tr_' + idx;
-        inner += `<tr class="tipo-row" id="${rowId}" onclick="window.destacarTipo(${idx},this)" title="Clic para destacar en 3D">
+        inner += `<tr class="tipo-row" id="${rowId}" onclick="window.destacarTipo(${idx},this,event)" title="Clic para destacar en 3D">
           <td class="td-name" style="padding-left:${filtrarCls?'10':'20'}px">
             <span style="font:400 9px var(--mono);color:var(--muted);display:block;margin-bottom:1px">${esc(fam)}</span>
             <span style="font:600 10px var(--mono);color:var(--text)">${esc(tip)}</span>
@@ -685,31 +685,73 @@ window.onEntidadClick = async (cls, e) => {
   actualizarSec5(isolatedCategories.size === 1 ? [...isolatedCategories][0] : null);
 };
 
-window.destacarTipo = async (idx, rowEl) => {
-  document.querySelectorAll('.tipo-row.tipo-active').forEach(r => r.classList.remove('tipo-active'));
-  if (rowEl._tipoActivo) { rowEl._tipoActivo=false; try{await highlighter.clear('select');}catch(e){} return; }
-  document.querySelectorAll('.tipo-row').forEach(r => r._tipoActivo=false);
-  rowEl._tipoActivo = true;
-  rowEl.classList.add('tipo-active');
+// Mapa de tipos activos: idx → Set de localIds
+const _tiposActivos = new Map();
+
+window.destacarTipo = async (idx, rowEl, e) => {
+  const ctrlPressed = e?.ctrlKey || e?.metaKey || false;
   const info = window._tiposIdx?.[idx];
   if (!info) return;
   const { cls, fam, tip } = info;
-  const modelIdMap = {};
+
+  // Recoger los localIds que coinciden con este tipo
+  const matchingIds = {};
   for (const [,model] of fragments.list) {
     try {
-      const items=await model.getItemsOfCategories([new RegExp(`^${cls}$`)]);
-      const ids=Object.values(items).flat(); const matching=[];
+      const items = await model.getItemsOfCategories([new RegExp(`^${cls}$`)]);
+      const ids = Object.values(items).flat();
+      const matching = [];
       for (const localId of ids) {
-        const [data]=await model.getItemsData([localId]); if(!data) continue;
-        // Buscar elementos con Name = "Familia:Tipo:*" o exactamente "Familia:Tipo"
+        const [data] = await model.getItemsData([localId]); if (!data) continue;
         const name = data.Name?.value || '';
         const prefijo = `${fam}:${tip}`;
         if (name === prefijo || name.startsWith(prefijo + ':')) matching.push(localId);
       }
-      if (matching.length) modelIdMap[model.modelId]=new Set(matching);
-    } catch(e){}
+      if (matching.length) matchingIds[model.modelId] = new Set(matching);
+    } catch(e) {}
   }
-  if (Object.keys(modelIdMap).length) try{await highlighter.highlightByID('select',modelIdMap,true,true);}catch(e){}
+
+  if (!ctrlPressed) {
+    // Sin Ctrl: deseleccionar todo, seleccionar solo este tipo
+    document.querySelectorAll('.tipo-row.tipo-active').forEach(r => { r.classList.remove('tipo-active'); r._tipoActivo = false; });
+    _tiposActivos.clear();
+    if (rowEl._tipoActivo) {
+      // Era el único activo → deseleccionar
+      rowEl._tipoActivo = false;
+      try { await highlighter.clear('select'); } catch(e) {}
+      return;
+    }
+  } else {
+    // Con Ctrl: toggle este tipo
+    if (rowEl._tipoActivo) {
+      rowEl._tipoActivo = false;
+      rowEl.classList.remove('tipo-active');
+      _tiposActivos.delete(idx);
+    } else {
+      rowEl._tipoActivo = true;
+      rowEl.classList.add('tipo-active');
+      _tiposActivos.set(idx, matchingIds);
+    }
+    // Reconstruir selección combinada
+    const combined = {};
+    for (const [, mids] of _tiposActivos) {
+      for (const [modelId, ids] of Object.entries(mids)) {
+        if (!combined[modelId]) combined[modelId] = new Set();
+        for (const id of ids) combined[modelId].add(id);
+      }
+    }
+    if (_tiposActivos.size === 0) { try { await highlighter.clear('select'); } catch(e) {} return; }
+    try { await highlighter.highlightByID('select', combined, true, true); } catch(e) {}
+    return;
+  }
+
+  // Selección nueva (sin Ctrl)
+  rowEl._tipoActivo = true;
+  rowEl.classList.add('tipo-active');
+  _tiposActivos.set(idx, matchingIds);
+  if (Object.keys(matchingIds).length) {
+    try { await highlighter.highlightByID('select', matchingIds, true, true); } catch(e) {}
+  }
 };
 
 const espSel = document.getElementById('espSel');
