@@ -274,14 +274,10 @@ highlighter.events.select.onClear.add(() => renderProps(null, null));
 const hider = components.get(OBC.Hider);
 const isolatedCategories = new Set();
 
-const _setOrbit = () => { world.camera.set("Orbit"); world.camera.projection.set("Perspective"); document.getElementById("btnOrbit").classList.add("active"); document.getElementById("btnPlan").classList.remove("active"); };
-const _setPlan = () => { world.camera.set("Plan"); world.camera.projection.set("Orthographic"); document.getElementById("btnPlan").classList.add("active"); document.getElementById("btnOrbit").classList.remove("active"); };
 document.getElementById("btnFit").addEventListener("click", () => world.camera.fitToItems());
-document.getElementById("btnOrbit").addEventListener("click", _setOrbit);
-document.getElementById("btnPlan").addEventListener("click", _setPlan);
 document.getElementById("btnFitSb").addEventListener("click", () => world.camera.fitToItems());
-document.getElementById("btnOrbitSb").addEventListener("click", _setOrbit);
-document.getElementById("btnPlanSb").addEventListener("click", _setPlan);
+document.getElementById("btnOrbitSb").addEventListener("click", () => { world.camera.set("Orbit"); world.camera.projection.set("Perspective"); });
+document.getElementById("btnPlanSb").addEventListener("click", () => { world.camera.set("Plan"); world.camera.projection.set("Orthographic"); });
 document.getElementById("btnProps").addEventListener("click", () => {
   propsPanel.classList.toggle("show");
   document.getElementById("btnProps").classList.toggle("active", propsPanel.classList.contains("show"));
