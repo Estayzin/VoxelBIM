@@ -276,16 +276,18 @@ const isolatedCategories = new Set();
 
 document.getElementById("btnFit").addEventListener("click", () => world.camera.fitToItems());
 
-document.getElementById("btnPlan").addEventListener("click", () => {
+document.getElementById("btnPlan").addEventListener("click", async () => {
   world.camera.set("Plan");
   world.camera.projection.set("Orthographic");
+  await world.camera.controls.setLookAt(0, 200, 0, 0, 0, 0, true);
   document.getElementById("btnPlan").classList.add("active");
   document.getElementById("btn3D").classList.remove("active");
 });
 
-document.getElementById("btn3D").addEventListener("click", () => {
+document.getElementById("btn3D").addEventListener("click", async () => {
   world.camera.set("Orbit");
   world.camera.projection.set("Perspective");
+  await world.camera.controls.setLookAt(50, 30, 50, 0, 0, 0, true);
   document.getElementById("btn3D").classList.add("active");
   document.getElementById("btnPlan").classList.remove("active");
 });
