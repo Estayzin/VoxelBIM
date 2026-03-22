@@ -275,18 +275,11 @@ const hider = components.get(OBC.Hider);
 const isolatedCategories = new Set();
 
 document.getElementById("btnFit").addEventListener("click", () => world.camera.fitToItems());
-document.getElementById("btnPlan").addEventListener("click", async () => {
-  const btn = document.getElementById("btnPlan");
-  if (btn.classList.contains("active")) {
-    world.camera.set("Orbit");
-    world.camera.projection.set("Perspective");
-    btn.classList.remove("active");
-  } else {
-    world.camera.set("Plan");
-    world.camera.projection.set("Orthographic");
-    await world.camera.controls.setLookAt(0, 200, 0.001, 0, 0, 0, true);
-    btn.classList.add("active");
-  }
+document.getElementById("btn3D").addEventListener("click", () => {
+  world.camera.set("Orbit");
+  world.camera.projection.set("Perspective");
+  document.getElementById("btn3D").classList.add("active");
+  setTimeout(() => document.getElementById("btn3D").classList.remove("active"), 300);
 });
 document.getElementById("btnFitSb").addEventListener("click", () => world.camera.fitToItems());
 document.getElementById("btnOrbitSb").addEventListener("click", () => { world.camera.set("Orbit"); world.camera.projection.set("Perspective"); _planMode = false; document.getElementById("btnPlan").classList.remove("active"); });
