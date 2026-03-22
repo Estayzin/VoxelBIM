@@ -76,6 +76,8 @@ let _clsFiltroActiva = null;
 let _espActual = 'ARQ';
 let _estActual = null;
 let _nombreArchivoActual = '';
+let _cfgX = 0, _cfgY = 0, _cfgZ = 0;
+let _cfgSite = 3, _cfgBuilding = 2, _cfgStorey = 5;
 
 const setProgress = (v) => {
   const pct = Math.round(v * 100);
@@ -301,9 +303,9 @@ function parsearIFC(texto) {
 }
 function getPunto(r,inst,t){if(!r||!inst[r]||inst[r].cls!=='IFCCARTESIANPOINT')return null;const c=extraerRaw(t,inst[r].pos).replace(/[\(\)]/g,'').split(',').map(v=>parseFloat(v)||0);return{x:c[0]||0,y:c[1]||0,z:c[2]||0};}
 function getOffset(plRef,inst,t){if(!plRef||!inst[plRef])return null;const lp=splitAttrs(extraerRaw(t,inst[plRef].pos));let ap=null;for(let i=0;i<lp.length;i++){const r=refId(lp[i]);if(r&&inst[r]&&(inst[r].cls==='IFCAXIS2PLACEMENT3D'||inst[r].cls==='IFCAXIS2PLACEMENT2D')){ap=r;break;}}if(!ap)return null;return getPunto(refId(splitAttrs(extraerRaw(t,inst[ap].pos))[0]),inst,t);}
-function verificarOrigen(est){const res=[];['IFCSITE','IFCBUILDING'].forEach(tipo=>{for(const id in est.instancias){if(est.instancias[id].cls===tipo){const attrs=splitAttrs(extraerRaw(est.texto,est.instancias[id].pos));const nombre=strVal(attrs[2])||strVal(attrs[1])||'(sin nombre)';let plRef=null;for(let i=3;i<=8&&i<attrs.length;i++){const rid=refId(attrs[i]);if(rid&&est.instancias[rid]&&est.instancias[rid].cls==='IFCLOCALPLACEMENT'){plRef=rid;break;}}let x=null,y=null,z=null;if(plRef){const off=getOffset(plRef,est.instancias,est.texto);if(off){x=off.x;y=off.y;z=off.z;}}res.push({tipo,nombre,x,y,z,ok:x===null||(Math.abs(x)<0.001&&Math.abs(y)<0.001&&Math.abs(z)<0.001)});break;}}});return res;}
-function verificarNombres(est){const res=[];[{tipo:'IFCSITE',min:3},{tipo:'IFCBUILDING',min:2}].forEach(cfg=>{for(const id in est.instancias){if(est.instancias[id].cls===cfg.tipo){const attrs=splitAttrs(extraerRaw(est.texto,est.instancias[id].pos));const nombre=strVal(attrs[2])||strVal(attrs[1])||'';res.push({tipo:cfg.tipo,nombre,largo:nombre.length,ok:nombre.length>=cfg.min});break;}}});return res;}
-function verificarNiveles(est){const niveles=[];for(const id in est.instancias){if(est.instancias[id].cls==='IFCBUILDINGSTOREY'){const attrs=splitAttrs(extraerRaw(est.texto,est.instancias[id].pos));const nombre=strVal(attrs[2])||strVal(attrs[1])||'';niveles.push({id:'#'+id,nombre,largo:nombre.length,ok:nombre.length>=5});}}return niveles;}
+function verificarOrigen(est){const res=[];['IFCSITE','IFCBUILDING'].forEach(tipo=>{for(const id in est.instancias){if(est.instancias[id].cls===tipo){const attrs=splitAttrs(extraerRaw(est.texto,est.instancias[id].pos));const nombre=strVal(attrs[2])||strVal(attrs[1])||'(sin nombre)';let plRef=null;for(let i=3;i<=8&&i<attrs.length;i++){const rid=refId(attrs[i]);if(rid&&est.instancias[rid]&&est.instancias[rid].cls==='IFCLOCALPLACEMENT'){plRef=rid;break;}}let x=null,y=null,z=null;if(plRef){const off=getOffset(plRef,est.instancias,est.texto);if(off){x=off.x;y=off.y;z=off.z;}}res.push({tipo,nombre,x,y,z,ok:x===null||(Math.abs(x-_cfgX)<0.001&&Math.abs(y-_cfgY)<0.001&&Math.abs(z-_cfgZ)<0.001)});break;}}});return res;}
+function verificarNombres(est){const res=[];[{tipo:'IFCSITE',min:_cfgSite},{tipo:'IFCBUILDING',min:_cfgBuilding}].forEach(cfg=>{for(const id in est.instancias){if(est.instancias[id].cls===cfg.tipo){const attrs=splitAttrs(extraerRaw(est.texto,est.instancias[id].pos));const nombre=strVal(attrs[2])||strVal(attrs[1])||'';res.push({tipo:cfg.tipo,nombre,largo:nombre.length,ok:nombre.length>=cfg.min});break;}}});return res;}
+function verificarNiveles(est){const niveles=[];for(const id in est.instancias){if(est.instancias[id].cls==='IFCBUILDINGSTOREY'){const attrs=splitAttrs(extraerRaw(est.texto,est.instancias[id].pos));const nombre=strVal(attrs[2])||strVal(attrs[1])||'';niveles.push({id:'#'+id,nombre,largo:nombre.length,ok:nombre.length>=_cfgStorey});}}return niveles;}
 function rpSec(t,b,bc,inner,open){return`<div class="rp-sec"><div class="rp-sec-hdr" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'"><span class="rp-sec-title">${t}</span><span class="rp-badge ${bc}">${b}</span></div><div class="rp-content" style="display:${open?'block':'none'}">${inner}</div></div>`;}
 
 function renderReporte(est) {
@@ -311,7 +313,7 @@ function renderReporte(est) {
 
   // Banner MEI
   html += `<div style="margin-bottom:10px;padding:10px 12px;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.15);border-left:3px solid var(--accent);border-radius:5px;">
-    <div style="font:700 9px var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.15em;margin-bottom:4px;">📋 Reporte MEI — Modelo de Entrega de Información</div>
+    <div style="font:700 9px var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.15em;margin-bottom:4px;">📋 Reporte Manual de entrega de información</div>
     <div style="font:400 9px var(--mono);color:var(--muted);line-height:1.7;">Este reporte ejecuta las pruebas definidas en el MEI, verificando que el modelo IFC cumpla con los requisitos de entrega según especialidad.</div>
     <div style="font:400 9px var(--mono);color:var(--muted);line-height:1.7;">Las secciones 3.1 a 3.5 corresponden a los criterios de revisión establecidos en el estándar PlanBIM Chile.</div>
   </div>`;
@@ -555,5 +557,59 @@ function detectarEspecialidad(nombre) {
 }
 
 const reportePanel = document.getElementById('reportePanel');
-document.getElementById('reporteClose').addEventListener('click', ()=>{ reportePanel.classList.remove('show'); document.getElementById('btnReporte').classList.remove('active'); });
-document.getElementById('btnReporte').addEventListener('click', ()=>{ reportePanel.classList.toggle('show'); document.getElementById('btnReporte').classList.toggle('active',reportePanel.classList.contains('show')); });
+const modalCfg = document.getElementById('modalCfg');
+
+// Poblar select de especialidades en el modal
+const mcfgEsp = document.getElementById('mcfgEsp');
+Object.keys(ESP).forEach(k => {
+  const opt = document.createElement('option');
+  opt.value = ESP[k].cod;
+  opt.textContent = `${k} (${ESP[k].cod})`;
+  mcfgEsp.append(opt);
+});
+
+// Abrir modal al hacer clic en Reporte (solo si hay modelo cargado)
+document.getElementById('btnReporte').addEventListener('click', () => {
+  if (!_estActual) {
+    reportePanel.classList.toggle('show');
+    document.getElementById('btnReporte').classList.toggle('active', reportePanel.classList.contains('show'));
+    return;
+  }
+  // Precargar valores detectados
+  mcfgEsp.value = _espActual;
+  document.getElementById('mcfgX').value = 0;
+  document.getElementById('mcfgY').value = 0;
+  document.getElementById('mcfgZ').value = 0;
+  document.getElementById('mcfgSite').value = 3;
+  document.getElementById('mcfgBuilding').value = 2;
+  document.getElementById('mcfgStorey').value = 5;
+  modalCfg.style.display = 'flex';
+});
+
+// Cancelar
+document.getElementById('mcfgCancel').addEventListener('click', () => {
+  modalCfg.style.display = 'none';
+});
+
+// Confirmar → aplicar config y generar reporte
+document.getElementById('mcfgOk').addEventListener('click', () => {
+  _espActual = mcfgEsp.value;
+  _cfgX = parseFloat(document.getElementById('mcfgX').value) || 0;
+  _cfgY = parseFloat(document.getElementById('mcfgY').value) || 0;
+  _cfgZ = parseFloat(document.getElementById('mcfgZ').value) || 0;
+  _cfgSite = parseInt(document.getElementById('mcfgSite').value) || 3;
+  _cfgBuilding = parseInt(document.getElementById('mcfgBuilding').value) || 2;
+  _cfgStorey = parseInt(document.getElementById('mcfgStorey').value) || 5;
+  espSel.value = _espActual;
+  _tiposCache = null;
+  _clsFiltroActiva = null;
+  modalCfg.style.display = 'none';
+  renderReporte(_estActual);
+  reportePanel.classList.add('show');
+  document.getElementById('btnReporte').classList.add('active');
+});
+
+document.getElementById('reporteClose').addEventListener('click', () => {
+  reportePanel.classList.remove('show');
+  document.getElementById('btnReporte').classList.remove('active');
+});

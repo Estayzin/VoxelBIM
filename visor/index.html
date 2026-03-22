@@ -288,6 +288,53 @@ body.light-mode .viewer-wrap { background:#c8d8e8; }
     </div>
   </div>
 
+  <!-- MODAL CONFIGURACIÓN REPORTE -->
+  <div id="modalCfg" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);align-items:center;justify-content:center;">
+    <div style="background:var(--blue);border:1px solid var(--border);border-top:2px solid var(--accent);border-radius:8px;padding:20px;width:300px;display:flex;flex-direction:column;gap:12px;box-shadow:0 0 40px rgba(0,212,255,.15);">
+      <div style="font:700 10px var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.15em;">⚙️ Configuración del Reporte</div>
+
+      <!-- Especialidad -->
+      <div>
+        <label style="display:block;font:600 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:5px;">Especialidad</label>
+        <select id="mcfgEsp" style="width:100%;padding:6px 8px;background:var(--navy);color:var(--text);border:1px solid var(--border);border-radius:4px;font:500 10px var(--mono);outline:none;cursor:pointer;"></select>
+      </div>
+
+      <!-- Coordenadas origen -->
+      <div>
+        <label style="display:block;font:600 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:5px;">Posición Local esperada</label>
+        <div style="display:flex;gap:6px;">
+          <div style="flex:1;"><label style="font:400 8px var(--mono);color:var(--muted);">X</label><input id="mcfgX" type="number" value="0" step="any" style="width:100%;padding:5px 6px;background:var(--navy);color:var(--text);border:1px solid var(--border);border-radius:3px;font:400 10px var(--mono);text-align:center;outline:none;"></div>
+          <div style="flex:1;"><label style="font:400 8px var(--mono);color:var(--muted);">Y</label><input id="mcfgY" type="number" value="0" step="any" style="width:100%;padding:5px 6px;background:var(--navy);color:var(--text);border:1px solid var(--border);border-radius:3px;font:400 10px var(--mono);text-align:center;outline:none;"></div>
+          <div style="flex:1;"><label style="font:400 8px var(--mono);color:var(--muted);">Z</label><input id="mcfgZ" type="number" value="0" step="any" style="width:100%;padding:5px 6px;background:var(--navy);color:var(--text);border:1px solid var(--border);border-radius:3px;font:400 10px var(--mono);text-align:center;outline:none;"></div>
+        </div>
+      </div>
+
+      <!-- Caracteres Sitio -->
+      <div>
+        <label style="display:block;font:600 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:5px;">N° caracteres IfcSite</label>
+        <input id="mcfgSite" type="number" value="3" min="1" max="50" style="width:100%;padding:6px 8px;background:var(--navy);color:var(--text);border:1px solid var(--border);border-radius:4px;font:400 11px var(--mono);text-align:center;outline:none;">
+      </div>
+
+      <!-- Caracteres Edificio -->
+      <div>
+        <label style="display:block;font:600 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:5px;">N° caracteres IfcBuilding</label>
+        <input id="mcfgBuilding" type="number" value="2" min="1" max="50" style="width:100%;padding:6px 8px;background:var(--navy);color:var(--text);border:1px solid var(--border);border-radius:4px;font:400 11px var(--mono);text-align:center;outline:none;">
+      </div>
+
+      <!-- Caracteres Niveles -->
+      <div>
+        <label style="display:block;font:600 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:5px;">N° caracteres IfcBuildingStorey</label>
+        <input id="mcfgStorey" type="number" value="5" min="1" max="50" style="width:100%;padding:6px 8px;background:var(--navy);color:var(--text);border:1px solid var(--border);border-radius:4px;font:400 11px var(--mono);text-align:center;outline:none;">
+      </div>
+
+      <!-- Botones -->
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button id="mcfgCancel" style="flex:1;padding:8px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:4px;font:600 9px var(--mono);cursor:pointer;text-transform:uppercase;letter-spacing:.1em;">Cancelar</button>
+        <button id="mcfgOk" style="flex:2;padding:8px;background:linear-gradient(135deg,var(--accent),#00bcd4);color:#000;border:none;border-radius:4px;font:700 9px var(--mono);cursor:pointer;text-transform:uppercase;letter-spacing:.1em;">▶ Generar Reporte</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>
