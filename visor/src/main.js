@@ -485,7 +485,7 @@ function renderReporte(est) {
   // Banner MEI
   html += `<div style="margin:0 8px 8px 8px;padding:10px 12px;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.15);border-left:3px solid var(--accent);border-radius:5px;">
     <div style="font:700 9px var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.15em;margin-bottom:4px;">✅ Reporte MEI</div>
-    <div style="font:400 9px var(--mono);color:var(--muted);line-height:1.7;">Pruebas MEI según estándar PlanBIM Chile — secciones 3.1 a 3.5. Verifica que el modelo IFC cumpla con los requisitos de entrega por especialidad.</div>
+    <div style="font:400 9px var(--mono);color:var(--muted);line-height:1.7;">Verifica el cumplimiento del modelo IFC según el estándar PlanBIM Chile — secciones 3.1 a 3.5.</div>
   </div>`;
 
   // 3.1 Identificación del modelo
