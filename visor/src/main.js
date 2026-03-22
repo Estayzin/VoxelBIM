@@ -216,51 +216,55 @@ highlighter.events.select.onHighlight.add(async (modelIdMap) => {
       const [data] = await model.getItemsData([localId]);
       renderProps(data, localId);
     } else {
-      // Múltiples elementos → mostrar resumen por categoría
-      const cats = {};
+      // Múltiples elementos → recoger valores y mostrar <Múltiples> si difieren
+      const vals = { nom: new Set(), tag: new Set(), cls: new Set(), nivel: new Set() };
       for (const [modelId, ids] of Object.entries(modelIdMap)) {
         const model = fragments.list.get(modelId);
         if (!model) continue;
         for (const localId of ids) {
           try {
             const [data] = await model.getItemsData([localId]);
-            const cls = data?._category?.value ?? 'Desconocido';
-            cats[cls] = (cats[cls] || 0) + 1;
+            vals.nom.add(data?.Name?.value ?? '—');
+            vals.tag.add(data?.Tag?.value ?? '—');
+            vals.cls.add(data?._category?.value ?? 'Desconocido');
+            vals.nivel.add(getNivelDeElemento(localId) ?? '—');
           } catch {}
         }
       }
-      renderPropsMulti(total, cats);
+      const r = (set) => set.size === 1 ? [...set][0] : '<Múltiples>';
+      const cls = r(vals.cls);
+      const ico = vals.cls.size === 1 ? (IFC_ICO[cls] || '▪') : '📦';
+      const clsL = vals.cls.size === 1 ? cls.charAt(0) + cls.slice(1).toLowerCase() : cls;
+      renderPropsMulti(total, r(vals.nom), r(vals.tag), clsL, r(vals.nivel), ico);
     }
   } catch { renderProps(null); }
 });
-function renderPropsMulti(total, cats) {
-  const filas = Object.entries(cats)
-    .sort((a,b) => b[1]-a[1])
-    .map(([cls,qty]) => {
-      const ico = IFC_ICO[cls] || '▪';
-      const clsL = cls.charAt(0) + cls.slice(1).toLowerCase();
-      return `<div class="props-row">
-        <span class="props-key">${ico} ${esc(clsL)}</span>
-        <span class="props-val" style="color:var(--accent);font-weight:700">${qty}</span>
-      </div>`;
-    }).join('');
+function renderPropsMulti(total, nom, tag, cls, nivel, ico) {
+  const filas = [
+    ['Nombre',    nom],
+    ['Tag',       tag],
+    ['Clase IFC', cls],
+    ['Nivel',     nivel],
+  ].map(([k,v]) => {
+    const esMultiple = v === '<Múltiples>';
+    return `<div class="props-row">
+      <span class="props-key">${k}</span>
+      <span class="props-val" style="${esMultiple ? 'color:var(--muted);font-style:italic' : ''}">${esc(v)}</span>
+    </div>`;
+  }).join('');
 
   propsEmpty.style.display = 'none';
   propsBody.innerHTML = `
     <div class="props-elem-hdr">
-      <div class="props-elem-icon">📦</div>
+      <div class="props-elem-icon">${ico}</div>
       <div class="props-elem-cls">Selección múltiple</div>
       <div class="props-elem-name">${total} elementos seleccionados</div>
     </div>
     <div class="props-sec">
       <div class="props-sec-hdr">
-        <span class="props-sec-title">Categorías</span>
-        <span class="rp-badge rp-info">${Object.keys(cats).length}</span>
+        <span class="props-sec-title">Información del elemento</span>
       </div>
       <div class="props-sec-body">${filas}</div>
-    </div>
-    <div style="margin-top:6px;padding:8px 10px;background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.1);border-radius:4px;font:400 8px var(--mono);color:var(--muted);line-height:1.6;">
-      ℹ️ Selecciona un único elemento para ver sus propiedades.
     </div>`;
   propsBody.style.display = 'block';
 }
