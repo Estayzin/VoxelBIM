@@ -383,34 +383,30 @@ function renderNavegador(est) {
   const conteo = est.conteo;
   let html = '';
 
-  // Sitio
   for (const id in inst) {
     if (inst[id].cls !== 'IFCSITE') continue;
     const attrs = splitAttrs(extraerRaw(est.texto, inst[id].pos));
     const nombre = strVal(attrs[2]) || strVal(attrs[1]) || '(sin nombre)';
-    html += `<div class="nav-item"><span class="nav-item-icon">🌍</span><span class="nav-item-name">${esc(nombre)}</span><span class="nav-item-badge">Sitio</span></div>`;
+    html += `<div class="nav-item" onclick="window.navSeleccionar('site','${id}',event)"><span class="nav-item-icon">🌍</span><span class="nav-item-name">${esc(nombre)}</span><span class="nav-item-badge">Sitio</span></div>`;
 
-    // Edificio
     for (const bid in inst) {
       if (inst[bid].cls !== 'IFCBUILDING') continue;
       const battrs = splitAttrs(extraerRaw(est.texto, inst[bid].pos));
       const bnombre = strVal(battrs[2]) || strVal(battrs[1]) || '(sin nombre)';
-      html += `<div class="nav-item nav-indent-1"><span class="nav-item-icon">🏢</span><span class="nav-item-name">${esc(bnombre)}</span><span class="nav-item-badge">Edificio</span></div>`;
+      html += `<div class="nav-item nav-indent-1" onclick="window.navSeleccionar('building','${bid}',event)"><span class="nav-item-icon">🏢</span><span class="nav-item-name">${esc(bnombre)}</span><span class="nav-item-badge">Edificio</span></div>`;
 
-      // Niveles
       for (const nid in inst) {
         if (inst[nid].cls !== 'IFCBUILDINGSTOREY') continue;
         const nattrs = splitAttrs(extraerRaw(est.texto, inst[nid].pos));
         const nnombre = strVal(nattrs[2]) || strVal(nattrs[1]) || '(sin nombre)';
         const elemsNivel = (est.elemsPorNivel[nid] || []).length;
-        html += `<div class="nav-item nav-indent-2"><span class="nav-item-icon">📊</span><span class="nav-item-name">${esc(nnombre)}</span>${elemsNivel>0?`<span class="nav-item-badge">${elemsNivel}</span>`:''}</div>`;
+        html += `<div class="nav-item nav-indent-2" id="navnivel_${nid}" onclick="window.navSeleccionar('storey','${nid}',event)"><span class="nav-item-icon">📊</span><span class="nav-item-name">${esc(nnombre)}</span>${elemsNivel>0?`<span class="nav-item-badge">${elemsNivel}</span>`:''}</div>`;
       }
       break;
     }
     break;
   }
 
-  // Separador y resumen de entidades presentes
   if (Object.keys(conteo).length) {
     html += `<div class="nav-sep"></div>`;
     html += `<div style="padding:4px 8px;font:700 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.15em;">Entidades</div>`;
@@ -420,9 +416,8 @@ function renderNavegador(est) {
       if (!qty) return;
       const ico = IFC_ICO[cls] || '▪';
       const nom = cls.charAt(0) + cls.slice(1).toLowerCase();
-      html += `<div class="nav-item nav-indent-1"><span class="nav-item-icon">${ico}</span><span class="nav-item-name">${nom}</span><span class="nav-item-badge">${qty}</span></div>`;
+      html += `<div class="nav-item nav-indent-1" id="navent_${cls}" onclick="window.navSeleccionar('entity','${cls}',event)"><span class="nav-item-icon">${ico}</span><span class="nav-item-name">${nom}</span><span class="nav-item-badge">${qty}</span></div>`;
     });
-    // Resto de entidades no listadas
     let otros = 0;
     for (const cls in conteo) { if (!entsCls.includes(cls) && !['IFCSITE','IFCBUILDING','IFCBUILDINGSTOREY'].includes(cls)) otros += conteo[cls]; }
     if (otros > 0) html += `<div class="nav-item nav-indent-1"><span class="nav-item-icon">📦</span><span class="nav-item-name" style="color:var(--muted)">Otros</span><span class="nav-item-badge">${otros}</span></div>`;
@@ -430,6 +425,69 @@ function renderNavegador(est) {
 
   navBody.innerHTML = html || '<div class="nav-empty">Sin datos de estructura</div>';
 }
+
+window.navSeleccionar = async (tipo, id, e) => {
+  const ctrlPressed = e?.ctrlKey || e?.metaKey || false;
+
+  // Limpiar selección visual anterior si no es Ctrl
+  if (!ctrlPressed) {
+    document.querySelectorAll('.nav-item.nav-active').forEach(r => r.classList.remove('nav-active'));
+  }
+
+  // Marcar el ítem activo
+  const el = document.querySelector(`[onclick*="navSeleccionar('${tipo}','${id}'"]`);
+  if (el) {
+    if (ctrlPressed && el.classList.contains('nav-active')) {
+      el.classList.remove('nav-active');
+    } else {
+      el.classList.add('nav-active');
+    }
+  }
+
+  const map = {};
+
+  if (tipo === 'entity') {
+    // Igual que onEntidadClick — aislar categoría
+    if (!ctrlPressed) {
+      isolatedCategories.clear();
+      document.querySelectorAll('.ent-row.ent-active').forEach(r => r.classList.remove('ent-active'));
+      await hider.set(true);
+    }
+    isolatedCategories.add(id);
+    for (const [,model] of fragments.list) {
+      const items = await model.getItemsOfCategories([new RegExp(`^${id}$`)]);
+      map[model.modelId] = new Set(Object.values(items).flat());
+    }
+    await hider.isolate(map);
+
+  } else if (tipo === 'storey') {
+    // Seleccionar todos los elementos del nivel
+    if (!_estActual) return;
+    const elemIds = (_estActual.elemsPorNivel[id] || []).map(Number);
+    if (!elemIds.length) return;
+    if (!ctrlPressed) await hider.set(true);
+    for (const [,model] of fragments.list) {
+      map[model.modelId] = new Set(elemIds);
+    }
+
+  } else if (tipo === 'building' || tipo === 'site') {
+    // Seleccionar todos los elementos del edificio/sitio (todos los niveles)
+    if (!_estActual) return;
+    const allIds = [];
+    for (const nid in _estActual.elemsPorNivel) {
+      allIds.push(..._estActual.elemsPorNivel[nid].map(Number));
+    }
+    if (!allIds.length) return;
+    if (!ctrlPressed) await hider.set(true);
+    for (const [,model] of fragments.list) {
+      map[model.modelId] = new Set(allIds);
+    }
+  }
+
+  if (Object.keys(map).length) {
+    try { await highlighter.highlightByID('select', map, true, true); } catch(e) {}
+  }
+};
 
 // ══ REPORTE BIM ══
 const ESP = {
