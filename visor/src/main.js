@@ -461,7 +461,6 @@ window.navSeleccionar = async (tipo, id, e) => {
     await hider.isolate(map);
 
   } else if (tipo === 'storey') {
-    // Seleccionar todos los elementos del nivel
     if (!_estActual) return;
     const elemIds = (_estActual.elemsPorNivel[id] || []).map(Number);
     if (!elemIds.length) return;
@@ -469,9 +468,9 @@ window.navSeleccionar = async (tipo, id, e) => {
     for (const [,model] of fragments.list) {
       map[model.modelId] = new Set(elemIds);
     }
+    await hider.isolate(map);
 
   } else if (tipo === 'building' || tipo === 'site') {
-    // Seleccionar todos los elementos del edificio/sitio (todos los niveles)
     if (!_estActual) return;
     const allIds = [];
     for (const nid in _estActual.elemsPorNivel) {
@@ -482,6 +481,7 @@ window.navSeleccionar = async (tipo, id, e) => {
     for (const [,model] of fragments.list) {
       map[model.modelId] = new Set(allIds);
     }
+    await hider.isolate(map);
   }
 
   if (Object.keys(map).length) {
