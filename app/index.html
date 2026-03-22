@@ -156,7 +156,7 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
 
       <!-- GRILLA DEMO -->
       <div id="gridDemo" class="modules-grid" style="display:none;">
-        <a href="explorer.html" class="module-card">
+        <a href="../visor/index.html" class="module-card">
           <div class="mc-icon" style="background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.2);">🗂️</div>
           <div>
             <div class="mc-title">Explorador BIM</div>
@@ -167,7 +167,7 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
         <div class="module-card disabled locked">
           <div class="mc-icon" style="background:rgba(0,212,255,.06);border:1px solid var(--border);">📐</div>
           <div>
-            <div class="mc-title">Revisor IFC</div>
+            <div class="mc-title">VoxelBIM</div>
             <div class="mc-desc">Revisión y reporte de modelos IFC por especialidad según estándares PlanBIM.</div>
           </div>
           <div class="mc-tags"><span class="mc-tag tag-lock">Solo Pro</span></div>
@@ -192,15 +192,7 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
 
       <!-- GRILLA PRO -->
       <div id="gridPro" class="modules-grid pro-grid" style="display:none;">
-        <a href="revisor.html" class="module-card">
-          <div class="mc-icon" style="background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.2);">📐</div>
-          <div>
-            <div class="mc-title">Revisor IFC</div>
-            <div class="mc-desc">Revisión y reporte de modelos IFC por especialidad según PlanBIM. Incluye visor 3D integrado.</div>
-          </div>
-          <div class="mc-tags"><span class="mc-tag tag-live">Activo</span><span class="mc-tag" style="background:rgba(0,212,255,.06);color:var(--muted);border:1px solid var(--border);">IFC2x3 · IFC4</span></div>
-        </a>
-        <a href="explorer.html" class="module-card">
+        <a href="../visor/index.html" class="module-card">
           <div class="mc-icon" style="background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.2);">🗂️</div>
           <div>
             <div class="mc-title">Explorador BIM</div>
@@ -208,14 +200,14 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
           </div>
           <div class="mc-tags"><span class="mc-tag tag-live">Activo</span><span class="mc-tag" style="background:rgba(0,212,255,.06);color:var(--muted);border:1px solid var(--border);">3D · Planos · Docs</span></div>
         </a>
-        <a href="autodesk.html" class="module-card">
+        <div class="module-card disabled">
           <div class="mc-icon" style="background:rgba(0,144,255,.1);border:1px solid rgba(0,144,255,.2);">🔗</div>
           <div>
             <div class="mc-title">Autodesk APS</div>
             <div class="mc-desc">Revisión de modelos Revit y acceso a proyectos BIM 360 / ACC via Autodesk Platform Services.</div>
           </div>
-          <div class="mc-tags"><span class="mc-tag tag-pro">Pro</span><span class="mc-tag" style="background:rgba(0,212,255,.06);color:var(--muted);border:1px solid var(--border);">RVT · BIM 360</span></div>
-        </a>
+          <div class="mc-tags"><span class="mc-tag tag-dev">No disponible</span><span class="mc-tag" style="background:rgba(0,212,255,.06);color:var(--muted);border:1px solid var(--border);">RVT · BIM 360</span></div>
+        </div>
         <div class="module-card disabled">
           <div class="mc-icon" style="background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.2);">📊</div>
           <div>
@@ -240,6 +232,14 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
           </div>
           <div class="mc-tags"><span class="mc-tag tag-dev">En desarrollo</span></div>
         </div>
+        <a href="mailto:c.estay@outlook.com" class="module-card">
+          <div class="mc-icon" style="background:rgba(124,77,255,.1);border:1px solid rgba(124,77,255,.2);">✉️</div>
+          <div>
+            <div class="mc-title">Contacto</div>
+            <div class="mc-desc">¿Consultas o sugerencias? Escríbeme directamente.</div>
+          </div>
+          <div class="mc-tags"><span class="mc-tag" style="background:rgba(124,77,255,.1);color:var(--accent2);border:1px solid rgba(124,77,255,.2);">c.estay@outlook.com</span></div>
+        </a>
       </div>
 
     </div>
@@ -248,17 +248,16 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
 
 <script>
 // Hash SHA-256 de las credenciales
-// Demo:  usuario "demo"  + contraseña a definir por ti
-// Pro:   usuario "admin" + contraseña original
-// Cómo calcular un hash nuevo:
-// En consola del navegador: 
-//   crypto.subtle.digest('SHA-256', new TextEncoder().encode('usuario:contraseña'))
-//     .then(b => console.log(Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')))
+// Pro:    usuario "admin"  + contraseña "221472"
+// Demo 1: usuario "demo1"  + contraseña "5167"
+// Demo 2: usuario "demo2"  + contraseña "1472"
 const HASHES = {
-  // hash de "demo:demo2026"
-  '7f3b2a1e9d4c8f6b0e5a3d7c2f9b4e8a1d6c3f0e7b4a2d9c6f3b0e8a5d2c7f4': 'demo',
-  // hash original pro
-  '4a5afc6a96b43901088eafb3487073444ab492ed53df37ccfa938e25ed0eb279': 'pro'
+  // hash de "admin:221472"
+  'd231f71a9d546eb5fb328f99bb495fcd50ff32a4dc7226519131b5f9fa695fce': 'pro',
+  // hash de "demo1:5167"
+  '5417b77699089c0d0ad6085ae6fb3a8b5b49ec9cf2d2d35e97f9169d74156bef': 'demo',
+  // hash de "demo2:1472"
+  '1794bf57ce0108bc9577d4ccf4ffebd0b76327d0c667659d9a85dcc13b8efef2': 'demo'
 };
 
 async function doLogin() {
