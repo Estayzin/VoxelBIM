@@ -418,9 +418,7 @@ function renderNavegador(est) {
       const nom = cls.charAt(0) + cls.slice(1).toLowerCase();
       html += `<div class="nav-item nav-indent-1" id="navent_${cls}" onclick="window.navSeleccionar('entity','${cls}',event)"><span class="nav-item-icon">${ico}</span><span class="nav-item-name">${nom}</span><span class="nav-item-badge">${qty}</span></div>`;
     });
-    let otros = 0;
-    for (const cls in conteo) { if (!entsCls.includes(cls) && !['IFCSITE','IFCBUILDING','IFCBUILDINGSTOREY'].includes(cls)) otros += conteo[cls]; }
-    if (otros > 0) html += `<div class="nav-item nav-indent-1"><span class="nav-item-icon">📦</span><span class="nav-item-name" style="color:var(--muted)">Otros</span><span class="nav-item-badge">${otros}</span></div>`;
+
   }
 
   navBody.innerHTML = html || '<div class="nav-empty">Sin datos de estructura</div>';
