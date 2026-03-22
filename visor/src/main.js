@@ -99,8 +99,9 @@ const loadIfc = async (file) => {
   _clsFiltroActiva = null;
   _nombreArchivoActual = file.name;
   _espActual = detectarEspecialidad(file.name);
-  espSel.value = _espActual;
+  _estActual = est;
   renderNavegador(est);
+  setProgress(1);
   await ifcLoader.load(new Uint8Array(buffer), false, file.name, { processData: { progressCallback: setProgress } });
   if (world.camera.fitToItems) await world.camera.fitToItems();
 };
