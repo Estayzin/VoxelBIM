@@ -75,6 +75,7 @@ let _tiposCache = null;
 let _clsFiltroActiva = null;
 let _espActual = 'ARQ';
 let _estActual = null;
+let _nombreArchivoActual = '';
 
 const setProgress = (v) => {
   const pct = Math.round(v * 100);
@@ -94,6 +95,7 @@ const loadIfc = async (file) => {
   const est = parsearIFC(texto);
   _tiposCache = null;
   _clsFiltroActiva = null;
+  _nombreArchivoActual = file.name;
   _espActual = detectarEspecialidad(file.name);
   espSel.value = _espActual;
   renderReporte(est);
@@ -258,18 +260,26 @@ world.renderer.onAfterUpdate.add(drawGizmo);
 
 // ══ REPORTE BIM ══
 const ESP = {
-  "Arquitectura":        {cod:"ARQ",ents:[["IFCGRID","Grilla"],["IFCWALL","Muro"],["IFCCURTAINWALL","Muro Cortina"],["IFCWINDOW","Ventana"],["IFCDOOR","Puerta"],["IFCROOF","Cubierta"],["IFCCOVERING","Cielo / Piso"],["IFCSANITARYTERMINAL","Aparato Sanitario"],["IFCRAILING","Baranda"],["IFCFURNITURE","Mobiliario"],["IFCSPACE","Espacio"],["IFCZONE","Zona"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
-  "Estructural":         {cod:"EST",ents:[["IFCGRID","Grilla"],["IFCBEAM","Viga"],["IFCCOLUMN","Columna"],["IFCFOOTING","Fundacion"],["IFCSLAB","Losa"],["IFCWALL","Muro"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
-  "Coordinacion":        {cod:"COO",ents:[["IFCGRID","Grilla"],["IFCSITE","Sitio"],["IFCBUILDING","Edificio"],["IFCBUILDINGSTOREY","Nivel"],["IFCSPACE","Espacio"],["IFCWALL","Muro"],["IFCWINDOW","Ventana"],["IFCDOOR","Puerta"],["IFCBEAM","Viga"],["IFCCOLUMN","Columna"],["IFCSLAB","Losa"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
-  "Agua Potable":        {cod:"APO",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento Tuberia"],["IFCPIPEFITTING","Fitting Tuberia"],["IFCPUMP","Bomba"],["IFCTANK","Estanque"],["IFCVALVE","Valvula"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
-  "Climatizacion":       {cod:"CLI",ents:[["IFCGRID","Grilla"],["IFCAIRTERMINAL","Terminal Aire"],["IFCDAMPER","Compuerta"],["IFCDUCTFITTING","Fitting Ducto"],["IFCDUCTSEGMENT","Segmento Ducto"],["IFCUNITARYEQUIPMENT","Equipo Unitario"],["IFCPUMP","Bomba"],["IFCCHILLER","Enfriador"],["IFCVALVE","Valvula"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
-  "Electricidad":        {cod:"ELE",ents:[["IFCGRID","Grilla"],["IFCCABLECARRIERSEGMENT","Bandeja Cable"],["IFCELECTRICDISTRIBUTIONBOARD","Tablero Electrico"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
-  "Iluminacion":         {cod:"ILU",ents:[["IFCGRID","Grilla"],["IFCLIGHTFIXTURE","Luminaria"],["IFCSWITCHINGDEVICE","Interruptor"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
-  "Proteccion Incendios":{cod:"PCI",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento Tuberia"],["IFCSENSOR","Sensor"],["IFCPUMP","Bomba"],["IFCFIRESUPPRESSIONTERMINAL","Supresion Incendio"],["IFCALARM","Alarma"],["IFCVALVE","Valvula"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
-  "Alcantarillado":      {cod:"ALC",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento Tuberia"],["IFCPIPEFITTING","Fitting Tuberia"],["IFCDISTRIBUTIONCHAMBERELEME","Camara Distribucion"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
-  "Sitio":               {cod:"SIT",ents:[["IFCGRID","Grilla"],["IFCSITE","Sitio"],["IFCSLAB","Losa"],["IFCWALL","Muro"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
+  "Coordinacion":         {cod:"COO",ents:[["IFCGRID","Grilla"],["IFCSITE","Sitio"],["IFCBUILDING","Edificio"],["IFCBUILDINGSTOREY","Nivel"],["IFCSPACE","Espacio"],["IFCZONE","Zona"],["IFCWALL","Muro"],["IFCCURTAINWALL","Muro Cortina"],["IFCWINDOW","Ventana"],["IFCDOOR","Puerta"],["IFCROOF","Cubierta"],["IFCCOVERING","Cielo Falso / Piso"],["IFCBEAM","Viga"],["IFCCOLUMN","Columna"],["IFCFOOTING","Fundacion"],["IFCSLAB","Losa"],["IFCSTAIR","Escalera"],["IFCRAMP","Rampa"],["IFCRAILING","Baranda"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCDUCTSEGMENT","Segmento de Ducto"],["IFCDUCTFITTING","Fitting de Ducto"],["IFCCABLECARRIERSEGMENT","Bandeja de Cable"],["IFCCABLECARRIERFITTING","Fitting Bandeja de Cable"],["IFCELECTRICDISTRIBUTIONBOARD","Tablero Electrico"],["IFCAIRTERMINAL","Terminal de Aire"],["IFCDAMPER","Compuerta"],["IFCPUMP","Bomba"],["IFCTANK","Estanque"],["IFCVALVE","Valvula"],["IFCLIGHTFIXTURE","Luminaria"],["IFCSENSOR","Sensor"],["IFCFIRESUPPRESSIONTERMINAL","Terminal Supresion Incendio"],["IFCALARM","Alarma"],["IFCMEDICALDEVICE","Dispositivo Medico"],["IFCFURNITURE","Mobiliario"],["IFCTRANSPORTELEMENT","Elemento de Transporte"],["IFCSANITARYTERMINAL","Aparato Sanitario"],["IFCWASTETERMINAL","Terminal de Residuos"],["IFCOUTLET","Salida Electrica"],["IFCSWITCHINGDEVICE","Interruptor"],["IFCUNITARYEQUIPMENT","Equipo Unitario"],["IFCCHILLER","Enfriador"],["IFCDISTRIBUTIONCHAMBERELEME","Camara de Distribucion"],["IFCDISTRIBUTIONELEMENT","Elemento de Distribucion"],["IFCAUDIOVISUALAPPLIANCE","Equipo Audiovisual"],["IFCCOMMUNICATIONSAPPLIANCE","Equipo de Comunicaciones"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
+  "Sitio":                {cod:"SIT",ents:[["IFCGRID","Grilla"],["IFCSITE","Sitio"],["IFCCIVILELEMENT","Elemento Civil"],["IFCGEOGRAPHICELEMENT","Elemento Geografico"],["IFCSLAB","Losa"],["IFCWALL","Muro"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
+  "Arquitectura":         {cod:"ARQ",ents:[["IFCGRID","Grilla"],["IFCWALL","Muro"],["IFCCURTAINWALL","Muro Cortina"],["IFCWINDOW","Ventana"],["IFCDOOR","Puerta"],["IFCROOF","Cubierta"],["IFCCOVERING","Cielo Falso / Piso"],["IFCSANITARYTERMINAL","Aparato Sanitario"],["IFCRAILING","Baranda"],["IFCFURNITURE","Mobiliario"],["IFCVALVE","Valvula"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCWASTETERMINAL","Terminal de Residuos"],["IFCTRANSPORTELEMENT","Elemento de Transporte"],["IFCSPACE","Espacio"],["IFCZONE","Zona"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
+  "Volumetrico":          {cod:"VOL",ents:[["IFCGRID","Grilla"],["IFCZONE","Zona"],["IFCSPACE","Espacio"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
+  "Estructural":          {cod:"EST",ents:[["IFCGRID","Grilla"],["IFCBEAM","Viga"],["IFCCOLUMN","Columna"],["IFCFOOTING","Fundacion"],["IFCSLAB","Losa"],["IFCWALL","Muro"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
+  "Agua Potable":         {cod:"APO",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCPUMP","Bomba"],["IFCTANK","Estanque"],["IFCVALVE","Valvula"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
+  "Aguas Tratadas":       {cod:"ATR",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCPUMP","Bomba"],["IFCTANK","Estanque"],["IFCVALVE","Valvula"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
+  "Alcantarillado":       {cod:"ALC",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCDISTRIBUTIONCHAMBERELEME","Camara de Distribucion"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
+  "Corrientes Debiles":   {cod:"CEC",ents:[["IFCGRID","Grilla"],["IFCCABLECARRIERSEGMENT","Bandeja de Cable"],["IFCCABLECARRIERFITTING","Fitting Bandeja de Cable"],["IFCDISTRIBUTIONCHAMBERELEME","Camara de Distribucion"],["IFCOUTLET","Salida Electrica"],["IFCSENSOR","Sensor"],["IFCAUDIOVISUALAPPLIANCE","Equipo Audiovisual"],["IFCCOMMUNICATIONSAPPLIANCE","Equipo de Comunicaciones"],["IFCELECTRICDISTRIBUTIONBOARD","Tablero Electrico"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
+  "Climatizacion":        {cod:"CLI",ents:[["IFCGRID","Grilla"],["IFCAIRTERMINAL","Terminal de Aire"],["IFCDAMPER","Compuerta"],["IFCDUCTFITTING","Fitting de Ducto"],["IFCDUCTSEGMENT","Segmento de Ducto"],["IFCUNITARYEQUIPMENT","Equipo Unitario"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCPUMP","Bomba"],["IFCTANK","Estanque"],["IFCCHILLER","Enfriador"],["IFCVALVE","Valvula"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
+  "Combustible":          {cod:"COM",ents:[["IFCGRID","Grilla"],["IFCTANK","Estanque"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCVALVE","Valvula"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
+  "Control Centralizado": {cod:"CCT",ents:[["IFCGRID","Grilla"],["IFCELECTRICDISTRIBUTIONBOARD","Tablero Electrico"],["IFCDISTRIBUTIONCONTROLELEMENT","Elemento de Control"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
+  "Correo Neumatico":     {cod:"COR",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCDISTRIBUTIONELEMENT","Elemento de Distribucion"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
+  "Aguas Lluvias":        {cod:"ALL",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCDISTRIBUTIONCHAMBERELEME","Camara de Distribucion"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
+  "Gases Clinicos":       {cod:"GCL",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCVALVE","Valvula"],["IFCTANK","Estanque"],["IFCMEDICALDEVICE","Dispositivo Medico"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
+  "Iluminacion":          {cod:"ILU",ents:[["IFCGRID","Grilla"],["IFCLIGHTFIXTURE","Luminaria"],["IFCSWITCHINGDEVICE","Interruptor"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
+  "Proteccion Incendios": {cod:"PCI",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCSENSOR","Sensor"],["IFCTANK","Estanque"],["IFCPUMP","Bomba"],["IFCFIRESUPPRESSIONTERMINAL","Terminal Supresion Incendio"],["IFCALARM","Alarma"],["IFCVALVE","Valvula"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
+  "Electricidad":         {cod:"ELE",ents:[["IFCGRID","Grilla"],["IFCCABLECARRIERSEGMENT","Bandeja de Cable"],["IFCCABLECARRIERFITTING","Fitting Bandeja de Cable"],["IFCDISTRIBUTIONCHAMBERELEME","Camara de Distribucion"],["IFCELECTRICDISTRIBUTIONBOARD","Tablero Electrico"],["IFCBUILDINGELEMENTPROXY","Sin clasificar"]]},
 };
-const IFC_ICO = {IFCWALL:"🧱",IFCCURTAINWALL:"🪟",IFCSLAB:"⬜",IFCROOF:"🏠",IFCCOLUMN:"🏛️",IFCBEAM:"📐",IFCFOOTING:"⚓",IFCDOOR:"🚪",IFCWINDOW:"🪟",IFCRAILING:"🔩",IFCSTAIR:"🪜",IFCCOVERING:"🪵",IFCFURNITURE:"🪑",IFCPIPESEGMENT:"💧",IFCPIPEFITTING:"🔧",IFCDUCTSEGMENT:"💨",IFCDUCTFITTING:"🔧",IFCPUMP:"⚙️",IFCTANK:"🛢️",IFCVALVE:"🔩",IFCLIGHTFIXTURE:"💡",IFCSWITCHINGDEVICE:"🔌",IFCELECTRICDISTRIBUTIONBOARD:"⚡",IFCSENSOR:"📡",IFCALARM:"🚨",IFCFIRESUPPRESSIONTERMINAL:"🔥",IFCSITE:"🌍",IFCBUILDING:"🏢",IFCBUILDINGSTOREY:"📊",IFCGRID:"#",IFCSPACE:"🔵",IFCBUILDINGELEMENTPROXY:"⚠️"};
+const IFC_ICO = {IFCWALL:"🧱",IFCCURTAINWALL:"🪟",IFCSLAB:"⬜",IFCROOF:"🏠",IFCCOLUMN:"🏛️",IFCBEAM:"📐",IFCFOOTING:"⚓",IFCDOOR:"🚪",IFCWINDOW:"🪟",IFCRAILING:"🔩",IFCSTAIR:"🪜",IFCRAMP:"♿",IFCCOVERING:"🪵",IFCFURNITURE:"🪑",IFCPIPESEGMENT:"💧",IFCPIPEFITTING:"🔧",IFCDUCTSEGMENT:"💨",IFCDUCTFITTING:"🔧",IFCPUMP:"⚙️",IFCTANK:"🛢️",IFCVALVE:"🔩",IFCLIGHTFIXTURE:"💡",IFCSWITCHINGDEVICE:"🔌",IFCOUTLET:"🔌",IFCELECTRICDISTRIBUTIONBOARD:"⚡",IFCSENSOR:"📡",IFCALARM:"🚨",IFCFIRESUPPRESSIONTERMINAL:"🔥",IFCSITE:"🌍",IFCBUILDING:"🏢",IFCBUILDINGSTOREY:"📊",IFCGRID:"#",IFCSPACE:"🔵",IFCZONE:"🔷",IFCBUILDINGELEMENTPROXY:"⚠️",IFCCABLECARRIERSEGMENT:"📦",IFCCABLECARRIERFITTING:"🔧",IFCAIRTERMINAL:"💨",IFCDAMPER:"🔒",IFCUNITARYEQUIPMENT:"🏭",IFCCHILLER:"❄️",IFCMEDICALDEVICE:"🏥",IFCTRANSPORTELEMENT:"🚡",IFCSANITARYTERMINAL:"🚿",IFCWASTETERMINAL:"🗑️",IFCFURNITURESTANDARD:"🪑",IFCCIVILELEMENT:"🏗️",IFCGEOGRAPHICELEMENT:"🗺️",IFCDISTRIBUTIONCHAMBERELEME:"🔲",IFCDISTRIBUTIONELEMENT:"🔲",IFCDISTRIBUTIONCONTROLELEMENT:"🎛️",IFCAUDIOVISUALAPPLIANCE:"📺",IFCCOMMUNICATIONSAPPLIANCE:"📡"};
 
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function extraerRaw(t,p){let d=1,i=p,o='';while(i<t.length&&d>0){const c=t[i];if(c==='(')d++;else if(c===')'){d--;if(!d)break;}o+=c;i++;}return o;}
@@ -298,6 +308,36 @@ function rpSec(t,b,bc,inner,open){return`<div class="rp-sec"><div class="rp-sec-
 
 function renderReporte(est) {
   _estActual = est; let html = ''; const conteo = est.conteo;
+
+  // 0. Identificación del modelo
+  const espKey0 = Object.keys(ESP).find(k=>ESP[k].cod===_espActual)||'Arquitectura';
+  const optsEsp = Object.keys(ESP).map(k =>
+    `<option value="${ESP[k].cod}"${ESP[k].cod===_espActual?' selected':''}>${k} (${ESP[k].cod})</option>`
+  ).join('');
+  html += `<div class="rp-sec">
+    <div class="rp-sec-hdr" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+      <span class="rp-sec-title">0. Identificación</span>
+      <span class="rp-badge rp-info">${espKey0}</span>
+    </div>
+    <div class="rp-content" style="display:block">
+      <table class="rp-table">
+        <tr>
+          <td style="font:400 9px var(--mono);color:var(--muted);padding:5px 10px 2px;white-space:nowrap">Archivo</td>
+          <td style="font:600 10px var(--mono);color:var(--accent);padding:5px 10px 2px;word-break:break-all">${esc(_nombreArchivoActual||'—')}</td>
+        </tr>
+        <tr>
+          <td style="font:400 9px var(--mono);color:var(--muted);padding:2px 10px 5px;white-space:nowrap">Especialidad</td>
+          <td style="padding:2px 10px 5px">
+            <select onchange="window._cambiarEsp(this.value)" style="background:var(--navy);color:var(--text);border:1px solid var(--border);border-radius:4px;font:500 9px var(--mono);padding:3px 6px;width:100%;cursor:pointer;outline:none">
+              ${optsEsp}
+            </select>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>`;
+
+  // 1. Origen
   const orig = verificarOrigen(est);
   if (orig.length) { const ok=orig.every(r=>r.ok); const filas=orig.map(r=>{const c=r.x!==null?`(${[r.x,r.y,r.z].map(v=>(+v).toFixed(3)).join(', ')})`:'N/A';return`<tr><td class="td-name">${r.tipo.charAt(0)+r.tipo.slice(1).toLowerCase()}<div class="td-cls">${esc(r.nombre)}</div></td><td style="font:400 9px var(--mono);color:var(--muted)">${c}</td><td class="td-ok">${r.ok?'<span class="ic-ok">✓</span>':'<span class="ic-err">✗</span>'}</td></tr>`;}).join(''); html+=rpSec('1. Origen (0,0,0)',ok?'OK':'Error',ok?'rp-ok':'rp-err',`<table class="rp-table">${filas}</table>`,!ok); }
   const noms = verificarNombres(est);
@@ -480,7 +520,32 @@ const espSel = document.getElementById('espSel');
 Object.keys(ESP).forEach(k=>{ const opt=document.createElement('option'); opt.value=ESP[k].cod; opt.textContent=k; if(ESP[k].cod==='ARQ')opt.selected=true; espSel.append(opt); });
 espSel.addEventListener('change', () => { _espActual=espSel.value; _tiposCache=null; _clsFiltroActiva=null; if(_estActual)renderReporte(_estActual); });
 
-function detectarEspecialidad(nombre) { const u=(nombre||'').toUpperCase(); for(const k in ESP){if(u.indexOf(ESP[k].cod)!==-1)return ESP[k].cod;} return 'ARQ'; }
+// Cambiar especialidad desde sección 0
+window._cambiarEsp = (cod) => {
+  _espActual = cod;
+  espSel.value = cod;
+  _tiposCache = null;
+  _clsFiltroActiva = null;
+  if (_estActual) renderReporte(_estActual);
+};
+
+function detectarEspecialidad(nombre) {
+  const upper = (nombre||'').toUpperCase();
+  const partes = upper.split(/[_\-\s\.]+/);
+  // Primero buscar coincidencia exacta por segmento
+  for (const p of partes) {
+    for (const k in ESP) { if (ESP[k].cod === p) return ESP[k].cod; }
+  }
+  // Luego buscar por substring (prioridad: SIT y VOL primero si están)
+  const prio = ['SIT','VOL'];
+  for (const cod of prio) {
+    if (upper.indexOf(cod) !== -1) return cod;
+  }
+  for (const k in ESP) {
+    if (upper.indexOf(ESP[k].cod) !== -1) return ESP[k].cod;
+  }
+  return 'ARQ';
+}
 
 const reportePanel = document.getElementById('reportePanel');
 document.getElementById('reporteClose').addEventListener('click', ()=>{ reportePanel.classList.remove('show'); document.getElementById('btnReporte').classList.remove('active'); });
