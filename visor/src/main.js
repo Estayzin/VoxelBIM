@@ -376,6 +376,14 @@ function drawGizmo() {
 world.renderer.onAfterUpdate.add(drawGizmo);
 
 // ══ NAVEGADOR DEL MODELO ══
+window.navToggle = (id) => {
+  const body = document.getElementById('ng_' + id);
+  const arrow = document.getElementById('nga_' + id);
+  if (!body) return;
+  body.classList.toggle('open');
+  if (arrow) arrow.classList.toggle('open');
+};
+
 function renderNavegador(est) {
   const navBody = document.getElementById('navBody');
   if (!navBody) return;
@@ -383,45 +391,52 @@ function renderNavegador(est) {
   const conteo = est.conteo;
   let html = '';
 
+  // ── Sección Estructura ──
+  let estructuraHtml = '';
   for (const id in inst) {
     if (inst[id].cls !== 'IFCSITE') continue;
     const attrs = splitAttrs(extraerRaw(est.texto, inst[id].pos));
     const nombre = strVal(attrs[2]) || strVal(attrs[1]) || '(sin nombre)';
-    html += `<div class="nav-item" onclick="window.navSeleccionar('site','${id}',event)"><span class="nav-item-icon">🌍</span><span class="nav-item-name">${esc(nombre)}</span><span class="nav-item-badge">Sitio</span></div>`;
+    estructuraHtml += `<div class="nav-item" onclick="window.navSeleccionar('site','${id}',event)"><span class="nav-item-icon">🌍</span><span class="nav-item-name">${esc(nombre)}</span><span class="nav-item-badge">Sitio</span></div>`;
 
     for (const bid in inst) {
       if (inst[bid].cls !== 'IFCBUILDING') continue;
       const battrs = splitAttrs(extraerRaw(est.texto, inst[bid].pos));
       const bnombre = strVal(battrs[2]) || strVal(battrs[1]) || '(sin nombre)';
-      html += `<div class="nav-item nav-indent-1" onclick="window.navSeleccionar('building','${bid}',event)"><span class="nav-item-icon">🏢</span><span class="nav-item-name">${esc(bnombre)}</span><span class="nav-item-badge">Edificio</span></div>`;
-
+      estructuraHtml += `<div class="nav-item nav-indent-1" onclick="window.navSeleccionar('building','${bid}',event)"><span class="nav-item-icon">🏢</span><span class="nav-item-name">${esc(bnombre)}</span><span class="nav-item-badge">Edificio</span></div>`;
       for (const nid in inst) {
         if (inst[nid].cls !== 'IFCBUILDINGSTOREY') continue;
         const nattrs = splitAttrs(extraerRaw(est.texto, inst[nid].pos));
         const nnombre = strVal(nattrs[2]) || strVal(nattrs[1]) || '(sin nombre)';
-        const elemsNivel = (est.elemsPorNivel[nid] || []).length;
-        html += `<div class="nav-item nav-indent-2" id="navnivel_${nid}" onclick="window.navSeleccionar('storey','${nid}',event)"><span class="nav-item-icon">📊</span><span class="nav-item-name">${esc(nnombre)}</span>${elemsNivel>0?`<span class="nav-item-badge">${elemsNivel}</span>`:''}</div>`;
+        const qty = (est.elemsPorNivel[nid] || []).length;
+        estructuraHtml += `<div class="nav-item nav-indent-2" onclick="window.navSeleccionar('storey','${nid}',event)"><span class="nav-item-icon">📊</span><span class="nav-item-name">${esc(nnombre)}</span>${qty>0?`<span class="nav-item-badge">${qty}</span>`:''}</div>`;
       }
       break;
     }
     break;
   }
 
-  if (Object.keys(conteo).length) {
-    html += `<div class="nav-sep"></div>`;
-    html += `<div style="padding:4px 8px;font:700 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.15em;">Entidades</div>`;
-    const entsCls = ['IFCWALL','IFCSLAB','IFCCOLUMN','IFCBEAM','IFCDOOR','IFCWINDOW','IFCROOF','IFCSTAIR','IFCPIPESEGMENT','IFCDUCTSEGMENT','IFCLIGHTFIXTURE','IFCBUILDINGELEMENTPROXY'];
-    entsCls.forEach(cls => {
-      const qty = conteo[cls] || 0;
-      if (!qty) return;
-      const ico = IFC_ICO[cls] || '▪';
-      const nom = cls.charAt(0) + cls.slice(1).toLowerCase();
-      html += `<div class="nav-item nav-indent-1" id="navent_${cls}" onclick="window.navSeleccionar('entity','${cls}',event)"><span class="nav-item-icon">${ico}</span><span class="nav-item-name">${nom}</span><span class="nav-item-badge">${qty}</span></div>`;
-    });
-
+  if (estructuraHtml) {
+    const nNiveles = Object.keys(est.elemsPorNivel).length;
+    html += `<div class="nav-group"><div class="nav-group-hdr" onclick="window.navToggle('est')"><span class="nav-group-arrow open" id="nga_est">▶</span><span class="nav-group-title">Estructura</span><span class="nav-group-badge">${nNiveles} niveles</span></div><div class="nav-group-body open" id="ng_est">${estructuraHtml}</div></div>`;
   }
 
-  navBody.innerHTML = html || '<div class="nav-empty">Sin datos de estructura</div>';
+  // ── Sección Entidades ──
+  const entsCls = ['IFCWALL','IFCSLAB','IFCCOLUMN','IFCBEAM','IFCDOOR','IFCWINDOW','IFCROOF','IFCSTAIR','IFCPIPESEGMENT','IFCDUCTSEGMENT','IFCLIGHTFIXTURE','IFCBUILDINGELEMENTPROXY'];
+  let entHtml = '', totalEnts = 0;
+  entsCls.forEach(cls => {
+    const qty = conteo[cls] || 0; if (!qty) return;
+    totalEnts += qty;
+    const ico = IFC_ICO[cls] || '▪';
+    const nom = cls.charAt(0) + cls.slice(1).toLowerCase();
+    entHtml += `<div class="nav-item nav-indent-1" onclick="window.navSeleccionar('entity','${cls}',event)"><span class="nav-item-icon">${ico}</span><span class="nav-item-name">${nom}</span><span class="nav-item-badge">${qty}</span></div>`;
+  });
+
+  if (entHtml) {
+    html += `<div class="nav-sep"></div><div class="nav-group"><div class="nav-group-hdr" onclick="window.navToggle('ent')"><span class="nav-group-arrow open" id="nga_ent">▶</span><span class="nav-group-title">Entidades</span><span class="nav-group-badge">${totalEnts}</span></div><div class="nav-group-body open" id="ng_ent">${entHtml}</div></div>`;
+  }
+
+  navBody.innerHTML = html || '<div class="nav-empty">Carga un modelo IFC<br>para navegar su estructura</div>';
 }
 
 window.navSeleccionar = async (tipo, id, e) => {
