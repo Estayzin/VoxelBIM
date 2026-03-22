@@ -97,11 +97,17 @@ body.light-mode .viewer-wrap { background:#c8d8e8; }
 </style>
 <style>
 /* TOOLTIP */
-#tooltip { display:none; position:fixed; pointer-events:none; z-index:9999;
-  background:rgba(6,13,24,.92); border:1px solid var(--accent); border-radius:5px;
-  padding:5px 10px; font:600 10px var(--mono); color:var(--accent);
-  letter-spacing:.08em; white-space:nowrap; box-shadow:0 0 12px rgba(0,212,255,.2); }
-#tooltip .tt-sub { font:400 9px var(--mono); color:var(--muted); margin-top:2px; }
+#tooltip {
+  display:none; position:fixed; pointer-events:none; z-index:9999;
+  background:var(--navy); border:1px solid var(--accent); border-radius:6px;
+  padding:8px 12px; min-width:160px;
+  box-shadow:0 0 20px rgba(0,212,255,.2);
+}
+#tt-header { display:flex; align-items:center; gap:7px; margin-bottom:5px; }
+#tt-icon { font-size:14px; }
+#tt-class { font:700 9px var(--mono); color:var(--accent); text-transform:uppercase; letter-spacing:.12em; }
+#tt-name { font:400 10px var(--mono); color:var(--text); margin-top:2px; }
+#tt-id { font:400 8px var(--mono); color:var(--muted); margin-top:3px; letter-spacing:.06em; }
 
 /* VISOR */
 .viewer-wrap { flex:1; position:relative; background:#050b14; overflow:hidden; }
@@ -129,7 +135,21 @@ body.light-mode .viewer-wrap { background:#c8d8e8; }
 .pp-empty { padding:20px 12px; font:400 9px var(--mono); color:var(--muted); text-align:center; line-height:1.7; text-transform:uppercase; letter-spacing:.08em; opacity:.6; }
 .pp-body { flex:1; overflow-y:auto; padding:8px; }
 
-/* Forzar fuente del visor en componentes @thatopen/ui-obc */
+/* PROPS CUSTOM */
+.props-elem-hdr { padding:10px 12px; border-bottom:1px solid var(--border); background:rgba(0,212,255,.04); flex-shrink:0; }
+.props-elem-icon { font-size:18px; margin-bottom:4px; }
+.props-elem-cls { font:700 8px var(--mono); color:var(--accent); text-transform:uppercase; letter-spacing:.15em; }
+.props-elem-name { font:600 11px var(--mono); color:var(--text); margin-top:3px; word-break:break-word; }
+.props-elem-id { font:400 8px var(--mono); color:var(--muted); margin-top:2px; }
+.props-sec { background:var(--navy); border:1px solid var(--border); border-radius:5px; overflow:hidden; margin-bottom:6px; }
+.props-sec-hdr { padding:6px 10px; display:flex; align-items:center; gap:6px; cursor:pointer; transition:background .12s; }
+.props-sec-hdr:hover { background:rgba(255,255,255,.02); }
+.props-sec-title { font:700 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.15em; flex:1; }
+.props-sec-body { border-top:1px solid var(--border); }
+.props-row { display:flex; padding:5px 10px; border-bottom:1px solid rgba(26,42,64,.4); gap:8px; }
+.props-row:last-child { border-bottom:none; }
+.props-key { font:400 9px var(--mono); color:var(--muted); flex:0 0 90px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.props-val { font:500 9px var(--mono); color:var(--text); flex:1; min-width:0; word-break:break-word; }
 #propsBody, #propsBody * {
   font-family: 'JetBrains Mono', monospace !important;
   font-size: 10px !important;
@@ -299,7 +319,14 @@ body.light-mode .viewer-wrap { background:#c8d8e8; }
         <div class="ov-icon">🏗️</div>
         <div class="ov-text">Carga un archivo IFC para comenzar</div>
       </div>
-      <div id="tooltip"><div id="tt-class"></div><div class="tt-sub" id="tt-name"></div></div>
+      <div id="tooltip">
+        <div id="tt-header">
+          <span id="tt-icon"></span>
+          <span id="tt-class"></span>
+        </div>
+        <div id="tt-name"></div>
+        <div id="tt-id"></div>
+      </div>
       <!-- GIZMO de orientación -->
       <canvas id="gizmo" width="70" height="70"></canvas>
     </div>

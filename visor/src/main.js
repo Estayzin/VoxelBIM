@@ -119,6 +119,9 @@ dropzone.addEventListener("drop", (e) => {
 
 const casters = components.get(OBC.Raycasters);
 const caster = casters.get(world);
+const ttIcon = document.getElementById("tt-icon");
+const ttId   = document.getElementById("tt-id");
+
 container.addEventListener("mousemove", async (e) => {
   const model = fragments.list.values().next().value;
   if (!model) return;
@@ -127,11 +130,15 @@ container.addEventListener("mousemove", async (e) => {
   try {
     const [data] = await model.getItemsData([result.localId]);
     if (!data) { tooltip.style.display = "none"; return; }
-    ttClass.textContent = data._category?.value ?? "Desconocido";
-    ttName.textContent = data.Name?.value ?? "";
+    const cls = data._category?.value ?? "Desconocido";
+    const nom = data.Name?.value ?? "";
+    ttIcon.textContent  = IFC_ICO[cls] || '▪';
+    ttClass.textContent = cls.charAt(0) + cls.slice(1).toLowerCase();
+    ttName.textContent  = nom;
+    ttId.textContent    = `#${result.localId}`;
     tooltip.style.display = "block";
-    tooltip.style.left = (e.clientX + 14) + "px";
-    tooltip.style.top = (e.clientY - 10) + "px";
+    tooltip.style.left = (e.clientX + 16) + "px";
+    tooltip.style.top  = (e.clientY - 10) + "px";
   } catch { tooltip.style.display = "none"; }
 });
 container.addEventListener("mouseleave", () => { tooltip.style.display = "none"; });
@@ -140,22 +147,90 @@ const highlighter = components.get(OBF.Highlighter);
 highlighter.setup({ world });
 
 const propsPanel = document.getElementById("propsPanel");
-const propsBody = document.getElementById("propsBody");
+const propsBody  = document.getElementById("propsBody");
 const propsEmpty = document.getElementById("propsEmpty");
-const [propsTable, updateProps] = BUIC.tables.itemsData({ components, modelIdMap: {} });
-propsTable.preserveStructureOnFilter = true;
-propsBody.append(propsTable);
-propsBody.style.display = 'none';
-highlighter.events.select.onHighlight.add((modelIdMap) => {
-  updateProps({ modelIdMap });
-  if (propsEmpty) propsEmpty.style.display = 'none';
+
+function renderProps(data) {
+  if (!data) { propsEmpty.style.display = 'block'; propsBody.style.display = 'none'; return; }
+  const cls  = data._category?.value ?? 'Desconocido';
+  const nom  = data.Name?.value ?? '(sin nombre)';
+  const ico  = IFC_ICO[cls] || '▪';
+  const clsL = cls.charAt(0) + cls.slice(1).toLowerCase();
+
+  // Propiedades base del elemento
+  const SKIP = new Set(['_category','expressID','type']);
+  const base = {};
+  const psets = {};
+  for (const k in data) {
+    if (SKIP.has(k)) continue;
+    const v = data[k];
+    if (v && typeof v === 'object' && v.value !== undefined) {
+      base[k] = v.value;
+    } else if (v && typeof v === 'object' && !Array.isArray(v)) {
+      // PropertySet
+      const label = k;
+      psets[label] = {};
+      for (const pk in v) {
+        const pv = v[pk];
+        psets[label][pk] = pv?.value !== undefined ? pv.value : pv;
+      }
+    }
+  }
+
+  let html = `<div class="props-elem-hdr">
+    <div class="props-elem-icon">${ico}</div>
+    <div class="props-elem-cls">${esc(clsL)}</div>
+    <div class="props-elem-name">${esc(nom)}</div>
+    <div class="props-elem-id">ID: ${data.expressID ?? '—'}</div>
+  </div>`;
+
+  // Sección propiedades base
+  const baseEntries = Object.entries(base).filter(([,v]) => v !== null && v !== undefined && v !== '');
+  if (baseEntries.length) {
+    const uid = 'pb_' + Math.random().toString(36).substr(2,4);
+    html += `<div class="props-sec">
+      <div class="props-sec-hdr" onclick="var b=document.getElementById('${uid}');b.style.display=b.style.display==='none'?'block':'none'">
+        <span class="props-sec-title">Propiedades del elemento</span>
+        <span class="rp-badge rp-info">${baseEntries.length}</span>
+      </div>
+      <div id="${uid}" class="props-sec-body">
+        ${baseEntries.map(([k,v])=>`<div class="props-row"><span class="props-key">${esc(k)}</span><span class="props-val">${esc(String(v))}</span></div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  // Secciones por PropertySet
+  for (const [psName, psProps] of Object.entries(psets)) {
+    const entries = Object.entries(psProps).filter(([,v]) => v !== null && v !== undefined && v !== '');
+    if (!entries.length) continue;
+    const uid = 'ps_' + Math.random().toString(36).substr(2,4);
+    html += `<div class="props-sec">
+      <div class="props-sec-hdr" onclick="var b=document.getElementById('${uid}');b.style.display=b.style.display==='none'?'block':'none'">
+        <span class="props-sec-title">${esc(psName)}</span>
+        <span class="rp-badge rp-info">${entries.length}</span>
+      </div>
+      <div id="${uid}" class="props-sec-body" style="display:none">
+        ${entries.map(([k,v])=>`<div class="props-row"><span class="props-key">${esc(k)}</span><span class="props-val">${esc(String(v))}</span></div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  propsEmpty.style.display = 'none';
+  propsBody.innerHTML = html;
   propsBody.style.display = 'block';
+}
+
+highlighter.events.select.onHighlight.add(async (modelIdMap) => {
+  try {
+    const [modelId, ids] = Object.entries(modelIdMap)[0];
+    const model = fragments.list.get(modelId);
+    if (!model) return;
+    const localId = [...ids][0];
+    const [data] = await model.getItemsData([localId]);
+    renderProps(data);
+  } catch { renderProps(null); }
 });
-highlighter.events.select.onClear.add(() => {
-  updateProps({ modelIdMap: {} });
-  if (propsEmpty) propsEmpty.style.display = 'block';
-  propsBody.style.display = 'none';
-});
+highlighter.events.select.onClear.add(() => renderProps(null));
 
 const hider = components.get(OBC.Hider);
 const isolatedCategories = new Set();
