@@ -344,9 +344,10 @@ function extraerTiposDelIFC(est) {
     const cls = key.slice(0, sep);
     const nombre = key.slice(sep + 2);
     const partes = nombre.split(':');
-    // Familia = todo menos el último segmento, Tipo = último segmento
-    const fam = partes.slice(0, -1).join(':');
-    const tip = partes[partes.length - 1];
+    // Revit exporta "Familia:Tipo:IDinstancia" (3 partes) o "Familia:Tipo" (2 partes)
+    // El último segmento cuando hay 3+ es el ID único de instancia — ignorarlo
+    const fam = partes[0];
+    const tip = partes.length >= 3 ? partes.slice(1, -1).join(':') : (partes[1] || partes[0]);
     if (!por[cls]) por[cls] = new Map();
     if (!por[cls].has(fam)) por[cls].set(fam, new Map());
     por[cls].get(fam).set(tip, conteoNombres[key]);
@@ -462,7 +463,10 @@ window.destacarTipo = async (idx, rowEl) => {
       const ids=Object.values(items).flat(); const matching=[];
       for (const localId of ids) {
         const [data]=await model.getItemsData([localId]); if(!data) continue;
-        if ((data.Name?.value||'') === `${fam}:${tip}`) matching.push(localId);
+        // Buscar elementos con Name = "Familia:Tipo:*" o exactamente "Familia:Tipo"
+        const name = data.Name?.value || '';
+        const prefijo = `${fam}:${tip}`;
+        if (name === prefijo || name.startsWith(prefijo + ':')) matching.push(localId);
       }
       if (matching.length) modelIdMap[model.modelId]=new Set(matching);
     } catch(e){}
