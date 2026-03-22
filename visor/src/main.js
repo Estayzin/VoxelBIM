@@ -216,7 +216,7 @@ function renderProps(data) {
   }
 
   propsEmpty.style.display = 'none';
-  propsBody.innerHTML = html;
+  propsBody.innerHTML = html + `<div style="margin-top:8px;padding:8px 10px;background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.1);border-radius:4px;font:400 8px var(--mono);color:var(--muted);line-height:1.6;letter-spacing:.04em;">ℹ️ Solo se muestran propiedades básicas del elemento para reducir la carga del modelo.</div>`;
   propsBody.style.display = 'block';
 }
 
