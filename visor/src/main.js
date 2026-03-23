@@ -28,7 +28,7 @@ grid.config.primarySize = 1;
 grid.config.secondarySize = 10;
 grid.config.visible = false;
 
-const workerUrl = new URL('/worker.mjs', window.location.origin).href;
+const workerUrl = new URL('./worker.mjs', import.meta.url).href;
 const fragments = components.get(OBC.FragmentsManager);
 fragments.init(workerUrl);
 
