@@ -76,6 +76,7 @@ let _clsFiltroActiva = null;
 let _espActual = 'ARQ';
 let _estActual = null;
 let _nombreArchivoActual = '';
+let _planMode = false;
 let _cfgX = 0, _cfgY = 0, _cfgZ = 0;
 let _cfgSite = 3, _cfgBuilding = 2, _cfgStorey = 5;
 
@@ -278,12 +279,36 @@ document.getElementById("btnFit").addEventListener("click", () => world.camera.f
 document.getElementById("btn3D").addEventListener("click", () => {
   world.camera.set("Orbit");
   world.camera.projection.set("Perspective");
+  _planMode = false;
+  const btnPlan = document.getElementById("btnPlan");
+  btnPlan.classList.remove("active");
+  btnPlan.querySelector(".hb-icon").textContent = "📐";
   document.getElementById("btn3D").classList.add("active");
   setTimeout(() => document.getElementById("btn3D").classList.remove("active"), 300);
 });
 document.getElementById("btnFitSb").addEventListener("click", () => world.camera.fitToItems());
 document.getElementById("btnOrbitSb").addEventListener("click", () => { world.camera.set("Orbit"); world.camera.projection.set("Perspective"); _planMode = false; document.getElementById("btnPlan").classList.remove("active"); });
 document.getElementById("btnPlanSb").addEventListener("click", () => { world.camera.set("Plan"); world.camera.projection.set("Orthographic"); _planMode = true; document.getElementById("btnPlan").classList.add("active"); });
+
+// Vista en planta — toggle entre Planta (ortogonal top) y 3D (perspectiva)
+document.getElementById("btnPlan").addEventListener("click", async () => {
+  _planMode = !_planMode;
+  const btn = document.getElementById("btnPlan");
+  if (_planMode) {
+    world.camera.set("Plan");
+    world.camera.projection.set("Orthographic");
+    await world.camera.controls.setLookAt(0, 200, 0, 0, 0, 0, true);
+    if (world.camera.fitToItems) await world.camera.fitToItems();
+    btn.classList.add("active");
+    btn.querySelector(".hb-icon").textContent = "🔲";
+  } else {
+    world.camera.set("Orbit");
+    world.camera.projection.set("Perspective");
+    await world.camera.controls.setLookAt(50, 30, 50, 0, 0, 0, true);
+    btn.classList.remove("active");
+    btn.querySelector(".hb-icon").textContent = "📐";
+  }
+});
 document.getElementById("btnProps").addEventListener("click", () => {
   const visible = document.getElementById("rightPanel").style.display !== 'none';
   document.getElementById("rightPanel").style.display = visible ? 'none' : '';

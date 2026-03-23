@@ -267,7 +267,7 @@ body.light-mode .viewer-wrap { background:#c8d8e8; }
     <div class="header-toolbar">
       <button class="hbar-btn disabled" id="btnClip" title="Próximamente"><span class="hb-icon">✂️</span> Corte <span class="hbar-tag">PRÓX.</span></button>
       <button class="hbar-btn disabled" id="btnMeasure" title="Próximamente"><span class="hb-icon">📏</span> Medir <span class="hbar-tag">PRÓX.</span></button>
-      <button class="hbar-btn disabled" id="btnPlan" title="Próximamente"><span class="hb-icon">📐</span> Planta <span class="hbar-tag">PRÓX.</span></button>
+      <button class="hbar-btn" id="btnPlan" title="Vista en planta — cámara ortogonal desde arriba"><span class="hb-icon">📐</span> Planta</button>
     </div>
 
     <div class="header-toolbar-sep"></div>
@@ -278,7 +278,7 @@ body.light-mode .viewer-wrap { background:#c8d8e8; }
       <button class="hbar-btn" id="btnReporte"><span class="hb-icon">📊</span> Reporte</button>
     </div>
 
-    <a class="hback" href="../explorer.html" style="margin-left:auto;">← Revisor</a>
+    <button class="hback" onclick="history.length > 1 ? history.back() : window.location.href='/'" style="margin-left:auto;">← Volver</button>
   </header>
 
   <div class="main">
