@@ -7,16 +7,5 @@ npm install
 npm run build
 cd ..
 
-# 2. Crear estructura del dist final
-mkdir -p dist/visor
-
-# 3. Copiar build del visor
-cp -r visor/dist/* dist/visor/
-
-# 4. Copiar WASM a la raiz del dist (el visor los busca en /web-ifc/)
-cp -r visor/dist/web-ifc dist/web-ifc
-
-# 5. Copiar portal principal y resto del proyecto
-cp index.html dist/
-cp _headers dist/
-cp -r app dist/
+# 2. Copiar portal principal al dist del visor
+cp index.html visor/dist/
