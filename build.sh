@@ -1,13 +1,19 @@
 #!/bin/bash
-# Build script para Cloudflare Pages
-# 1. Compila el visor con Vite
-cd visor && npm install && npm run build && cd ..
+set -e
 
-# 2. Copia el dist del visor a /dist en la raiz
-mkdir -p dist
+# 1. Compilar el visor con Vite
+cd visor
+npm install
+npm run build
+cd ..
+
+# 2. Crear estructura del dist final
+mkdir -p dist/visor
+
+# 3. Copiar build del visor
 cp -r visor/dist/* dist/visor/
 
-# 3. Copia el resto del proyecto al dist
+# 4. Copiar portal principal y resto del proyecto
 cp index.html dist/
 cp _headers dist/
 cp -r app dist/
