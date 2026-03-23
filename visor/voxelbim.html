@@ -17,7 +17,7 @@ html,body { height:100%; overflow:hidden; }
 body { font-family:var(--sans); background:var(--bg); color:var(--text); display:flex; flex-direction:column; height:100vh; font-size:13px; }
 
 /* HEADER */
-header { background:var(--navy); padding:8px 16px; display:flex; align-items:center; gap:10px; border-bottom:2px solid var(--accent); flex-shrink:0; box-shadow:0 2px 20px rgba(0,212,255,.08); }
+header { background:var(--navy); padding:10px 16px; min-height:52px; display:flex; align-items:center; gap:10px; border-bottom:2px solid var(--accent); flex-shrink:0; box-shadow:0 2px 20px rgba(0,212,255,.08); flex-wrap:wrap; row-gap:6px; }
 .hicon { width:28px; height:28px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
 .htitle { font:600 11px var(--mono); color:var(--text); letter-spacing:.08em; text-transform:uppercase; }
 .hsub { font:400 9px var(--mono); color:var(--muted); margin-top:1px; }
@@ -34,6 +34,34 @@ header { background:var(--navy); padding:8px 16px; display:flex; align-items:cen
 .hbar-btn.disabled:hover { border-color:var(--border); color:var(--muted); background:transparent; }
 .hbar-btn .hb-icon { font-size:12px; }
 .hbar-tag { font:600 7px var(--mono); padding:1px 4px; border-radius:2px; background:rgba(255,107,53,.15); color:var(--warn); letter-spacing:.08em; margin-left:3px; }
+
+/* ══ MEDICIÓN — Labels y snaps ══ */
+/* Label de distancia */
+.ifcjs-dimension-label,
+[class*="dimension-label"],
+[class*="length-label"] {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  padding: 4px 10px !important;
+  border-radius: 5px !important;
+  letter-spacing: 0.04em !important;
+  white-space: nowrap !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5) !important;
+  border: 1px solid rgba(255,255,255,0.15) !important;
+  color: #000 !important;
+  pointer-events: none !important;
+}
+/* Snap marker (vértice) — agrandar y resaltar */
+.ifcjs-dimension-preview,
+[class*="dimension-preview"],
+[class*="vertex-picker"] {
+  width: 14px !important;
+  height: 14px !important;
+  border-radius: 50% !important;
+  border: 2px solid #fff !important;
+  box-shadow: 0 0 8px rgba(0,212,255,0.8) !important;
+}
 
 /* Modo claro */
 body.light-mode {
@@ -85,8 +113,11 @@ body.light-mode .hsub { color:#4a6080; }
 .model-item { display:flex; align-items:center; gap:7px; padding:5px 8px; background:var(--card); border:1px solid var(--border); border-radius:4px; transition:all .15s; }
 .model-item:hover { border-color:var(--accent); }
 .model-item-name { font:500 9px var(--mono); color:var(--text); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.model-item-toggle { background:none; border:none; cursor:pointer; font-size:13px; padding:0 2px; transition:opacity .15s; line-height:1; }
-.model-item-toggle.hidden { opacity:.3; }
+.model-item-btn { background:none; border:1px solid transparent; border-radius:3px; cursor:pointer; font-size:12px; padding:1px 4px; transition:all .15s; line-height:1.4; flex-shrink:0; }
+.model-item-btn:hover { border-color:var(--border); background:rgba(255,255,255,.05); }
+.model-item-btn.hidden { opacity:.4; }
+.model-item-btn.model-item-del:hover { border-color:var(--red); background:rgba(255,61,87,.08); }
+.model-item-hidden .model-item-name { opacity:.4; text-decoration:line-through; }
 .models-empty { font:400 9px var(--mono); color:var(--muted); text-align:center; padding:8px 0; opacity:.6; }
 
 /* CONTROLES SIDEBAR */

@@ -1,1 +1,0 @@
-feat: menu contextual, ocultar elementos, grilla ajustable, zoom seleccion, dimensiones bbox, modo claro fixes

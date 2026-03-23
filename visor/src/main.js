@@ -304,6 +304,126 @@ function renderPropsMulti(total, nom, tag, cls, nivel, ico) {
 
 highlighter.events.select.onClear.add(() => renderProps(null, null));
 
+// ══ OCULTAR ELEMENTO SELECCIONADO ══
+// Mantiene un registro de los elementos ocultos manualmente
+const hiddenElements = new Map(); // modelId → Set<localId>
+
+async function ocultarSeleccion() {
+  const selection = highlighter.selection['select'];
+  if (!selection || Object.keys(selection).length === 0) return;
+  for (const [modelId, ids] of Object.entries(selection)) {
+    if (!ids || ids.size === 0) continue;
+    if (!hiddenElements.has(modelId)) hiddenElements.set(modelId, new Set());
+    for (const id of ids) hiddenElements.get(modelId).add(id);
+    await hider.set(false, { [modelId]: new Set(ids) });
+  }
+  try { await highlighter.clear('select'); } catch(e) {}
+  renderProps(null, null);
+}
+
+// ── Menú contextual con botón derecho ──
+const ctxMenu = document.createElement('div');
+ctxMenu.id = 'ctxMenu';
+ctxMenu.style.cssText = `
+  display:none; position:fixed; z-index:99999;
+  background:var(--navy); border:1px solid var(--border);
+  border-radius:6px; padding:4px 0; min-width:170px;
+  box-shadow:0 4px 20px rgba(0,0,0,.4);
+`;
+ctxMenu.innerHTML = `
+  <div id="ctxHide" style="padding:8px 14px;cursor:pointer;font:600 10px var(--mono);color:var(--text);
+    text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;gap:8px;transition:background .12s;">
+    <span>🙈</span> Ocultar elemento
+    <span style="margin-left:auto;font:400 9px var(--mono);color:var(--muted);">Space</span>
+  </div>
+  <div style="height:1px;background:var(--border);margin:2px 0;"></div>
+  <div id="ctxShowAll" style="padding:8px 14px;cursor:pointer;font:600 10px var(--mono);color:var(--muted);
+    text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;gap:8px;transition:background .12s;">
+    <span>👁️</span> Mostrar todo
+  </div>
+`;
+document.body.appendChild(ctxMenu);
+
+ctxMenu.querySelectorAll('div[id]').forEach(item => {
+  item.addEventListener('mouseenter', () => item.style.background = 'rgba(0,212,255,.08)');
+  item.addEventListener('mouseleave', () => item.style.background = '');
+});
+
+document.getElementById('ctxHide').addEventListener('click', async () => {
+  ctxMenu.style.display = 'none';
+  await ocultarSeleccion();
+});
+
+document.getElementById('ctxShowAll').addEventListener('click', async () => {
+  ctxMenu.style.display = 'none';
+  hiddenElements.clear();
+  await hider.set(true);
+  isolatedCategories.clear();
+  _clsFiltroActiva = null;
+  document.querySelectorAll('.ent-row.ent-active').forEach(r => r.classList.remove('ent-active'));
+  document.querySelectorAll('.tipo-row.tipo-active').forEach(r => { r.classList.remove('tipo-active'); r._tipoActivo = false; });
+  actualizarSec5(null);
+});
+
+// Mostrar menú en clic derecho sobre el visor (solo si hay selección activa)
+container.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  const selection = highlighter.selection['select'];
+  const hasSelection = selection && Object.values(selection).some(ids => ids?.size > 0);
+  if (!hasSelection) return;
+  ctxMenu.style.left = e.clientX + 'px';
+  ctxMenu.style.top  = e.clientY + 'px';
+  ctxMenu.style.display = 'block';
+});
+
+// Cerrar menú al hacer clic en cualquier otro lugar
+document.addEventListener('click', () => { ctxMenu.style.display = 'none'; });
+
+// Barra espaciadora — toggle ocultar/desocultar selección, o desocultar todo si no hay selección
+document.addEventListener('keydown', async (e) => {
+  if (e.code === 'Space' || e.key === ' ') {
+    const activeEl = document.activeElement;
+    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'SELECT' || activeEl.tagName === 'TEXTAREA')) return;
+    e.preventDefault();
+    const selection = highlighter.selection['select'];
+    const hasSelection = selection && Object.values(selection).some(ids => ids?.size > 0);
+    if (hasSelection) {
+      // Verificar si alguno de los elementos seleccionados está oculto
+      let algunoOculto = false;
+      for (const [modelId, ids] of Object.entries(selection)) {
+        const ocultosPorModelo = hiddenElements.get(modelId);
+        if (ocultosPorModelo) {
+          for (const id of ids) {
+            if (ocultosPorModelo.has(id)) { algunoOculto = true; break; }
+          }
+        }
+        if (algunoOculto) break;
+      }
+      if (algunoOculto) {
+        // Hay elementos ocultos en la selección → desocultar solo esos
+        for (const [modelId, ids] of Object.entries(selection)) {
+          const ocultosPorModelo = hiddenElements.get(modelId);
+          if (!ocultosPorModelo) continue;
+          const aDesocultar = {};
+          const idsADesocultar = new Set();
+          for (const id of ids) {
+            if (ocultosPorModelo.has(id)) { ocultosPorModelo.delete(id); idsADesocultar.add(id); }
+          }
+          if (ocultosPorModelo.size === 0) hiddenElements.delete(modelId);
+          if (idsADesocultar.size > 0) await hider.set(true, { [modelId]: idsADesocultar });
+        }
+      } else {
+        // Todos visibles → ocultar la selección
+        await ocultarSeleccion();
+      }
+    } else if (hiddenElements.size > 0) {
+      // Sin selección pero hay ocultos → desocultar todos
+      hiddenElements.clear();
+      await hider.set(true);
+    }
+  }
+});
+
 const hider = components.get(OBC.Hider);
 const isolatedCategories = new Set();
 
@@ -362,40 +482,405 @@ document.getElementById("propsClose").addEventListener("click", () => {
 });
 document.getElementById("btnClip").addEventListener("click", () => {});
 
-// ══ HERRAMIENTA DE MEDICIÓN ══
+// ══ HERRAMIENTA DE MEDICIÓN (implementación propia) ══
+// Usa el vertexPicker de la librería para snap, pero captura puntos y dibuja líneas manualmente.
+
 const measurer = components.get(OBF.LengthMeasurement);
 measurer.world = world;
 measurer.enabled = false;
-measurer.snapDistance = 1;
+measurer.snapDistance = 0.4;
+measurer.pickerSize = 14;
 
-let _measureMode = false;
-document.getElementById("btnMeasure").addEventListener("click", () => {
-  _measureMode = !_measureMode;
-  measurer.enabled = _measureMode;
-  highlighter.enabled = !_measureMode;
-  const btn = document.getElementById("btnMeasure");
-  btn.classList.toggle("active", _measureMode);
-  btn.querySelector(".hb-icon").textContent = _measureMode ? "✂" : "📏";
-  if (_measureMode) {
-    container.addEventListener("click", onMeasureClick);
-    container.addEventListener("dblclick", onMeasureDelete);
-  } else {
-    container.removeEventListener("click", onMeasureClick);
-    container.removeEventListener("dblclick", onMeasureDelete);
-    measurer.cancelCreation();
-  }
+let _measureMode    = false;
+let _measuringActive = false;   // esperando el 2° punto
+let _pt1            = null;     // THREE.Vector3 del 1er punto
+let _previewLine    = null;     // línea de preview mientras se elige el 2° punto
+let _hoveredMeasure = null;     // {group, data} de la medición bajo el cursor
+
+// Almacén propio de mediciones: [{pt1, pt2, group (THREE.Group)}]
+const _measures = [];
+
+// ── Tooltip de snap ──
+const snapTooltip = document.createElement('div');
+snapTooltip.id = 'snapTooltip';
+snapTooltip.style.cssText = `
+  display:none; position:fixed; pointer-events:none; z-index:99998;
+  background:var(--navy); border:1px solid var(--border); border-radius:4px;
+  padding:4px 10px; font:600 9px var(--mono); color:var(--text);
+  text-transform:uppercase; letter-spacing:.1em; white-space:nowrap;
+  box-shadow:0 2px 10px rgba(0,0,0,.4);
+`;
+document.body.appendChild(snapTooltip);
+
+const SNAP_LABELS = {
+  vertex: { text: '⬡ Vértice', color: '#00d4ff' },
+  edge:   { text: '— Arista',  color: '#69db7c'  },
+  face:   { text: '▣ Cara',    color: '#ffd43b'  },
+};
+
+// ── Menú contextual de medición ──
+const measureCtxMenu = document.createElement('div');
+measureCtxMenu.id = 'measureCtxMenu';
+measureCtxMenu.style.cssText = `
+  display:none; position:fixed; z-index:99999;
+  background:var(--navy); border:1px solid var(--border);
+  border-radius:6px; padding:4px 0; min-width:190px;
+  box-shadow:0 4px 20px rgba(0,0,0,.4);
+`;
+measureCtxMenu.innerHTML = `
+  <div id="mctxCancel" style="padding:8px 14px;cursor:pointer;font:600 10px var(--mono);color:var(--muted);
+    text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;gap:8px;">
+    <span>✕</span> Cancelar medición
+  </div>
+  <div style="height:1px;background:var(--border);margin:2px 0;"></div>
+  <div id="mctxDelete" style="padding:8px 14px;cursor:pointer;font:600 10px var(--mono);color:var(--text);
+    text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;gap:8px;">
+    <span>🗑</span> Eliminar seleccionada
+    <span style="margin-left:auto;font:400 9px var(--mono);color:var(--muted);">Del</span>
+  </div>
+  <div id="mctxDeleteAll" style="padding:8px 14px;cursor:pointer;font:600 10px var(--mono);color:var(--muted);
+    text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;gap:8px;">
+    <span>🗑</span> Eliminar todas
+  </div>
+`;
+document.body.appendChild(measureCtxMenu);
+
+measureCtxMenu.querySelectorAll('div[id]').forEach(item => {
+  item.addEventListener('mouseenter', () => item.style.background = 'rgba(0,212,255,.08)');
+  item.addEventListener('mouseleave', () => item.style.background = '');
 });
 
-async function onMeasureClick() {
-  if (!_measureMode) return;
-  await measurer.create();
+function closeMeasureCtx() { measureCtxMenu.style.display = 'none'; }
+document.addEventListener('click', (e) => { if (!measureCtxMenu.contains(e.target)) closeMeasureCtx(); });
+
+document.getElementById('mctxCancel').addEventListener('click', () => {
+  closeMeasureCtx(); cancelarMedicionActual();
+});
+document.getElementById('mctxDelete').addEventListener('click', () => {
+  closeMeasureCtx(); eliminarMedicionSeleccionada();
+});
+document.getElementById('mctxDeleteAll').addEventListener('click', () => {
+  closeMeasureCtx(); eliminarTodasMediciones();
+});
+
+// ── Helpers de geometría ──
+function crearLineaMaterial(color = 0x00d4ff, opacity = 1) {
+  return new THREE.LineBasicMaterial({ color, transparent: opacity < 1, opacity, depthTest: false });
 }
 
-function onMeasureDelete() {
-  if (!_measureMode) return;
-  measurer.cancelCreation();
-  measurer.deleteAll();
+function crearLineaThree(p1, p2, color = 0x00d4ff, opacity = 1) {
+  const geo = new THREE.BufferGeometry().setFromPoints([p1, p2]);
+  return new THREE.Line(geo, crearLineaMaterial(color, opacity));
 }
+
+function crearEsfera(pos, color = 0x00d4ff, r = 0.05) {
+  const mesh = new THREE.Mesh(
+    new THREE.SphereGeometry(r, 8, 8),
+    new THREE.MeshBasicMaterial({ color, depthTest: false })
+  );
+  mesh.position.copy(pos);
+  return mesh;
+}
+
+// ── Dibujar medición completa ──
+function dibujarMedicion(pt1, pt2) {
+  const group = new THREE.Group();
+  group.renderOrder = 999;
+
+  // Línea principal
+  group.add(crearLineaThree(pt1, pt2, 0x00d4ff));
+
+  // Líneas de proyección X Y Z (punteadas via segmentos cortos)
+  const mid = new THREE.Vector3().addVectors(pt1, pt2).multiplyScalar(0.5);
+  const px = new THREE.Vector3(pt2.x, pt1.y, pt1.z);
+  const pz = new THREE.Vector3(pt2.x, pt1.y, pt2.z);
+
+  group.add(crearLineaThree(pt1, px,  0xff6b6b, 0.6));  // Δ X  rojo
+  group.add(crearLineaThree(px,  pz,  0x74c0fc, 0.6));  // Δ Z  azul
+  group.add(crearLineaThree(pz,  pt2, 0x69db7c, 0.6));  // Δ Y  verde
+
+  // Esferas en extremos
+  group.add(crearEsfera(pt1, 0xffffff, 0.04));
+  group.add(crearEsfera(pt2, 0xffffff, 0.04));
+
+  world.scene.three.add(group);
+
+  const dx = Math.abs(pt2.x - pt1.x);
+  const dy = Math.abs(pt2.y - pt1.y);
+  const dz = Math.abs(pt2.z - pt1.z);
+  const total = Math.sqrt(dx*dx + dy*dy + dz*dz);
+
+  const data = { pt1: pt1.clone(), pt2: pt2.clone(), dx, dy, dz, total };
+  _measures.push({ group, data });
+  actualizarMeasurePanel(data);
+  return { group, data };
+}
+
+function cancelarMedicionActual() {
+  if (_previewLine) { world.scene.three.remove(_previewLine); _previewLine.geometry.dispose(); _previewLine = null; }
+  _pt1 = null;
+  _measuringActive = false;
+}
+
+function eliminarMedicionSeleccionada() {
+  const target = _hoveredMeasure ?? _measures.at(-1);
+  if (!target) return;
+  world.scene.three.remove(target.group);
+  const idx = _measures.indexOf(target);
+  if (idx !== -1) _measures.splice(idx, 1);
+  if (target === _hoveredMeasure) _hoveredMeasure = null;
+  if (_measures.length > 0) actualizarMeasurePanel(_measures.at(-1).data);
+  else measurePanel.style.display = 'none';
+}
+
+function eliminarTodasMediciones() {
+  cancelarMedicionActual();
+  _measures.forEach(m => world.scene.three.remove(m.group));
+  _measures.length = 0;
+  _hoveredMeasure = null;
+  measurePanel.style.display = 'none';
+}
+
+// ── Activar / desactivar ──
+function activarMedicion() {
+  _measureMode = true;
+  measurer.enabled = true;   // activa el snap visual del cursor
+  highlighter.enabled = false;
+  _measuringActive = false;
+  _pt1 = null;
+  const btn = document.getElementById("btnMeasure");
+  btn.classList.add("active");
+  btn.querySelector(".hb-icon").textContent = "✂";
+  container.addEventListener("click",       onMeasureClick);
+  container.addEventListener("dblclick",    onMeasureDblClick);
+  container.addEventListener("contextmenu", onMeasureCtxClick);
+  container.addEventListener("pointermove", onMeasurePointerMove);
+  if (_measures.length > 0) actualizarMeasurePanel(_measures.at(-1).data);
+}
+
+function desactivarMedicion() {
+  cancelarMedicionActual();
+  _measureMode = false;
+  measurer.enabled = false;
+  highlighter.enabled = true;
+  const btn = document.getElementById("btnMeasure");
+  btn.classList.remove("active");
+  btn.querySelector(".hb-icon").textContent = "📏";
+  container.removeEventListener("click",       onMeasureClick);
+  container.removeEventListener("dblclick",    onMeasureDblClick);
+  container.removeEventListener("contextmenu", onMeasureCtxClick);
+  container.removeEventListener("pointermove", onMeasurePointerMove);
+  snapTooltip.style.display = 'none';
+  measurePanel.style.display = 'none';
+  closeMeasureCtx();
+}
+
+document.getElementById("btnMeasure").addEventListener("click", () => {
+  if (_measureMode) desactivarMedicion(); else activarMedicion();
+});
+
+// ── Captura de puntos ──
+async function getSnapPoint() {
+  // Usa el vertexPicker interno de la librería para obtener el punto snapeado
+  try {
+    const vp = measurer._vertexPicker ?? measurer.__vertexPicker;
+    if (vp) {
+      const res = await vp.get({ snappingClasses: measurer.snappings });
+      if (res?.point) return res.point.clone();
+    }
+  } catch(e) {}
+  // Fallback: raycaster directo
+  const hit = await caster.castRay();
+  return hit ? hit.point.clone() : null;
+}
+
+async function onMeasureClick(e) {
+  if (!_measureMode || e.button !== 0) return;
+  if (e.shiftKey) { eliminarTodasMediciones(); return; }
+
+  const pt = await getSnapPoint();
+  if (!pt) return;
+
+  if (!_measuringActive) {
+    // Primer punto
+    _pt1 = pt;
+    _measuringActive = true;
+    // Crear línea de preview
+    _previewLine = crearLineaThree(_pt1, _pt1.clone(), 0xffffff, 0.5);
+    world.scene.three.add(_previewLine);
+  } else {
+    // Segundo punto → completar medición
+    cancelarMedicionActual();   // quita preview
+    dibujarMedicion(_pt1, pt);
+  }
+}
+
+function onMeasureDblClick(e) {
+  if (!_measureMode) return;
+  cancelarMedicionActual();
+}
+
+function onMeasureCtxClick(e) {
+  if (!_measureMode) return;
+  e.preventDefault(); e.stopPropagation();
+  const hasLines = _measures.length > 0;
+  document.getElementById('mctxDelete').style.opacity    = hasLines ? '1' : '0.4';
+  document.getElementById('mctxDelete').style.pointerEvents = hasLines ? '' : 'none';
+  document.getElementById('mctxDeleteAll').style.opacity = hasLines ? '1' : '0.4';
+  document.getElementById('mctxDeleteAll').style.pointerEvents = hasLines ? '' : 'none';
+  document.getElementById('mctxCancel').style.opacity    = _measuringActive ? '1' : '0.4';
+  document.getElementById('mctxCancel').style.pointerEvents = _measuringActive ? '' : 'none';
+  measureCtxMenu.style.left = e.clientX + 'px';
+  measureCtxMenu.style.top  = e.clientY + 'px';
+  measureCtxMenu.style.display = 'block';
+}
+
+async function onMeasurePointerMove(e) {
+  // Actualizar línea de preview
+  if (_measuringActive && _pt1 && _previewLine) {
+    const pt = await getSnapPoint();
+    if (pt) {
+      const pos = _previewLine.geometry.attributes.position;
+      pos.setXYZ(1, pt.x, pt.y, pt.z);
+      pos.needsUpdate = true;
+    }
+  }
+
+  // Tooltip de snap
+  try {
+    const result = await caster.castRay();
+    if (result?.face) {
+      const pos = result.object?.geometry?.attributes?.position?.array;
+      const mw  = result.object?.matrixWorld;
+      let snapType = 'face';
+      if (pos && mw) {
+        const { a, b, c } = result.face;
+        const verts = [a, b, c].map(i => new THREE.Vector3(pos[i*3], pos[i*3+1], pos[i*3+2]).applyMatrix4(mw));
+        const minVertDist = Math.min(...verts.map(v => v.distanceTo(result.point)));
+        if (minVertDist < measurer.snapDistance) {
+          snapType = 'vertex';
+        } else {
+          const edges = [[verts[0],verts[1]],[verts[1],verts[2]],[verts[2],verts[0]]];
+          const minEdgeDist = Math.min(...edges.map(([a,b]) => {
+            const ab = new THREE.Vector3().subVectors(b, a);
+            const t  = Math.max(0, Math.min(1, new THREE.Vector3().subVectors(result.point, a).dot(ab) / ab.lengthSq()));
+            return result.point.distanceTo(new THREE.Vector3().copy(a).addScaledVector(ab, t));
+          }));
+          if (minEdgeDist < measurer.snapDistance * 1.5) snapType = 'edge';
+        }
+      }
+      const lbl = SNAP_LABELS[snapType];
+      snapTooltip.textContent   = lbl.text;
+      snapTooltip.style.color   = lbl.color;
+      snapTooltip.style.borderColor = lbl.color + '55';
+      snapTooltip.style.left    = (e.clientX + 20) + 'px';
+      snapTooltip.style.top     = (e.clientY - 30) + 'px';
+      snapTooltip.style.display = 'block';
+    } else {
+      snapTooltip.style.display = 'none';
+    }
+  } catch(err) { snapTooltip.style.display = 'none'; }
+
+  // Hover sobre mediciones existentes
+  _hoveredMeasure = null;
+  for (const m of _measures) {
+    const objs = [];
+    m.group.traverse(o => { if (o.isMesh) objs.push(o); });
+  }
+  // Detección simplificada: comparar distancia del cursor a cada línea en espacio pantalla
+  const rect = container.getBoundingClientRect();
+  const mouse = new THREE.Vector2(
+    ((e.clientX - rect.left) / rect.width)  *  2 - 1,
+    ((e.clientY - rect.top)  / rect.height) * -2 + 1
+  );
+  const ray = new THREE.Raycaster();
+  ray.setFromCamera(mouse, world.camera.three);
+  ray.params.Line = { threshold: 0.15 };
+
+  let closest = null, closestDist = Infinity;
+  for (const m of _measures) {
+    const lines = [];
+    m.group.traverse(o => { if (o.isLine) lines.push(o); });
+    const hits = ray.intersectObjects(lines, false);
+    if (hits.length > 0 && hits[0].distance < closestDist) {
+      closestDist = hits[0].distance;
+      closest = m;
+    }
+  }
+
+  // Resetear highlight anterior
+  _measures.forEach(m => {
+    m.group.traverse(o => {
+      if (o.isLine && o.material) o.material.color.set(
+        o === m.group.children[0] ? 0x00d4ff :
+        o === m.group.children[1] ? 0xff6b6b :
+        o === m.group.children[2] ? 0x74c0fc : 0x69db7c
+      );
+    });
+  });
+
+  if (closest) {
+    _hoveredMeasure = closest;
+    closest.group.traverse(o => { if (o.isLine && o.material) o.material.color.set(0xffffff); });
+    actualizarMeasurePanel(closest.data);
+  }
+}
+// ══ PANEL DE DESGLOSE X/Y/Z DE MEDICIONES ══
+const measurePanel = document.createElement('div');
+measurePanel.id = 'measurePanel';
+measurePanel.style.cssText = `
+  display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  z-index:9998; background:var(--navy); border:1px solid var(--accent);
+  border-radius:8px; padding:10px 14px; min-width:320px;
+  box-shadow:0 4px 24px rgba(0,212,255,.2); font-family:'JetBrains Mono',monospace;
+  pointer-events:none;
+`;
+measurePanel.innerHTML = `
+  <div style="font:700 8px var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.18em;margin-bottom:8px;">📏 Desglose de medición</div>
+  <div style="display:flex;gap:10px;align-items:flex-end;">
+    <div style="flex:1;text-align:center;">
+      <div style="font:400 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:3px;">Δ X</div>
+      <div id="mpX" style="font:700 14px var(--mono);color:#ff6b6b;">—</div>
+    </div>
+    <div style="flex:1;text-align:center;">
+      <div style="font:400 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:3px;">Δ Y</div>
+      <div id="mpY" style="font:700 14px var(--mono);color:#69db7c;">—</div>
+    </div>
+    <div style="flex:1;text-align:center;">
+      <div style="font:400 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:3px;">Δ Z</div>
+      <div id="mpZ" style="font:700 14px var(--mono);color:#74c0fc;">—</div>
+    </div>
+    <div style="width:1px;height:36px;background:var(--border);flex-shrink:0;"></div>
+    <div style="flex:1.2;text-align:center;">
+      <div style="font:400 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:3px;">Total</div>
+      <div id="mpTotal" style="font:700 16px var(--mono);color:var(--accent);">—</div>
+    </div>
+  </div>
+`;
+document.body.appendChild(measurePanel);
+
+function actualizarMeasurePanel(data) {
+  if (!data) return;
+  const fmt = (v) => v.toFixed(3) + ' m';
+  document.getElementById('mpX').textContent     = fmt(data.dx);
+  document.getElementById('mpY').textContent     = fmt(data.dy);
+  document.getElementById('mpZ').textContent     = fmt(data.dz);
+  document.getElementById('mpTotal').textContent = fmt(data.total);
+  measurePanel.style.display = 'block';
+}
+
+// Escape / Delete en modo medir
+document.addEventListener("keydown", (e) => {
+  if (!_measureMode) return;
+  if (e.key === "Escape") {
+    if (_measuringActive) cancelarMedicionActual();
+    else desactivarMedicion();
+  }
+  if (e.key === "Delete" || e.key === "Backspace") {
+    if (_measuringActive) { cancelarMedicionActual(); return; }
+    eliminarMedicionSeleccionada();
+  }
+});
 
 
 document.getElementById("btnLightMode").addEventListener("click", () => {
@@ -437,17 +922,72 @@ function updateModelsList() {
   if (fragments.list.size === 0) { modelsListEl.append(modelsEmptyEl); return; }
   modelsEmptyEl.style.display = 'none';
   for (const [id, model] of fragments.list) {
-    const item = document.createElement('div'); item.className = 'model-item';
-    const name = document.createElement('span'); name.className = 'model-item-name'; name.textContent = id; name.title = id;
-    const toggle = document.createElement('button'); toggle.className = 'model-item-toggle';
+    const item = document.createElement('div');
+    item.className = 'model-item';
+
+    // Nombre del modelo
+    const name = document.createElement('span');
+    name.className = 'model-item-name';
+    name.textContent = id;
+    name.title = id;
+
+    // Botón ocultar/mostrar
     const isVis = loadedModels.get(id)?.visible !== false;
-    toggle.textContent = isVis ? '👁' : '🙈';
-    toggle.addEventListener('click', async () => {
-      const cur = loadedModels.get(id) || { visible: true }; cur.visible = !cur.visible; loadedModels.set(id, cur);
+    const btnVis = document.createElement('button');
+    btnVis.className = 'model-item-btn' + (isVis ? '' : ' hidden');
+    btnVis.title = isVis ? 'Ocultar modelo' : 'Mostrar modelo';
+    btnVis.textContent = isVis ? '👁' : '🙈';
+    btnVis.addEventListener('click', async () => {
+      const cur = loadedModels.get(id) || { visible: true };
+      cur.visible = !cur.visible;
+      loadedModels.set(id, cur);
       await hider.set(cur.visible, { [id]: new Set(await getAllIds(model)) });
-      toggle.textContent = cur.visible ? '👁' : '🙈';
+      btnVis.textContent = cur.visible ? '👁' : '🙈';
+      btnVis.title = cur.visible ? 'Ocultar modelo' : 'Mostrar modelo';
+      btnVis.classList.toggle('hidden', !cur.visible);
+      item.classList.toggle('model-item-hidden', !cur.visible);
     });
-    item.append(name, toggle); modelsListEl.append(item);
+
+    // Botón eliminar
+    const btnDel = document.createElement('button');
+    btnDel.className = 'model-item-btn model-item-del';
+    btnDel.title = 'Eliminar modelo';
+    btnDel.textContent = '🗑';
+    btnDel.addEventListener('click', async () => {
+      // Confirmación rápida inline: cambiar a ✓ / ✗
+      if (btnDel._confirming) return;
+      btnDel._confirming = true;
+      const prev = btnDel.textContent;
+      btnDel.textContent = '✓';
+      btnDel.title = 'Confirmar eliminación';
+      btnDel.style.color = 'var(--red)';
+      btnDel.style.borderColor = 'var(--red)';
+
+      const cancelTimeout = setTimeout(() => {
+        btnDel._confirming = false;
+        btnDel.textContent = prev;
+        btnDel.title = 'Eliminar modelo';
+        btnDel.style.color = '';
+        btnDel.style.borderColor = '';
+      }, 2500);
+
+      btnDel.addEventListener('click', async function confirmDelete() {
+        clearTimeout(cancelTimeout);
+        btnDel.removeEventListener('click', confirmDelete);
+        btnDel._confirming = false;
+        try {
+          world.scene.three.remove(model.object);
+          fragments.list.delete(id);
+          loadedModels.delete(id);
+          updateModelsList();
+          renderProps(null, null);
+        } catch(e) { console.error('Error al eliminar modelo:', e); }
+      }, { once: true });
+    });
+
+    item.append(name, btnVis, btnDel);
+    if (!isVis) item.classList.add('model-item-hidden');
+    modelsListEl.append(item);
   }
 }
 fragments.list.onItemSet.add(({ key }) => { loadedModels.set(key, { visible: true }); updateModelsList(); });

@@ -4,8 +4,8 @@
   Autor:    Carlos Estay Ruggieri
   Contacto: c.estay@outlook.com
   Rol:      Coordinación BIM
-  Versión:  3.0 | 2026
-  Repo:     https://github.com/Estayzin/Revisor-IFC
+  Versión:  4.0 | 2026  — Claude AI Integration
+  Repo:     https://github.com/Estayzin/VoxelBIM
   Licencia: MIT — ver LICENSE en el repositorio
   ============================================================
 -->
@@ -15,85 +15,243 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="author" content="Carlos Estay Ruggieri">
-<meta name="description" content="Módulo Autodesk APS — Integración con BIM 360 y Autodesk Construction Cloud.">
+<meta name="description" content="Módulo Autodesk APS — Integración con BIM 360, ACC y Claude AI.">
 <meta name="copyright" content="Carlos Estay Ruggieri, 2026">
-<title>Autodesk APS — Plataforma BIM</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<title>Autodesk APS + Claude AI — Plataforma BIM</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.min.css">
+<script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.min.js"></script>
 <style>
 :root {
   --navy:#060d18; --blue:#0a1628; --accent:#00d4ff; --green:#00c853;
   --bg:#0a0f1e; --card:#0d1526; --text:#c8d8f0; --muted:#4a6080; --border:#1a2a40;
-  --mono:'JetBrains Mono',monospace; --sans:'Inter',sans-serif;
+  --mono:'JetBrains Mono',monospace; --sans:'Syne',sans-serif;
   --accent2:#7c4dff; --warn:#ff6b35; --aps:#0090ff;
+  --claude:#c77dff; --claude-dark:#1a0d2e; --claude-mid:#2d1454;
 }
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
 html,body { height:100%; overflow:hidden; }
 body { font-family:var(--sans); background:var(--bg); color:var(--text); display:flex; flex-direction:column; height:100vh; }
+</style>
+<style>
+/* ── HEADER ── */
 header { background:var(--navy); padding:11px 24px; display:flex; align-items:center; gap:14px; border-bottom:2px solid var(--aps); flex-shrink:0; }
-.hicon { width:34px; height:34px; background:linear-gradient(135deg,var(--aps),var(--accent2)); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:16px; }
 .hback { margin-left:auto; padding:5px 12px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:4px; font:600 9px var(--mono); cursor:pointer; text-transform:uppercase; letter-spacing:.1em; text-decoration:none; transition:all .15s; }
 .hback:hover { border-color:var(--aps); color:var(--aps); }
-/* LAYOUT */
-.workspace { display:flex; flex:1; overflow:hidden; }
-/* PANEL IZQUIERDO — árbol de proyectos */
-.panel-left { width:280px; flex-shrink:0; background:var(--blue); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+@keyframes voxel-float { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-3px)} }
+@keyframes voxel-glow  { 0%,100%{filter:drop-shadow(0 0 4px rgba(0,144,255,.4))} 50%{filter:drop-shadow(0 0 10px rgba(0,144,255,.9))} }
+@keyframes voxel-edge  { 0%,100%{opacity:.5} 50%{opacity:1} }
+.voxel-wrap { animation: voxel-float 3.5s ease-in-out infinite, voxel-glow 3.5s ease-in-out infinite; }
+.voxel-edge-top { animation: voxel-edge 3.5s ease-in-out infinite; }
+/* ── LAYOUT ── */
+.workspace { display:flex; flex:1; overflow:hidden; position:relative; }
+/* ── PANEL IZQUIERDO ── */
+.panel-left { width:260px; flex-shrink:0; background:var(--blue); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
 .pl-header { padding:12px 16px; border-bottom:1px solid var(--border); flex-shrink:0; }
 .pl-title { font:700 9px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.2em; margin-bottom:10px; }
 .btn-login { width:100%; padding:10px; background:var(--aps); color:#fff; border:none; border-radius:6px; font:700 11px var(--mono); cursor:pointer; letter-spacing:.08em; text-transform:uppercase; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:8px; }
 .btn-login:hover { background:#0077dd; box-shadow:0 0 20px rgba(0,144,255,.3); }
 .btn-login.connected { background:rgba(0,200,83,.15); color:var(--green); border:1px solid rgba(0,200,83,.3); cursor:default; }
+.btn-platform { flex:1; padding:6px 4px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:4px; font:600 9px var(--mono); cursor:pointer; transition:all .15s; text-transform:uppercase; letter-spacing:.06em; }
+.btn-platform:hover { border-color:var(--aps); color:var(--aps); }
+.btn-platform.active { background:rgba(0,144,255,.12); border-color:var(--aps); color:var(--aps); }
 .user-info { margin-top:10px; padding:8px 10px; background:var(--navy); border-radius:5px; border:1px solid var(--border); }
-.user-name { font:600 11px var(--mono); color:var(--text); }
+.user-name  { font:600 11px var(--mono); color:var(--text); }
 .user-email { font:400 9px var(--mono); color:var(--muted); margin-top:2px; }
-/* Árbol de proyectos */
 .tree { flex:1; overflow-y:auto; padding:8px 0; }
 .tree-section { padding:6px 16px 3px; font:700 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.2em; }
-.tree-item { display:flex; align-items:center; gap:8px; padding:6px 16px; cursor:pointer; transition:background .12s; border-left:2px solid transparent; }
+.tree-item { display:flex; align-items:center; gap:8px; padding:7px 16px; cursor:pointer; transition:background .12s; border-left:2px solid transparent; }
 .tree-item:hover { background:rgba(0,144,255,.06); }
-.tree-item.active { background:rgba(0,144,255,.1); border-left-color:var(--aps); }
+.tree-item.active { background:rgba(0,144,255,.12); border-left-color:var(--aps); }
 .tree-item.disabled { opacity:.4; cursor:default; }
 .tree-icon { font-size:13px; flex-shrink:0; }
 .tree-info { flex:1; min-width:0; }
 .tree-name { font:500 11px var(--mono); color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .tree-meta { font:400 9px var(--mono); color:var(--muted); margin-top:1px; }
 .tree-badge { font:700 8px var(--mono); padding:2px 5px; border-radius:3px; flex-shrink:0; background:rgba(0,144,255,.1); color:var(--aps); }
-/* PANEL DERECHO — visor */
-.panel-right { flex:1; display:flex; flex-direction:column; overflow:hidden; background:var(--bg); }
-/* Toolbar del visor */
+</style>
+<style>
+/* ── PANEL CENTRAL ── */
+.panel-mid { width:300px; flex-shrink:0; background:var(--navy); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; transition:width .22s ease, opacity .22s ease; }
+.panel-mid.hidden { width:0; opacity:0; pointer-events:none; }
+.pm-header { padding:10px 14px; border-bottom:1px solid var(--border); flex-shrink:0; display:flex; flex-direction:column; gap:6px; }
+.pm-title-row { display:flex; align-items:center; gap:8px; }
+.pm-project-name { font:600 12px var(--mono); color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; letter-spacing:.04em; }
+.pm-close { background:transparent; border:none; color:var(--muted); cursor:pointer; font-size:14px; padding:2px 4px; border-radius:3px; line-height:1; transition:color .12s; flex-shrink:0; }
+.pm-close:hover { color:#ff3d57; }
+.breadcrumb { display:flex; align-items:center; gap:4px; flex-wrap:wrap; min-height:20px; }
+.breadcrumb-item { font:400 9px var(--mono); color:var(--muted); cursor:pointer; padding:2px 5px; border-radius:3px; transition:all .12s; white-space:nowrap; }
+.breadcrumb-item:hover { color:var(--aps); background:rgba(0,144,255,.08); }
+.breadcrumb-item.current { color:var(--text); cursor:default; }
+.breadcrumb-item.current:hover { background:none; }
+.breadcrumb-sep { font-size:9px; color:var(--border); flex-shrink:0; }
+.pm-filter { display:flex; gap:5px; padding:8px 14px 0; flex-shrink:0; }
+.filter-btn { padding:4px 8px; background:transparent; border:1px solid var(--border); border-radius:3px; font:600 8px var(--mono); color:var(--muted); cursor:pointer; text-transform:uppercase; letter-spacing:.06em; transition:all .12s; }
+.filter-btn:hover { border-color:var(--aps); color:var(--aps); }
+.filter-btn.active { background:rgba(0,144,255,.1); border-color:var(--aps); color:var(--aps); }
+.nav-list { flex:1; overflow-y:auto; padding:6px 0; }
+.nav-item { display:flex; align-items:center; gap:9px; padding:7px 14px; cursor:pointer; transition:background .12s; border-left:2px solid transparent; }
+.nav-item:hover { background:rgba(0,144,255,.06); }
+.nav-item.active { background:rgba(0,144,255,.1); border-left-color:var(--aps); }
+.nav-icon { font-size:14px; flex-shrink:0; width:18px; text-align:center; }
+.nav-info { flex:1; min-width:0; }
+.nav-name { font:500 11px var(--mono); color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nav-sub  { font:400 9px var(--mono); color:var(--muted); margin-top:1px; }
+.nav-tag  { font:700 8px var(--mono); padding:2px 5px; border-radius:3px; flex-shrink:0; text-transform:uppercase; }
+.tag-rvt  { background:rgba(0,144,255,.1); color:var(--aps); border:1px solid rgba(0,144,255,.2); }
+.tag-ifc  { background:rgba(0,200,83,.1); color:var(--green); border:1px solid rgba(0,200,83,.2); }
+.tag-dwg  { background:rgba(124,77,255,.1); color:var(--accent2); border:1px solid rgba(124,77,255,.2); }
+.tag-gen  { background:rgba(255,255,255,.04); color:var(--muted); border:1px solid var(--border); }
+.nav-empty { padding:28px 14px; text-align:center; font:400 10px var(--mono); color:var(--muted); line-height:1.8; }
+.nav-loading { padding:20px 14px; display:flex; align-items:center; gap:10px; }
+.nav-spin { width:14px; height:14px; border:2px solid rgba(0,144,255,.2); border-top-color:var(--aps); border-radius:50%; animation:spin .7s linear infinite; flex-shrink:0; }
+.nav-load-text { font:400 9px var(--mono); color:var(--muted); letter-spacing:.08em; }
+/* ── PANEL DERECHO ── */
+.panel-right { flex:1; display:flex; flex-direction:column; overflow:hidden; background:var(--bg); position:relative; }
 .viewer-toolbar { padding:8px 16px; background:var(--navy); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; flex-shrink:0; }
 .vt-title { font:600 11px var(--mono); color:var(--text); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; letter-spacing:.05em; text-transform:uppercase; }
 .vt-badge { font:600 9px var(--mono); padding:3px 8px; border-radius:3px; background:rgba(0,144,255,.1); color:var(--aps); border:1px solid rgba(0,144,255,.2); }
-/* Área del visor de Autodesk */
-#forgeViewer { flex:1; width:100%; position:relative; }
-/* Estado vacío */
+/* Botón abrir Claude */
+.btn-claude { padding:5px 12px; background:rgba(199,125,255,.1); border:1px solid rgba(199,125,255,.3); border-radius:5px; font:700 9px var(--mono); color:var(--claude); cursor:pointer; letter-spacing:.08em; text-transform:uppercase; transition:all .18s; display:flex; align-items:center; gap:6px; }
+.btn-claude:hover { background:rgba(199,125,255,.2); border-color:var(--claude); box-shadow:0 0 16px rgba(199,125,255,.25); }
+#forgeViewer { flex:1; width:100%; height:100%; position:relative; min-height:0; }
 .viewer-empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; color:var(--muted); }
 .viewer-empty .eicon { font-size:48px; opacity:.15; }
 .viewer-empty p { font:400 11px var(--mono); letter-spacing:.08em; text-transform:uppercase; }
 .viewer-empty .hint { font:400 10px var(--mono); color:var(--muted); opacity:.5; max-width:280px; text-align:center; line-height:1.6; }
-/* Loading */
 .loading-overlay { position:absolute; inset:0; background:rgba(10,15,30,.9); display:none; flex-direction:column; align-items:center; justify-content:center; gap:14px; z-index:100; }
 .loading-overlay.show { display:flex; }
 .load-spinner { width:36px; height:36px; border:2px solid rgba(0,144,255,.2); border-top-color:var(--aps); border-radius:50%; animation:spin .8s linear infinite; }
 .load-text { font:400 10px var(--mono); color:var(--muted); letter-spacing:.1em; text-transform:uppercase; }
 @keyframes spin { to { transform:rotate(360deg); } }
 @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
-/* Estado de conexión */
 .conn-dot { width:7px; height:7px; border-radius:50%; background:var(--muted); flex-shrink:0; }
 .conn-dot.connected { background:var(--green); animation:pulse 2s infinite; }
+.tree::-webkit-scrollbar, .nav-list::-webkit-scrollbar { width:4px; }
+.tree::-webkit-scrollbar-track, .nav-list::-webkit-scrollbar-track { background:transparent; }
+.tree::-webkit-scrollbar-thumb, .nav-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
 </style>
-<!-- Autodesk Viewer SDK — servido localmente para evitar COEP -->
-<link rel="stylesheet" href="viewer/style.css">
-<script src="viewer/viewer3D.min.js"></script>
+<style>
+/* ══════════════════════════════════════════════
+   PANEL CLAUDE AI — FLOTANTE LATERAL DERECHO
+══════════════════════════════════════════════ */
+#claudePanel {
+  position:absolute; top:0; right:0; bottom:0;
+  width:420px; z-index:200;
+  background:linear-gradient(160deg, #0e0820 0%, #0d1526 60%, #060d18 100%);
+  border-left:1px solid rgba(199,125,255,.25);
+  display:flex; flex-direction:column;
+  transform:translateX(100%);
+  transition:transform .28s cubic-bezier(.4,0,.2,1);
+  box-shadow:-8px 0 40px rgba(0,0,0,.6);
+}
+#claudePanel.open { transform:translateX(0); }
+/* Barra superior del panel Claude */
+.cp-header {
+  padding:12px 16px; border-bottom:1px solid rgba(199,125,255,.15);
+  flex-shrink:0; display:flex; align-items:center; gap:10px;
+  background:rgba(199,125,255,.05);
+}
+.cp-logo { width:26px; height:26px; border-radius:50%; background:linear-gradient(135deg,#c77dff,#7c4dff); display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
+.cp-title { font:700 11px var(--mono); color:#e0c8ff; letter-spacing:.1em; text-transform:uppercase; flex:1; }
+.cp-model { font:400 9px var(--mono); color:rgba(199,125,255,.5); }
+.cp-close { background:transparent; border:none; color:rgba(199,125,255,.4); cursor:pointer; font-size:16px; padding:2px 5px; border-radius:3px; transition:color .12s; }
+.cp-close:hover { color:#ff3d57; }
+/* Pestañas: Chat / Propiedades / Gráficos */
+.cp-tabs { display:flex; border-bottom:1px solid rgba(199,125,255,.12); flex-shrink:0; }
+.cp-tab { flex:1; padding:8px 4px; background:transparent; border:none; font:600 9px var(--mono); color:rgba(199,125,255,.4); cursor:pointer; text-transform:uppercase; letter-spacing:.1em; transition:all .15s; border-bottom:2px solid transparent; }
+.cp-tab:hover { color:var(--claude); }
+.cp-tab.active { color:var(--claude); border-bottom-color:var(--claude); background:rgba(199,125,255,.05); }
+/* Contenido de tabs */
+.cp-pane { display:none; flex:1; flex-direction:column; overflow:hidden; }
+.cp-pane.active { display:flex; }
+/* ── TAB CHAT ── */
+.chat-messages { flex:1; overflow-y:auto; padding:12px 14px; display:flex; flex-direction:column; gap:10px; }
+.chat-messages::-webkit-scrollbar { width:3px; }
+.chat-messages::-webkit-scrollbar-thumb { background:rgba(199,125,255,.2); border-radius:2px; }
+.msg { display:flex; flex-direction:column; gap:3px; max-width:92%; }
+.msg.user { align-self:flex-end; align-items:flex-end; }
+.msg.assistant { align-self:flex-start; align-items:flex-start; }
+.msg-bubble { padding:9px 12px; border-radius:10px; font:400 11px var(--mono); line-height:1.6; }
+.msg.user .msg-bubble { background:rgba(0,144,255,.18); border:1px solid rgba(0,144,255,.3); color:#c8e8ff; border-radius:10px 10px 3px 10px; }
+.msg.assistant .msg-bubble { background:rgba(199,125,255,.1); border:1px solid rgba(199,125,255,.2); color:#e0c8ff; border-radius:10px 10px 10px 3px; }
+.msg-time { font:400 8px var(--mono); color:var(--muted); }
+.msg-typing { align-self:flex-start; }
+.msg-typing .msg-bubble { background:rgba(199,125,255,.06); border:1px dashed rgba(199,125,255,.2); }
+@keyframes blink { 0%,100%{opacity:.3} 50%{opacity:1} }
+.dot-anim span { animation:blink 1.2s ease-in-out infinite; font-size:16px; color:var(--claude); }
+.dot-anim span:nth-child(2){animation-delay:.2s}
+.dot-anim span:nth-child(3){animation-delay:.4s}
+/* Input chat */
+.chat-input-area { padding:10px 14px; border-top:1px solid rgba(199,125,255,.12); flex-shrink:0; }
+.chat-context-tag { font:400 8px var(--mono); color:rgba(199,125,255,.5); padding:4px 8px; background:rgba(199,125,255,.06); border:1px solid rgba(199,125,255,.12); border-radius:4px; margin-bottom:7px; display:none; }
+.chat-context-tag.visible { display:block; }
+.chat-input-row { display:flex; gap:8px; }
+.chat-input { flex:1; background:rgba(255,255,255,.04); border:1px solid rgba(199,125,255,.2); border-radius:7px; padding:8px 12px; font:400 11px var(--mono); color:var(--text); outline:none; resize:none; height:38px; transition:border-color .15s; }
+.chat-input:focus { border-color:rgba(199,125,255,.5); }
+.chat-send { padding:8px 14px; background:linear-gradient(135deg,#7c4dff,#c77dff); border:none; border-radius:7px; font:700 9px var(--mono); color:#fff; cursor:pointer; letter-spacing:.06em; text-transform:uppercase; transition:all .18s; flex-shrink:0; }
+.chat-send:hover { box-shadow:0 0 20px rgba(199,125,255,.4); transform:translateY(-1px); }
+.chat-send:disabled { opacity:.4; cursor:default; transform:none; }
+/* Sugerencias rápidas */
+.chat-suggestions { display:flex; flex-wrap:wrap; gap:5px; padding:0 14px 8px; flex-shrink:0; }
+.sug-btn { padding:4px 9px; background:rgba(199,125,255,.07); border:1px solid rgba(199,125,255,.15); border-radius:20px; font:400 9px var(--mono); color:rgba(199,125,255,.7); cursor:pointer; transition:all .15s; white-space:nowrap; }
+.sug-btn:hover { background:rgba(199,125,255,.15); color:var(--claude); border-color:rgba(199,125,255,.35); }
+</style>
+<style>
+/* ── TAB PROPIEDADES ── */
+.props-area { flex:1; overflow-y:auto; padding:10px 14px; }
+.props-area::-webkit-scrollbar { width:3px; }
+.props-area::-webkit-scrollbar-thumb { background:rgba(199,125,255,.2); border-radius:2px; }
+.props-empty { padding:30px 14px; text-align:center; font:400 10px var(--mono); color:rgba(199,125,255,.3); line-height:1.8; }
+.props-section-title { font:700 8px var(--mono); color:rgba(199,125,255,.5); text-transform:uppercase; letter-spacing:.18em; padding:8px 0 5px; border-bottom:1px solid rgba(199,125,255,.08); margin-bottom:6px; }
+.prop-row { display:flex; gap:8px; padding:5px 0; border-bottom:1px solid rgba(255,255,255,.03); }
+.prop-key { font:400 9px var(--mono); color:var(--muted); flex:0 0 38%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.prop-val { font:500 9px var(--mono); color:#d0e8ff; flex:1; word-break:break-word; }
+.prop-cat-tag { display:inline-block; font:700 7px var(--mono); padding:1px 5px; border-radius:3px; margin-bottom:4px; background:rgba(199,125,255,.12); color:var(--claude); border:1px solid rgba(199,125,255,.2); text-transform:uppercase; letter-spacing:.08em; }
+/* Botón analizar con Claude */
+.btn-analyze { width:100%; margin:10px 0 0; padding:9px; background:linear-gradient(135deg,rgba(124,77,255,.2),rgba(199,125,255,.12)); border:1px solid rgba(199,125,255,.3); border-radius:6px; font:700 9px var(--mono); color:var(--claude); cursor:pointer; letter-spacing:.1em; text-transform:uppercase; transition:all .18s; }
+.btn-analyze:hover { background:linear-gradient(135deg,rgba(124,77,255,.35),rgba(199,125,255,.2)); box-shadow:0 0 18px rgba(199,125,255,.2); }
+/* ── TAB GRÁFICOS ── */
+.charts-area { flex:1; overflow-y:auto; padding:12px 14px; display:flex; flex-direction:column; gap:16px; }
+.charts-area::-webkit-scrollbar { width:3px; }
+.charts-area::-webkit-scrollbar-thumb { background:rgba(199,125,255,.2); border-radius:2px; }
+.chart-card { background:rgba(255,255,255,.03); border:1px solid rgba(199,125,255,.12); border-radius:8px; padding:12px; }
+.chart-card-title { font:700 9px var(--mono); color:rgba(199,125,255,.6); text-transform:uppercase; letter-spacing:.15em; margin-bottom:10px; }
+.chart-empty { padding:20px; text-align:center; font:400 9px var(--mono); color:rgba(199,125,255,.25); line-height:1.8; }
+/* Botón reporte */
+.btn-report { width:100%; padding:10px; background:rgba(0,200,83,.08); border:1px solid rgba(0,200,83,.25); border-radius:6px; font:700 9px var(--mono); color:var(--green); cursor:pointer; letter-spacing:.1em; text-transform:uppercase; transition:all .18s; margin-top:4px; }
+.btn-report:hover { background:rgba(0,200,83,.15); box-shadow:0 0 16px rgba(0,200,83,.15); }
+/* ── NOTIFICACIÓN TOAST ── */
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(60px); background:rgba(13,21,38,.96); border:1px solid rgba(199,125,255,.3); border-radius:8px; padding:10px 18px; font:500 10px var(--mono); color:#e0c8ff; letter-spacing:.06em; z-index:9999; transition:transform .25s ease, opacity .25s ease; opacity:0; pointer-events:none; white-space:nowrap; }
+.toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+</style>
 </head>
 <body>
 <script>
-if (sessionStorage.getItem('ifc_auth') !== '1' && window.location.protocol !== 'file:') window.location.href = 'index.html';
+// Guard: permite pasar si tiene sesión, si viene de OAuth (tiene ?code=) o si es local
+var _hasCode = new URLSearchParams(window.location.search).get('code');
+var _hasToken = sessionStorage.getItem('aps_token');
+if (!_hasCode && !_hasToken && sessionStorage.getItem('ifc_auth') !== '1' && window.location.protocol !== 'file:') {
+  window.location.href = '/index.html';
+}
 </script>
+
+<!-- HEADER -->
 <header>
-  <div class="hicon">&#128279;</div>
+  <div style="background:none;overflow:visible;width:34px;height:34px;display:flex;align-items:center;justify-content:center;">
+    <svg class="voxel-wrap" width="28" height="28" viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="45,8 80,27 45,46 10,27" fill="rgba(0,144,255,0.18)" stroke="rgba(0,144,255,0.6)" stroke-width="2"/>
+      <polygon points="10,27 45,46 45,82 10,63" fill="rgba(0,144,255,0.07)" stroke="rgba(0,144,255,0.35)" stroke-width="2"/>
+      <polygon points="80,27 45,46 45,82 80,63" fill="rgba(0,144,255,0.13)" stroke="rgba(0,144,255,0.45)" stroke-width="2"/>
+      <line x1="45" y1="46" x2="45" y2="82" stroke="rgba(0,144,255,0.25)" stroke-width="1.5"/>
+      <line class="voxel-edge-top" x1="10" y1="27" x2="45" y2="8" stroke="rgba(0,144,255,0.9)" stroke-width="2.5"/>
+      <line class="voxel-edge-top" x1="45" y1="8" x2="80" y2="27" stroke="rgba(0,144,255,0.65)" stroke-width="2"/>
+    </svg>
+  </div>
   <div>
-    <div style="font:600 13px var(--mono);color:#e0f0ff;letter-spacing:.05em;text-transform:uppercase;">Autodesk Platform Services</div>
-    <div style="font:400 10px var(--mono);color:var(--muted);margin-top:1px;">Visor de modelos RVT &middot; BIM 360 &middot; ACC</div>
+    <div style="font:700 13px var(--mono);color:#e0f0ff;letter-spacing:.05em;text-transform:uppercase;">Autodesk Platform Services</div>
+    <div style="font:400 10px var(--mono);color:var(--muted);margin-top:1px;">Visor BIM &middot; ACC &middot; <span style="color:rgba(199,125,255,.6);">Claude AI</span></div>
   </div>
   <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
     <div class="conn-dot" id="connDot"></div>
@@ -102,6 +260,7 @@ if (sessionStorage.getItem('ifc_auth') !== '1' && window.location.protocol !== '
   <a href="index.html" class="hback">&#8592; Portal</a>
 </header>
 
+<!-- WORKSPACE -->
 <div class="workspace">
   <!-- PANEL IZQUIERDO -->
   <div class="panel-left">
@@ -114,62 +273,229 @@ if (sessionStorage.getItem('ifc_auth') !== '1' && window.location.protocol !== '
         <div class="user-name" id="userName">-</div>
         <div class="user-email" id="userEmail">-</div>
       </div>
+      <div id="platformWrap" style="display:none;margin-top:10px;">
+        <div style="font:700 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.15em;margin-bottom:6px;">Plataforma</div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn-platform active" id="btnBIM360" onclick="seleccionarPlataforma('bim360')">&#9881;&#65039; BIM 360</button>
+          <button class="btn-platform" id="btnACC"   onclick="seleccionarPlataforma('acc')">&#9729;&#65039; ACC</button>
+          <button class="btn-platform" id="btnA360"  onclick="seleccionarPlataforma('a360')">&#127760; A360</button>
+        </div>
+      </div>
     </div>
     <div class="tree" id="projectTree">
       <div style="padding:20px 16px;text-align:center;">
         <div style="font:400 10px var(--mono);color:var(--muted);line-height:1.8;">
-          Conecta tu cuenta Autodesk para ver tus proyectos BIM 360 / ACC
+          Conecta tu cuenta Autodesk<br>para ver tus proyectos BIM 360 / ACC
         </div>
       </div>
     </div>
   </div>
 
-  <!-- PANEL DERECHO -->
+  <!-- PANEL CENTRAL -->
+  <div class="panel-mid hidden" id="panelMid">
+    <div class="pm-header">
+      <div class="pm-title-row">
+        <span class="pm-project-name" id="pmProjectName">Proyecto</span>
+        <button class="pm-close" onclick="cerrarNavegador()" title="Cerrar">&#10005;</button>
+      </div>
+      <div class="breadcrumb" id="breadcrumb"></div>
+    </div>
+    <div class="pm-filter" id="pmFilter">
+      <button class="filter-btn active" id="fAll"  onclick="filtrarNav('all')">Todo</button>
+      <button class="filter-btn" id="fRVT"  onclick="filtrarNav('rvt')">RVT</button>
+      <button class="filter-btn" id="fIFC"  onclick="filtrarNav('ifc')">IFC</button>
+      <button class="filter-btn" id="fDWG"  onclick="filtrarNav('dwg')">DWG</button>
+    </div>
+    <div class="nav-list" id="navList">
+      <div class="nav-empty">Selecciona un proyecto</div>
+    </div>
+  </div>
+
+  <!-- PANEL DERECHO — Visor 3D -->
   <div class="panel-right">
     <div class="viewer-toolbar" id="viewerToolbar" style="display:none;">
       <span class="vt-title" id="viewerTitle">Sin modelo</span>
       <span class="vt-badge" id="viewerBadge">APS Viewer</span>
+      <button class="btn-claude" id="btnClaudePanel" onclick="toggleClaudePanel()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M8 12h8M12 8v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Claude AI
+      </button>
     </div>
+
     <div id="viewerContainer" style="flex:1;position:relative;display:flex;flex-direction:column;">
       <div class="viewer-empty" id="viewerEmpty">
         <div class="eicon">&#127959;</div>
         <p>Selecciona un modelo</p>
-        <div class="hint">Conecta tu cuenta Autodesk y selecciona un modelo RVT de tus proyectos BIM 360 o ACC</div>
+        <div class="hint">Conecta tu cuenta y navega un proyecto para abrir un modelo RVT, IFC o DWG</div>
       </div>
-      <div id="forgeViewer" style="flex:1;display:none;"></div>
+      <div id="forgeViewer" style="flex:1;display:none;height:100%;"></div>
       <div class="loading-overlay" id="loadingOverlay">
         <div class="load-spinner"></div>
         <div class="load-text" id="loadText">Cargando...</div>
       </div>
-    </div>
-  </div>
-</div>
+
+      <!-- ══ PANEL CLAUDE AI (flotante dentro del visor) ══ -->
+      <div id="claudePanel">
+        <div class="cp-header">
+          <div class="cp-logo">✦</div>
+          <div>
+            <div class="cp-title">Claude AI &nbsp;·&nbsp; BIM Assistant</div>
+            <div class="cp-model">claude-sonnet-4-20250514 &nbsp;·&nbsp; Bilingual</div>
+          </div>
+          <button class="cp-close" onclick="toggleClaudePanel()" title="Cerrar">&#10005;</button>
+        </div>
+        <!-- Pestañas -->
+        <div class="cp-tabs">
+          <button class="cp-tab active" onclick="cambiarTab('chat',this)">💬 Chat</button>
+          <button class="cp-tab" onclick="cambiarTab('props',this)">🔩 Propiedades</button>
+          <button class="cp-tab" onclick="cambiarTab('charts',this)">📊 Gráficos</button>
+        </div>
+
+        <!-- TAB CHAT -->
+        <div class="cp-pane active" id="pane-chat">
+          <div class="chat-messages" id="chatMessages">
+            <div class="msg assistant">
+              <div class="msg-bubble">Hola! Soy tu asistente BIM potenciado por Claude.<br><br>Selecciona un elemento en el visor 3D y podré analizar sus propiedades, responder preguntas sobre el modelo o generar reportes.<br><br><span style="opacity:.6;font-size:9px;">// Hello! I'm your Claude-powered BIM assistant. Select an element in the 3D viewer to get started.</span></div>
+              <div class="msg-time" id="initTime"></div>
+            </div>
+          </div>
+          <div class="chat-suggestions" id="chatSuggestions">
+            <button class="sug-btn" onclick="enviarSugerencia(this)">Oculta los muros</button>
+            <button class="sug-btn" onclick="enviarSugerencia(this)">Aísla las estructuras</button>
+            <button class="sug-btn" onclick="enviarSugerencia(this)">Muestra todo</button>
+            <button class="sug-btn" onclick="enviarSugerencia(this)">Colorea las puertas de rojo</button>
+            <button class="sug-btn" onclick="enviarSugerencia(this)">¿Qué es este elemento?</button>
+            <button class="sug-btn" onclick="enviarSugerencia(this)">Genera un reporte</button>
+          </div>
+          <div class="chat-input-area">
+            <div class="chat-context-tag" id="contextTag">📍 Elemento seleccionado como contexto</div>
+            <div class="chat-input-row">
+              <textarea class="chat-input" id="chatInput" placeholder="Pregunta sobre el modelo..." rows="1"
+                onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();enviarMensaje();}"></textarea>
+              <button class="chat-send" id="chatSendBtn" onclick="enviarMensaje()">Send</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB PROPIEDADES -->
+        <div class="cp-pane" id="pane-props">
+          <div class="props-area" id="propsArea">
+            <div class="props-empty">
+              Selecciona un elemento<br>en el visor 3D para ver sus propiedades.<br><br>
+              <span style="opacity:.5;font-size:9px;">// Click any element in the 3D viewer</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB GRÁFICOS -->
+        <div class="cp-pane" id="pane-charts">
+          <div class="charts-area">
+            <div class="chart-card">
+              <div class="chart-card-title">📊 Categorías BIM del modelo</div>
+              <div id="donutContainer" style="position:relative;height:200px;display:flex;align-items:center;justify-content:center;">
+                <div class="chart-empty" id="donutEmpty">Carga un modelo para ver<br>la distribución por categorías</div>
+                <canvas id="donutChart" style="display:none;"></canvas>
+              </div>
+            </div>
+            <div class="chart-card" id="elementStatsCard" style="display:none;">
+              <div class="chart-card-title">🔩 Elemento seleccionado</div>
+              <div id="elementMiniStats"></div>
+            </div>
+            <button class="btn-report" id="btnGenerarReporte" onclick="generarReporte()" style="display:none;">
+              📄 Generar reporte con Claude AI
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- FIN PANEL CLAUDE -->
+
+    </div><!-- fin viewerContainer -->
+  </div><!-- fin panel-right -->
+</div><!-- fin workspace -->
+
+<div class="toast" id="toast"></div>
 
 <footer style="text-align:center;padding:6px;font:400 9px var(--mono);color:var(--muted);border-top:1px solid var(--border);letter-spacing:.08em;flex-shrink:0;">
   &copy; 2026 Carlos Estay Ruggieri &mdash; Coordinaci&oacute;n BIM &mdash; MIT License
+  &nbsp;&middot;&nbsp; <span style="color:rgba(199,125,255,.4);">Claude AI Integration v4.0</span>
 </footer>
+
 <script>
 // ============================================================
-// CONFIGURACIÓN APS
+// CONFIG APS
 // ============================================================
+var IS_LOCAL      = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 var APS_CLIENT_ID = 'kOJ4igA0Lm8a9ZHA3KGkATKASthAdjiWBjY9ventTQBnGVab';
-var APS_CALLBACK  = 'https://revisor-ifc-pages.pages.dev/autodesk.html';
-var APS_SCOPES    = 'data:read viewables:read';
-var APS_PROXY     = 'https://aps-oauth-proxy.zinnarox.workers.dev/token';
+var APS_CALLBACK  = IS_LOCAL
+  ? 'http://localhost:3000/app/autodesk.html'
+  : 'https://revisor-ifc-pages.pages.dev/autodesk.html';
+var APS_PROXY     = IS_LOCAL
+  ? 'http://localhost:3000/aps/token'
+  : 'https://aps-oauth-proxy.zinnarox.workers.dev/token';
+var APS_SCOPES    = 'data:read viewables:read account:read bucket:read';
 var apsToken      = null;
 var viewer        = null;
 
+// Estado Claude
+var claudePanelOpen  = false;
+var selectedProps    = null;  // propiedades del elemento seleccionado
+var selectedName     = '';
+var chatHistory      = [];    // historial para API Claude
+var donutChartInst   = null;
+var viewerIniciado   = false;
+
+// Timestamp inicial
+document.getElementById('initTime').textContent = new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+
 // ============================================================
-// OAUTH — Authorization Code Flow
+// PANEL CLAUDE — toggle
+// ============================================================
+function toggleClaudePanel() {
+  claudePanelOpen = !claudePanelOpen;
+  document.getElementById('claudePanel').classList.toggle('open', claudePanelOpen);
+  document.getElementById('btnClaudePanel').style.background = claudePanelOpen
+    ? 'rgba(199,125,255,.25)' : 'rgba(199,125,255,.1)';
+}
+
+function cambiarTab(nombre, el) {
+  document.querySelectorAll('.cp-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.cp-pane').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('pane-' + nombre).classList.add('active');
+}
+
+// ============================================================
+// UTILIDADES UI — deben estar antes del IIFE de OAuth
+// ============================================================
+function mostrarLoading(msg) {
+  document.getElementById('loadText').textContent = msg || 'Cargando...';
+  document.getElementById('loadingOverlay').classList.add('show');
+}
+function ocultarLoading() {
+  document.getElementById('loadingOverlay').classList.remove('show');
+}
+function mostrarError(msg) {
+  console.error(msg);
+  var err = document.createElement('div');
+  err.style.cssText = 'padding:10px 16px;font:400 9px var(--mono);color:#ff3d57;background:rgba(255,61,87,.08);border-left:3px solid #ff3d57;margin:8px;border-radius:3px;';
+  err.textContent = msg;
+  document.getElementById('projectTree').prepend(err);
+  setTimeout(function() { err.remove(); }, 5000);
+}
+function mostrarToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2800);
+}
+
+// ============================================================
+// OAUTH
 // ============================================================
 (function detectCallback() {
   var params = new URLSearchParams(window.location.search);
   var code = params.get('code');
-
   if (code) {
-    // Limpiar code de la URL
     window.history.replaceState({}, document.title, window.location.pathname);
-    // Intercambiar code por token via proxy Worker
     mostrarLoading('Autenticando...');
     fetch(APS_PROXY, {
       method: 'POST',
@@ -181,8 +507,7 @@ var viewer        = null;
       if (data.access_token) {
         apsToken = data.access_token;
         sessionStorage.setItem('aps_token', apsToken);
-        ocultarLoading();
-        onTokenReady();
+        ocultarLoading(); onTokenReady();
       } else {
         ocultarLoading();
         mostrarError('Error OAuth: ' + (data.error_description || data.error || JSON.stringify(data)));
@@ -191,18 +516,16 @@ var viewer        = null;
     .catch(e => { ocultarLoading(); mostrarError('Error de red: ' + e.message); });
     return;
   }
-
   var stored = sessionStorage.getItem('aps_token');
   if (stored) { apsToken = stored; onTokenReady(); }
 })();
 
 function iniciarLogin() {
-  var url = 'https://developer.api.autodesk.com/authentication/v2/authorize'
+  window.location.href = 'https://developer.api.autodesk.com/authentication/v2/authorize'
     + '?response_type=code'
-    + '&client_id=' + encodeURIComponent(APS_CLIENT_ID)
+    + '&client_id='    + encodeURIComponent(APS_CLIENT_ID)
     + '&redirect_uri=' + encodeURIComponent(APS_CALLBACK)
-    + '&scope=' + encodeURIComponent(APS_SCOPES);
-  window.location.href = url;
+    + '&scope='        + encodeURIComponent(APS_SCOPES);
 }
 
 function cerrarSesion() {
@@ -214,23 +537,27 @@ function cerrarSesion() {
   document.getElementById('userInfo').style.display = 'none';
   document.getElementById('connDot').className = 'conn-dot';
   document.getElementById('connStatus').textContent = 'Sin conexión';
-  document.getElementById('projectTree').innerHTML = '<div style="padding:20px 16px;text-align:center;"><div style="font:400 10px var(--mono);color:var(--muted);line-height:1.8;">Conecta tu cuenta Autodesk para ver tus proyectos BIM 360 / ACC</div></div>';
+  document.getElementById('platformWrap').style.display = 'none';
+  todosLosHubs = [];
+  cerrarNavegador();
+  document.getElementById('projectTree').innerHTML =
+    '<div style="padding:20px 16px;text-align:center;"><div style="font:400 10px var(--mono);color:var(--muted);line-height:1.8;">Conecta tu cuenta Autodesk para ver tus proyectos</div></div>';
 }
+</script>
 
+<script>
 // ============================================================
-// TRAS OBTENER TOKEN — cargar usuario y hubs
+// TRAS OBTENER TOKEN
 // ============================================================
 async function onTokenReady() {
   mostrarLoading('Obteniendo información de usuario...');
   try {
-    // Obtener perfil del usuario
-    var res = await fetch('https://api.userprofile.autodesk.com/userinfo', {
+    var res  = await fetch('https://api.userprofile.autodesk.com/userinfo', {
       headers: { 'Authorization': 'Bearer ' + apsToken }
     });
     if (!res.ok) throw new Error('Token inválido o expirado');
     var user = await res.json();
-
-    document.getElementById('userName').textContent  = user.name || user.given_name + ' ' + user.family_name;
+    document.getElementById('userName').textContent  = user.name || (user.given_name + ' ' + user.family_name);
     document.getElementById('userEmail').textContent = user.email;
     document.getElementById('userInfo').style.display = 'block';
     document.getElementById('btnLogin').innerHTML  = '&#10003; Conectado &mdash; Cerrar sesi&oacute;n';
@@ -238,7 +565,6 @@ async function onTokenReady() {
     document.getElementById('btnLogin').onclick    = cerrarSesion;
     document.getElementById('connDot').className   = 'conn-dot connected';
     document.getElementById('connStatus').textContent = user.name || 'Conectado';
-
     ocultarLoading();
     cargarHubs();
   } catch(e) {
@@ -249,164 +575,742 @@ async function onTokenReady() {
 }
 
 // ============================================================
-// CARGAR HUBS (BIM 360 / ACC)
+// HUBS
 // ============================================================
+var todosLosHubs    = [];
+var plataformaActual = 'bim360';
+
 async function cargarHubs() {
   mostrarLoading('Cargando hubs...');
   try {
-    var res = await fetch('https://developer.api.autodesk.com/project/v1/hubs', {
+    var res  = await fetch('https://developer.api.autodesk.com/project/v1/hubs', {
       headers: { 'Authorization': 'Bearer ' + apsToken }
     });
     var data = await res.json();
-    var hubs = data.data || [];
+    todosLosHubs = data.data || [];
+    console.log('[APS] Hubs recibidos:', todosLosHubs.length);
+    todosLosHubs.forEach(function(h) {
+      console.log('  hub id:', h.id, '| name:', h.attributes && h.attributes.name, '| extType:', h.attributes && h.attributes.extension && h.attributes.extension.type);
+    });
     ocultarLoading();
-
-    if (!hubs.length) {
-      document.getElementById('projectTree').innerHTML = '<div style="padding:16px;font:400 10px var(--mono);color:var(--muted);">No se encontraron hubs en tu cuenta.</div>';
+    if (!todosLosHubs.length) {
+      document.getElementById('projectTree').innerHTML =
+        '<div style="padding:16px;font:400 10px var(--mono);color:var(--muted);text-align:center;line-height:1.8;">No se encontraron hubs.</div>';
       return;
     }
-
-    var html = '';
-    hubs.forEach(function(hub) {
-      var tipo = hub.attributes.extension.type.includes('a360') ? '&#9729;&#65039; A360' : '&#128736;&#65039; ACC/BIM360';
-      html += '<div class="tree-section">' + (hub.attributes.name || 'Hub') + '</div>';
-      html += '<div class="tree-item" onclick="cargarProyectos(\'' + hub.id + '\', this)">'
-            + '<div class="tree-icon">&#127968;</div>'
-            + '<div class="tree-info"><div class="tree-name">' + (hub.attributes.name || hub.id) + '</div>'
-            + '<div class="tree-meta">' + tipo + '</div></div>'
-            + '<div class="tree-badge">HUB</div>'
-            + '</div>';
-    });
-    document.getElementById('projectTree').innerHTML = html;
+    document.getElementById('platformWrap').style.display = 'block';
+    renderHubs(plataformaActual);
   } catch(e) {
     ocultarLoading();
     mostrarError('Error cargando hubs: ' + e.message);
   }
 }
 
+function clasificarHub(hub) {
+  var extType = ((hub.attributes.extension && hub.attributes.extension.type) || '').toLowerCase();
+  var id      = (hub.id || '').toLowerCase();
+  var name    = ((hub.attributes && hub.attributes.name) || '').toLowerCase();
+
+  // A360 personal: id empieza con 'a.' o extType contiene 'a360project'
+  if (id.startsWith('a.') || extType.includes('a360project')) return 'a360';
+
+  // BIM360 / ACC: id empieza con 'b.' O extType contiene 'bim360' o 'account'
+  // ACC y BIM360 comparten el mismo hub type en la API — los diferenciamos por nombre
+  if (id.startsWith('b.') || extType.includes('bim360') || extType.includes('account')) {
+    if (name.includes('acc') || name.includes('construction cloud') || extType.includes('acc')) return 'acc';
+    return 'bim360';
+  }
+
+  // Fallback: si tiene ID de hub válido, tratar como BIM360/ACC
+  if (hub.id) return 'bim360';
+  return 'a360';
+}
+
+function seleccionarPlataforma(tipo) {
+  plataformaActual = tipo;
+  document.getElementById('btnBIM360').classList.toggle('active', tipo === 'bim360');
+  document.getElementById('btnACC').classList.toggle('active',    tipo === 'acc');
+  document.getElementById('btnA360').classList.toggle('active',   tipo === 'a360');
+  renderHubs(tipo);
+}
+
+function renderHubs(tipo) {
+  // Log para debug
+  console.log('[renderHubs] tipo:', tipo, '| total hubs:', todosLosHubs.length);
+  todosLosHubs.forEach(function(h) {
+    console.log('  hub:', h.id, '| extType:', (h.attributes.extension && h.attributes.extension.type), '| clasificado:', clasificarHub(h));
+  });
+
+  var filtrados = todosLosHubs.filter(function(hub) {
+    var clase = clasificarHub(hub);
+    if (tipo === 'bim360') return clase === 'bim360' || clase === 'acc'; // BIM360 muestra ambos
+    if (tipo === 'acc')    return clase === 'acc' || clase === 'bim360'; // ACC también muestra ambos (misma API)
+    if (tipo === 'a360')   return clase === 'a360';
+    return true;
+  });
+  console.log('[renderHubs] filtrados:', filtrados.length);
+  if (!filtrados.length) {
+    document.getElementById('projectTree').innerHTML =
+      '<div style="padding:16px;font:400 10px var(--mono);color:var(--muted);line-height:1.8;text-align:center;">Sin hubs disponibles.<br><span style="opacity:.5;font-size:9px;">Revisa la consola F12 para detalles</span></div>';
+    return;
+  }
+  var html = '';
+  filtrados.forEach(function(hub) {
+    var clase = clasificarHub(hub);
+    var label = clase === 'acc' ? '&#9729;&#65039; ACC' : clase === 'bim360' ? '&#9881;&#65039; BIM 360' : '&#127760; A360';
+    var extTypeRaw = (hub.attributes.extension && hub.attributes.extension.type) || 'desconocido';
+    html += '<div class="tree-section">' + (hub.attributes.name || 'Hub') + '</div>';
+    html += '<div class="tree-item" onclick="cargarProyectos(\'' + hub.id + '\', this)">'
+          + '<div class="tree-icon">&#127968;</div>'
+          + '<div class="tree-info"><div class="tree-name">' + (hub.attributes.name || hub.id) + '</div>'
+          + '<div class="tree-meta">' + label + ' &middot; <span style="opacity:.6;font-size:9px;">' + extTypeRaw + '</span></div></div>'
+          + '<div class="tree-badge">HUB</div></div>';
+  });
+  document.getElementById('projectTree').innerHTML = html;
+}
+</script>
+
+<script>
 // ============================================================
-// CARGAR PROYECTOS DE UN HUB
+// CARGAR PROYECTOS
 // ============================================================
 async function cargarProyectos(hubId, el) {
-  document.querySelectorAll('.tree-item').forEach(i => i.classList.remove('active'));
+  document.querySelectorAll('#projectTree .tree-item').forEach(i => i.classList.remove('active'));
   el.classList.add('active');
-  mostrarLoading('Cargando proyectos...');
+  var siguiente = el.nextElementSibling;
+  if (siguiente && siguiente.dataset.hubChildren === hubId) { siguiente.remove(); return; }
+  var loadRow = document.createElement('div');
+  loadRow.className = 'nav-loading'; loadRow.dataset.hubChildren = hubId;
+  loadRow.innerHTML = '<div class="nav-spin"></div><span class="nav-load-text">Cargando proyectos...</span>';
+  el.insertAdjacentElement('afterend', loadRow);
   try {
-    var res = await fetch('https://developer.api.autodesk.com/project/v1/hubs/' + hubId + '/projects', {
+    var res  = await fetch('https://developer.api.autodesk.com/project/v1/hubs/' + hubId + '/projects', {
       headers: { 'Authorization': 'Bearer ' + apsToken }
     });
     var data = await res.json();
     var proyectos = data.data || [];
-    ocultarLoading();
-
-    var hubHtml = el.parentElement.innerHTML;
-    var html = document.getElementById('projectTree').innerHTML;
-
-    // Insertar proyectos debajo del hub
-    var subsHtml = '';
-    proyectos.forEach(function(proj) {
-      var rootId = proj.relationships.rootFolder.data.id;
-      subsHtml += '<div class="tree-item" style="padding-left:28px;" onclick="cargarModelos(\'' + proj.id + '\',\'' + hubId + '\',\'' + rootId + '\', this)">'
-               + '<div class="tree-icon">&#128193;</div>'
-               + '<div class="tree-info"><div class="tree-name">' + (proj.attributes.name || proj.id) + '</div>'
-               + '<div class="tree-meta">Proyecto</div></div>'
-               + '</div>';
-    });
-
-    // Insertar después del item del hub
-    var parser = new DOMParser();
-    var doc = parser.parseFromString(document.getElementById('projectTree').innerHTML, 'text/html');
-    el.insertAdjacentHTML('afterend', subsHtml);
-  } catch(e) {
-    ocultarLoading();
-    mostrarError('Error cargando proyectos: ' + e.message);
-  }
+    loadRow.remove();
+    var wrap = document.createElement('div');
+    wrap.dataset.hubChildren = hubId;
+    if (!proyectos.length) {
+      wrap.innerHTML = '<div style="padding:6px 28px;font:400 9px var(--mono);color:var(--muted);">Sin proyectos</div>';
+    } else {
+      proyectos.forEach(function(proj) {
+        var rootId = proj.relationships.rootFolder.data.id;
+        var row = document.createElement('div');
+        row.className = 'tree-item'; row.style.paddingLeft = '28px';
+        row.innerHTML = '<div class="tree-icon">&#128193;</div>'
+          + '<div class="tree-info"><div class="tree-name">' + (proj.attributes.name || proj.id) + '</div>'
+          + '<div class="tree-meta">Proyecto &middot; clic para explorar</div></div>';
+        row.onclick = function() { abrirNavegador(proj.id, hubId, rootId, proj.attributes.name || proj.id, row); };
+        wrap.appendChild(row);
+      });
+    }
+    el.insertAdjacentElement('afterend', wrap);
+  } catch(e) { loadRow.remove(); mostrarError('Error cargando proyectos: ' + e.message); }
 }
 
 // ============================================================
-// CARGAR MODELOS DE UN PROYECTO
+// PANEL CENTRAL — Navegador
 // ============================================================
-async function cargarModelos(projectId, hubId, folderId, el) {
-  document.querySelectorAll('.tree-item').forEach(i => i.classList.remove('active'));
-  el.classList.add('active');
-  mostrarLoading('Cargando modelos...');
+var navState = {
+  projectId: null, hubId: null, stack: [], allItems: [], filtro: 'all'
+};
+
+function abrirNavegador(projectId, hubId, rootFolderId, projectName, elProyecto) {
+  document.querySelectorAll('#projectTree .tree-item').forEach(i => i.classList.remove('active'));
+  if (elProyecto) elProyecto.classList.add('active');
+  navState.projectId = projectId; navState.hubId = hubId;
+  navState.stack = [{ id: rootFolderId, name: projectName }]; navState.filtro = 'all';
+  document.getElementById('pmProjectName').textContent = projectName;
+  ['fAll','fRVT','fIFC','fDWG'].forEach(function(id) {
+    document.getElementById(id).classList.toggle('active', id === 'fAll');
+  });
+  document.getElementById('panelMid').classList.remove('hidden');
+  navegarCarpeta(rootFolderId);
+}
+
+function cerrarNavegador() {
+  document.getElementById('panelMid').classList.add('hidden');
+  navState.projectId = null;
+}
+
+function actualizarBreadcrumb() {
+  var bc = document.getElementById('breadcrumb'); bc.innerHTML = '';
+  navState.stack.forEach(function(item, idx) {
+    if (idx > 0) { var sep = document.createElement('span'); sep.className = 'breadcrumb-sep'; sep.textContent = '/'; bc.appendChild(sep); }
+    var span = document.createElement('span');
+    span.className = 'breadcrumb-item' + (idx === navState.stack.length - 1 ? ' current' : '');
+    span.textContent = item.name;
+    if (idx < navState.stack.length - 1) {
+      (function(i) { span.onclick = function() { navState.stack = navState.stack.slice(0, i + 1); navegarCarpeta(navState.stack[i].id); }; })(idx);
+    }
+    bc.appendChild(span);
+  });
+}
+
+function filtrarNav(tipo) {
+  navState.filtro = tipo;
+  document.getElementById('fAll').classList.toggle('active', tipo === 'all');
+  document.getElementById('fRVT').classList.toggle('active', tipo === 'rvt');
+  document.getElementById('fIFC').classList.toggle('active', tipo === 'ifc');
+  document.getElementById('fDWG').classList.toggle('active', tipo === 'dwg');
+  renderNavItems(navState.allItems);
+}
+
+async function navegarCarpeta(folderId) {
+  actualizarBreadcrumb();
+  var list = document.getElementById('navList');
+  list.innerHTML = '<div class="nav-loading"><div class="nav-spin"></div><span class="nav-load-text">Cargando contenido...</span></div>';
   try {
-    var res = await fetch('https://developer.api.autodesk.com/data/v1/projects/' + projectId + '/folders/' + folderId + '/contents', {
+    var res  = await fetch('https://developer.api.autodesk.com/data/v1/projects/' + navState.projectId + '/folders/' + folderId + '/contents', {
       headers: { 'Authorization': 'Bearer ' + apsToken }
     });
     var data = await res.json();
-    var items = (data.data || []).filter(i => i.type === 'items');
-    ocultarLoading();
-
-    if (!items.length) {
-      el.insertAdjacentHTML('afterend', '<div style="padding:8px 28px;font:400 9px var(--mono);color:var(--muted);">Sin modelos en esta carpeta</div>');
-      return;
-    }
-
-    var subsHtml = '';
-    items.forEach(function(item) {
-      var ext = (item.attributes.displayName || '').split('.').pop().toUpperCase();
-      var icon = ext === 'RVT' ? '&#128208;' : ext === 'IFC' ? '&#128230;' : '&#128196;';
-      var urn = item.relationships.tip && item.relationships.tip.data ? item.relationships.tip.data.id : null;
-      var onclick = urn ? 'cargarVisor(\'' + btoa(urn).replace(/=/g,'') + '\',\'' + (item.attributes.displayName||'Modelo') + '\', this)' : '';
-      subsHtml += '<div class="tree-item' + (urn ? '' : ' disabled') + '" style="padding-left:44px;" ' + (urn ? 'onclick="'+onclick+'"' : '') + '>'
-               + '<div class="tree-icon">' + icon + '</div>'
-               + '<div class="tree-info"><div class="tree-name">' + (item.attributes.displayName || item.id) + '</div>'
-               + '<div class="tree-meta">' + ext + (urn ? '' : ' &middot; Sin traducci&oacute;n') + '</div></div>'
-               + '</div>';
-    });
-    el.insertAdjacentHTML('afterend', subsHtml);
+    navState.allItems = data.data || [];
+    renderNavItems(navState.allItems);
   } catch(e) {
-    ocultarLoading();
-    mostrarError('Error cargando modelos: ' + e.message);
+    list.innerHTML = '<div class="nav-empty" style="color:#ff3d57;">Error: ' + e.message + '</div>';
   }
 }
 
-// ============================================================
-// CARGAR VISOR DE AUTODESK
-// ============================================================
-function cargarVisor(urn, nombre, el) {
-  document.querySelectorAll('.tree-item').forEach(i => i.classList.remove('active'));
-  if (el) el.classList.add('active');
+function renderNavItems(items) {
+  var list = document.getElementById('navList');
+  var filtro = navState.filtro;
+  var carpetas = items.filter(function(i) { return i.type === 'folders'; });
+  var archivos = items.filter(function(i) {
+    if (i.type !== 'items') return false;
+    if (filtro === 'all') return true;
+    var ext = (i.attributes.displayName || '').split('.').pop().toLowerCase();
+    return ext === filtro;
+  });
+  if (!carpetas.length && !archivos.length) {
+    list.innerHTML = '<div class="nav-empty">Esta carpeta est&aacute; vac&iacute;a' + (filtro !== 'all' ? ' para el filtro <strong>' + filtro.toUpperCase() + '</strong>' : '') + '</div>';
+    return;
+  }
+  list.innerHTML = '';
+  carpetas.forEach(function(folder) {
+    var row = document.createElement('div'); row.className = 'nav-item is-folder';
+    row.innerHTML = '<div class="nav-icon">&#128193;</div>'
+      + '<div class="nav-info"><div class="nav-name">' + (folder.attributes.name || folder.id) + '</div>'
+      + '<div class="nav-sub">Carpeta</div></div>';
+    row.onclick = function() { navState.stack.push({ id: folder.id, name: folder.attributes.name || folder.id }); navegarCarpeta(folder.id); };
+    list.appendChild(row);
+  });
+  archivos.forEach(function(item) {
+    var nombre = item.attributes.displayName || item.id;
+    var ext    = nombre.split('.').pop().toUpperCase();
+    var icon   = ext === 'RVT' ? '&#128208;' : ext === 'IFC' ? '&#128230;' : ext === 'DWG' ? '&#128195;' : '&#128196;';
+    var tagCls = ext === 'RVT' ? 'tag-rvt' : ext === 'IFC' ? 'tag-ifc' : ext === 'DWG' ? 'tag-dwg' : 'tag-gen';
+    var urn    = item.relationships.tip && item.relationships.tip.data ? item.relationships.tip.data.id : null;
+    var row    = document.createElement('div');
+    row.className = 'nav-item' + (urn ? '' : ' disabled');
+    row.innerHTML = '<div class="nav-icon">' + icon + '</div>'
+      + '<div class="nav-info"><div class="nav-name">' + nombre + '</div>'
+      + '<div class="nav-sub">' + (urn ? 'Clic para abrir en visor' : 'Sin traducción disponible') + '</div></div>'
+      + '<span class="nav-tag ' + tagCls + '">' + ext + '</span>';
+    if (urn) {
+      function toBase64URN(u) { return btoa(u).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_'); }
+      var safeUrn = toBase64URN(urn);
+      row.onclick = function() {
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        row.classList.add('active');
+        cargarVisor(safeUrn, nombre);
+      };
+    }
+    list.appendChild(row);
+  });
+}
+</script>
 
+<script>
+// ============================================================
+// VISOR 3D
+// ============================================================
+function cargarVisor(urn, nombre) {
+  if (typeof Autodesk === 'undefined' || !Autodesk.Viewing) {
+    mostrarError('SDK del visor no disponible. Recarga la página.'); return;
+  }
   document.getElementById('viewerEmpty').style.display = 'none';
   document.getElementById('forgeViewer').style.display = 'block';
   document.getElementById('viewerToolbar').style.display = 'flex';
   document.getElementById('viewerTitle').textContent = nombre;
   mostrarLoading('Iniciando visor...');
+  var docUrn = 'urn:' + urn;
 
-  Autodesk.Viewing.Initializer({ env: 'AutodeskProduction', accessToken: apsToken }, function() {
-    if (viewer) { viewer.finish(); viewer = null; }
-    var el3d = document.getElementById('forgeViewer');
-    el3d.innerHTML = '';
-    viewer = new Autodesk.Viewing.GuiViewer3D(el3d, {
-      theme: 'dark-theme',
-      extensions: ['Autodesk.DocumentBrowser']
-    });
+  function arrancarVisor() {
+    if (viewer) { try { viewer.finish(); } catch(e) {} viewer = null; }
+    var container = document.getElementById('forgeViewer');
+    container.innerHTML = '';
+    viewer = new Autodesk.Viewing.GuiViewer3D(container, { theme:'dark-theme' });
     var startCode = viewer.start();
-    if (startCode > 0) {
-      ocultarLoading();
-      mostrarError('Error iniciando visor: código ' + startCode);
-      return;
-    }
+    if (startCode > 0) { ocultarLoading(); mostrarError('Error iniciando visor (código ' + startCode + ').'); return; }
     document.getElementById('loadText').textContent = 'Cargando modelo...';
-    var docUrn = 'urn:' + urn;
-    Autodesk.Viewing.Document.load(docUrn,
-      function(doc) {
+
+    Autodesk.Viewing.Document.load(
+      docUrn,
+      function onDocumentLoadSuccess(doc) {
         ocultarLoading();
-        var defaultModel = doc.getRoot().getDefaultGeometry();
-        viewer.loadDocumentNode(doc, defaultModel, {
-          keepCurrentModels: false
-        }).then(function() {
-          console.log('Modelo cargado:', nombre);
-        });
+        var root = doc.getRoot();
+        var geometries = root.search({ type: 'geometry' });
+        var viewable = geometries.length > 0 ? geometries[0] : root.getDefaultGeometry();
+        if (!viewable) { mostrarError('El modelo no tiene geometría visualizable.'); return; }
+        viewer.loadDocumentNode(doc, viewable, { keepCurrentModels: false })
+          .then(function() {
+            viewer.resize();
+            viewer.addEventListener(Autodesk.Viewing.SELECTION_CHANGED_EVENT, onElementSelected);
+            // Construir índice completo del modelo en background
+            setTimeout(function() {
+              construirIndiceModelo(function(idx) {
+                if (idx) construirDonutDesdeIndice(idx);
+              });
+            }, 1000);
+          })
+          .catch(function(err) { mostrarError('Error cargando nodo: ' + (err.message || err)); });
       },
-      function(code, msg) {
+      function onDocumentLoadError(code, msg, errors) {
         ocultarLoading();
-        mostrarError('Error cargando documento (' + code + '): ' + msg);
+        var msgs = { 4:'Modelo no encontrado', 7:'Sin permiso de acceso', 9:'Token expirado' };
+        mostrarError('Error al cargar documento (código ' + code + '): ' + (msgs[code] || msg || 'Error desconocido'));
+        console.error('[Visor] Errores:', errors);
       }
     );
+  }
+
+  if (!viewerIniciado) {
+    viewerIniciado = true;
+    Autodesk.Viewing.Initializer(
+      { env:'AutodeskProduction', accessToken:apsToken, api:'streamingV2' },
+      function() { arrancarVisor(); }
+    );
+  } else { arrancarVisor(); }
+}
+
+// ============================================================
+// EVENTO SELECCIÓN — extrae propiedades para Claude
+// ============================================================
+function onElementSelected(event) {
+  var ids = event.dbIdArray;
+  if (!ids || ids.length === 0) {
+    selectedProps = null; selectedName = '';
+    document.getElementById('contextTag').classList.remove('visible');
+    document.getElementById('propsArea').innerHTML = '<div class="props-empty">Selecciona un elemento en el visor 3D.<br><span style="opacity:.5;font-size:9px;">// Click any element in the 3D viewer</span></div>';
+    document.getElementById('elementStatsCard').style.display = 'none';
+    return;
+  }
+  var dbId = ids[0];
+  viewer.getProperties(dbId, function(result) {
+    selectedName  = result.name || ('Elemento #' + dbId);
+    selectedProps = result;
+    document.getElementById('contextTag').classList.add('visible');
+    renderPropsPanel(result);
+    renderElementStats(result);
   });
+}
+
+function renderPropsPanel(result) {
+  var area = document.getElementById('propsArea');
+  var grupos = {};
+  (result.properties || []).forEach(function(p) {
+    var cat = p.displayCategory || 'General';
+    if (!grupos[cat]) grupos[cat] = [];
+    grupos[cat].push(p);
+  });
+  var html = '<span class="prop-cat-tag">' + (result.objectid || '') + '</span>';
+  Object.keys(grupos).forEach(function(cat) {
+    html += '<div class="props-section-title">' + cat + '</div>';
+    grupos[cat].forEach(function(p) {
+      if (!p.displayValue && p.displayValue !== 0) return;
+      html += '<div class="prop-row">'
+            + '<div class="prop-key" title="' + p.attributeName + '">' + p.displayName + '</div>'
+            + '<div class="prop-val">' + p.displayValue + (p.units ? ' <span style="opacity:.5;font-size:8px;">' + p.units + '</span>' : '') + '</div>'
+            + '</div>';
+    });
+  });
+  html += '<button class="btn-analyze" onclick="analizarConClaude()">✦ Analizar con Claude AI &nbsp;·&nbsp; Analyze</button>';
+  area.innerHTML = html;
+}
+
+function renderElementStats(result) {
+  var card = document.getElementById('elementStatsCard');
+  var mini = document.getElementById('elementMiniStats');
+  var claves = ['Category','Family','Type','Material','Level'];
+  var filas  = claves.map(function(k) {
+    var p = (result.properties||[]).find(function(x){ return x.displayName === k || x.attributeName === k; });
+    return p ? '<div class="prop-row"><div class="prop-key">' + k + '</div><div class="prop-val">' + p.displayValue + '</div></div>' : '';
+  }).join('');
+  mini.innerHTML = filas || '<div style="font:400 9px var(--mono);color:var(--muted);padding:8px 0;">Sin metadatos clave disponibles</div>';
+  card.style.display = 'block';
+  document.getElementById('btnGenerarReporte').style.display = 'block';
+}
+</script>
+
+<script>
+// ============================================================
+// GRÁFICO DONA — categorías BIM del modelo
+// ============================================================
+function construirDonutDesdeIndice(idx) {
+  var cats = {};
+  Object.keys(idx).forEach(function(cat) { cats[cat] = idx[cat].length; });
+  renderDonut(cats);
+}
+
+function renderDonut(cats) {
+  var entries = Object.entries(cats).sort((a,b) => b[1]-a[1]).slice(0,8);
+  if (!entries.length) return;
+  document.getElementById('donutEmpty').style.display = 'none';
+  var canvas = document.getElementById('donutChart');
+  canvas.style.display = 'block';
+  if (donutChartInst) { donutChartInst.destroy(); }
+  var palette = ['#c77dff','#7c4dff','#0090ff','#00d4ff','#00c853','#ff6b35','#ffcc02','#ff3d57'];
+  donutChartInst = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: entries.map(e => e[0]),
+      datasets: [{ data: entries.map(e => e[1]),
+        backgroundColor: palette.slice(0, entries.length).map(c => c + 'cc'),
+        borderColor: palette.slice(0, entries.length),
+        borderWidth: 1.5, hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false, cutout:'65%',
+      plugins: {
+        legend: { position:'right', labels: { color:'#c8d8f0', font:{ family:'JetBrains Mono', size:9 }, boxWidth:10, padding:8 }},
+        tooltip: { callbacks: { label: function(ctx){ return ' ' + ctx.label + ': ' + ctx.parsed; }}}
+      }
+    }
+  });
+}
+
+// ============================================================
+// CLAUDE AI — Chat
+// ============================================================
+
+// Caché de datos del modelo para análisis masivo
+var modelDataCache = {};
+
+// ============================================================
+// ÍNDICE COMPLETO DEL MODELO
+// ============================================================
+var modelIndex = null;        // { categoria: [ {id, nombre, props:{...}} ] }
+var modelIndexBuilding = false;
+
+function construirIndiceModelo(callback) {
+  if (modelIndex) return callback(modelIndex);
+  if (modelIndexBuilding) return setTimeout(function(){ construirIndiceModelo(callback); }, 500);
+  if (!viewer || !viewer.model) return callback(null);
+
+  modelIndexBuilding = true;
+  console.log('[Index] Construyendo índice del modelo...');
+  var index = {};
+  var total = 0, procesados = 0;
+
+  viewer.model.getObjectTree(function(tree) {
+    tree.enumNodeChildren(tree.getRootId(), function(dbId) { total++; }, true);
+    console.log('[Index] Total elementos:', total);
+
+    tree.enumNodeChildren(tree.getRootId(), function(dbId) {
+      viewer.getProperties(dbId, function(r) {
+        // Solo elementos con propiedades reales (no nodos contenedores)
+        var tieneProps = r.properties && r.properties.some(function(p){
+          return !p.hidden && p.displayValue !== null && p.displayValue !== '';
+        });
+        if (tieneProps) {
+          // Obtener categoría
+          var catProp = (r.properties||[]).find(function(p){
+            return p.attributeName === 'Category' || p.displayName === 'Categoría';
+          });
+          var cat = catProp ? catProp.displayValue : 'Sin categoría';
+          if (!index[cat]) index[cat] = [];
+
+          // Construir objeto compacto con todas las props relevantes
+          var props = {};
+          r.properties.forEach(function(p) {
+            if (!p.hidden && p.displayValue !== null && p.displayValue !== '' &&
+                !p.attributeName.startsWith('_') && p.displayCategory !== '__child__') {
+              props[p.displayName] = p.displayValue + (p.units ? ' ' + p.units : '');
+            }
+          });
+          index[cat].push({ id: dbId, nombre: r.name || 'Sin nombre', props: props });
+        }
+
+        if (++procesados >= total) {
+          modelIndex = index;
+          modelIndexBuilding = false;
+          var resumen = Object.keys(index).map(function(k){ return k + ': ' + index[k].length; }).join(', ');
+          console.log('[Index] Índice listo →', resumen);
+          if (callback) callback(modelIndex);
+        }
+      });
+    }, true);
+  });
+}
+
+// Construir resumen compacto del modelo para enviar a Claude
+function construirResumenModelo(categoriaFiltro) {
+  if (!modelIndex) return '';
+  var lines = ['=== ÍNDICE COMPLETO DEL MODELO BIM ==='];
+
+  var cats = categoriaFiltro
+    ? Object.keys(modelIndex).filter(function(k){ return k.toLowerCase().includes(categoriaFiltro.toLowerCase()); })
+    : Object.keys(modelIndex);
+
+  cats.forEach(function(cat) {
+    var items = modelIndex[cat];
+    lines.push('\n[' + cat + '] — ' + items.length + ' elementos');
+    // Incluir todos los elementos (máx 300 por categoría para no saturar el contexto)
+    items.slice(0, 300).forEach(function(item) {
+      var propStr = Object.entries(item.props)
+        .filter(function(e){ return e[1] && e[1] !== 'undefined'; })
+        .map(function(e){ return e[0] + ': ' + e[1]; })
+        .join(' | ');
+      lines.push('  • ' + item.nombre + (propStr ? ' → ' + propStr : ''));
+    });
+    if (items.length > 300) lines.push('  ... (' + (items.length - 300) + ' más)');
+  });
+  return lines.join('\n');
+}
+
+function construirContexto() {
+  if (!selectedProps) return '';
+  var lines = ['=== ELEMENTO BIM SELECCIONADO ===', 'Nombre: ' + selectedName];
+  var grupos = {};
+  (selectedProps.properties || []).forEach(function(p) {
+    if (!p.displayValue && p.displayValue !== 0) return;
+    var cat = p.displayCategory || 'General';
+    if (!grupos[cat]) grupos[cat] = [];
+    grupos[cat].push(p.displayName + ': ' + p.displayValue + (p.units ? ' ' + p.units : ''));
+  });
+  Object.keys(grupos).forEach(function(cat) {
+    lines.push('\n[' + cat + ']');
+    grupos[cat].forEach(function(l){ lines.push('  ' + l); });
+  });
+  return lines.join('\n');
+}
+
+async function llamarClaude(userMsg) {
+  var SYSTEM = 'Eres un asistente BIM experto en Autodesk Revit, IFC y ACC. Respondes en el idioma del usuario.\n'
+    + 'Cuando el usuario pide una ACCION sobre el visor 3D (ocultar, mostrar, aislar, colorear, restaurar),\n'
+    + 'responde SIEMPRE con un bloque JSON al inicio con este formato:\n\n'
+    + 'VIEWER_CMD:{"action":"hide","category":"muros","message":"texto"}\n\n'
+    + 'Acciones: hide, show, isolate, showAll, color, fitView\n'
+    + 'Categorias del modelo: muros, suelos, puertas, ventanas, pilares, cubiertas, techos, escaleras, rampas, barandillas, estructura, tuberias, muro cortina, ALL\n\n'
+    + 'Si el usuario NO pide accion de visor, responde normalmente sin VIEWER_CMD.\n'
+    + 'Eres conciso y tecnico. Si tienes propiedades BIM en contexto, usalas.';
+
+  var contexto = construirContexto();
+  // Incluir índice del modelo si está disponible
+  var resumenModelo = construirResumenModelo();
+  if (resumenModelo) contexto = (contexto ? contexto + '\n\n' : '') + resumenModelo;
+  // Limpiar caché viejo
+  modelDataCache = {};
+  var msgFinal = contexto ? contexto + '\n\n---\nUsuario: ' + userMsg : userMsg;
+  chatHistory.push({ role:'user', content: msgFinal });
+
+  var res = await fetch('/claude/chat', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system: SYSTEM,
+      messages: chatHistory
+    })
+  });
+  var data = await res.json();
+  var reply = (data.content && data.content[0] && data.content[0].text) ? data.content[0].text : 'Sin respuesta.';
+  chatHistory.push({ role:'assistant', content: reply });
+  if (chatHistory.length > 20) chatHistory = chatHistory.slice(-16);
+
+  // Detectar y ejecutar comandos de visor
+  var cmdMatch = reply.match(/VIEWER_CMD:(\{.*?\})/s);
+  if (cmdMatch) {
+    try {
+      var cmd = JSON.parse(cmdMatch[1]);
+      ejecutarComandoVisor(cmd);
+      // Devolver solo el mensaje amigable al chat
+      reply = reply.replace(/VIEWER_CMD:\{.*?\}/s, '').trim();
+      if (!reply && cmd.message) reply = cmd.message;
+    } catch(e) { console.warn('VIEWER_CMD parse error:', e); }
+  }
+  return reply;
+}
+
+// ============================================================
+// CONTROL DEL VISOR POR COMANDOS DE CLAUDE
+// ============================================================
+function obtenerDbIdsPorCategoria(categoria, callback) {
+  if (!viewer || !viewer.model) return callback([]);
+  viewer.model.getObjectTree(function(tree) {
+    var ids = [];
+    var total = 0, procesados = 0;
+    function checkDone() { if (++procesados >= total) callback(ids); }
+
+    // Normalizar la query del usuario
+    var query = categoria.toLowerCase().trim();
+
+    // Mapa de términos del usuario → fragmentos de categoría Revit (en español e inglés)
+    var mapa = {
+      'walls':'muros', 'muros':'muros', 'muro':'muros',
+      'floors':'suelos', 'suelos':'suelos', 'pisos':'suelos', 'losas':'suelos',
+      'doors':'puertas', 'puertas':'puertas', 'puerta':'puertas',
+      'windows':'ventanas', 'ventanas':'ventanas', 'ventana':'ventanas',
+      'columns':'pilares', 'pilares':'pilares', 'columnas':'pilares',
+      'roofs':'cubiertas', 'cubiertas':'cubiertas', 'techos':'techos',
+      'ceilings':'techos', 'techo':'techos',
+      'stairs':'escaleras', 'escaleras':'escaleras',
+      'ramps':'rampas', 'rampas':'rampas',
+      'railings':'barandillas', 'barandillas':'barandillas',
+      'structural':'armazón', 'estructura':'armazón', 'vigas':'armazón',
+      'curtain wall':'muro cortina', 'muro cortina':'muro cortina',
+      'pipes':'tuberías', 'tuberías':'tuberías', 'tubería':'tuberías',
+      'furniture':'mobiliario', 'mobiliario':'mobiliario',
+      'generic':'genéricos', 'genéricos':'genéricos',
+      'all':'all'
+    };
+
+    var termino = mapa[query] || query;
+
+    tree.enumNodeChildren(tree.getRootId(), function(dbId) {
+      total++;
+      viewer.getProperties(dbId, function(r) {
+        var catProp = (r.properties||[]).find(function(p){
+          return p.attributeName === 'Category' || p.displayName === 'Category' ||
+                 p.displayName === 'Categoría';
+        });
+        if (catProp && catProp.displayValue) {
+          var cat = catProp.displayValue.toLowerCase();
+          if (termino === 'all' || cat.includes(termino)) ids.push(dbId);
+        }
+        checkDone();
+      });
+    }, true);
+    if (total === 0) callback([]);
+  });
+}
+
+function ejecutarComandoVisor(cmd) {
+  if (!viewer) { mostrarToast('⚠ Carga un modelo primero'); return; }
+  var acc = cmd.action;
+  var cat = cmd.category || 'ALL';
+
+  if (acc === 'showAll') {
+    viewer.showAll();
+    mostrarToast('✓ ' + (cmd.message || 'Todos los elementos visibles'));
+    return;
+  }
+  if (acc === 'fitView') {
+    viewer.fitToView();
+    mostrarToast('✓ Cámara ajustada');
+    return;
+  }
+
+  obtenerDbIdsPorCategoria(cat, function(ids) {
+    if (!ids.length) { mostrarToast('No se encontraron elementos: ' + cat); return; }
+    if (acc === 'hide') {
+      viewer.hide(ids);
+      mostrarToast('✓ ' + (cmd.message || 'Ocultado: ' + cat + ' (' + ids.length + ')'));
+    } else if (acc === 'show') {
+      viewer.show(ids);
+      mostrarToast('✓ ' + (cmd.message || 'Mostrado: ' + cat + ' (' + ids.length + ')'));
+    } else if (acc === 'isolate') {
+      viewer.isolate(ids);
+      mostrarToast('✓ ' + (cmd.message || 'Aislado: ' + cat + ' (' + ids.length + ')'));
+    } else if (acc === 'color' && cmd.color) {
+      var THREE = window.THREE;
+      var hex = cmd.color.replace('#','');
+      var r = parseInt(hex.substr(0,2),16)/255;
+      var g = parseInt(hex.substr(2,2),16)/255;
+      var b = parseInt(hex.substr(4,2),16)/255;
+      ids.forEach(function(id){
+        viewer.setThemingColor(id, new THREE.Vector4(r,g,b,1));
+      });
+      mostrarToast('✓ ' + (cmd.message || 'Coloreado: ' + cat));
+    }
+  });
+}
+
+function agregarMensaje(rol, texto) {
+  var msgs = document.getElementById('chatMessages');
+  var div  = document.createElement('div');
+  div.className = 'msg ' + rol;
+  var time = new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+  div.innerHTML = '<div class="msg-bubble">' + texto.replace(/\n/g,'<br>') + '</div><div class="msg-time">' + time + '</div>';
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function mostrarTyping() {
+  var msgs = document.getElementById('chatMessages');
+  var div  = document.createElement('div');
+  div.className = 'msg assistant msg-typing'; div.id = 'typingBubble';
+  div.innerHTML = '<div class="msg-bubble dot-anim"><span>•</span><span>•</span><span>•</span></div>';
+  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
+}
+
+function quitarTyping() {
+  var t = document.getElementById('typingBubble');
+  if (t) t.remove();
+}
+
+async function enviarMensaje() {
+  var input = document.getElementById('chatInput');
+  var texto = input.value.trim();
+  if (!texto) return;
+  input.value = '';
+  input.style.height = '38px';
+  agregarMensaje('user', texto);
+  document.getElementById('chatSendBtn').disabled = true;
+  mostrarTyping();
+
+  try {
+    // Si hay modelo cargado y el índice no está listo, construirlo primero
+    if (viewer && viewer.model && !modelIndex) {
+      quitarTyping();
+      agregarMensaje('assistant', '🔍 Indexando modelo por primera vez... espera un momento.');
+      mostrarTyping();
+      await new Promise(function(resolve) {
+        construirIndiceModelo(function(){ resolve(); });
+      });
+    }
+    var reply = await llamarClaude(texto);
+    quitarTyping();
+    agregarMensaje('assistant', reply);
+  } catch(e) {
+    quitarTyping();
+    agregarMensaje('assistant', '⚠ Error al conectar con Claude: ' + e.message);
+  }
+  document.getElementById('chatSendBtn').disabled = false;
+  if (!claudePanelOpen) toggleClaudePanel();
+}
+
+function enviarSugerencia(btn) {
+  document.getElementById('chatInput').value = btn.textContent;
+  enviarMensaje();
+}
+
+function analizarConClaude() {
+  if (!selectedProps) return;
+  document.getElementById('chatInput').value = 'Analiza este elemento BIM. Describe su tipología, materiales, nivel, posibles usos y cualquier dato relevante que encuentres en sus propiedades.';
+  if (!claudePanelOpen) toggleClaudePanel();
+  cambiarTab('chat', document.querySelectorAll('.cp-tab')[0]);
+  setTimeout(enviarMensaje, 100);
+}
+</script>
+
+<script>
+// ============================================================
+// REPORTE CON CLAUDE
+// ============================================================
+async function generarReporte() {
+  if (!claudePanelOpen) toggleClaudePanel();
+  cambiarTab('chat', document.querySelectorAll('.cp-tab')[0]);
+  var prompt = 'Genera un reporte técnico BIM completo del elemento seleccionado. '
+    + 'Incluye: 1) Identificación del elemento, 2) Propiedades principales, 3) Observaciones técnicas, '
+    + '4) Recomendaciones. Formato estructurado. Responde en español e inglés.';
+  document.getElementById('chatInput').value = prompt;
+  await enviarMensaje();
 }
 
 // ============================================================
@@ -421,13 +1325,23 @@ function ocultarLoading() {
 }
 function mostrarError(msg) {
   console.error(msg);
-  var tree = document.getElementById('projectTree');
   var err = document.createElement('div');
   err.style.cssText = 'padding:10px 16px;font:400 9px var(--mono);color:#ff3d57;background:rgba(255,61,87,.08);border-left:3px solid #ff3d57;margin:8px;border-radius:3px;';
   err.textContent = msg;
-  tree.prepend(err);
+  document.getElementById('projectTree').prepend(err);
   setTimeout(function() { err.remove(); }, 5000);
 }
+function mostrarToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2800);
+}
+
+// Auto-resize textarea
+document.getElementById('chatInput').addEventListener('input', function() {
+  this.style.height = '38px';
+  this.style.height = Math.min(this.scrollHeight, 90) + 'px';
+});
 </script>
 </body>
 </html>
