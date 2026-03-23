@@ -32,6 +32,25 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
     const url = new URL(request.url);
 
+    // ---- PROXY CLAUDE AI ----
+    if (request.method === 'POST' && url.pathname === '/claude') {
+      try {
+        const payload = await request.json();
+        const apiKey  = env.ANTHROPIC_API_KEY || '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';
+        const resp = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type':      'application/json',
+            'anthropic-version': '2023-06-01',
+            'x-api-key':         apiKey,
+          },
+          body: JSON.stringify(payload),
+        });
+        return json(await resp.json(), resp.status, cors);
+      } catch(e) { return json({ error: e.message }, 500, cors); }
+    }
+
+    // ---- PROXY APS TOKEN ----
     if (request.method === 'POST' && url.pathname === '/token') {
       try {
         const body        = await request.json();

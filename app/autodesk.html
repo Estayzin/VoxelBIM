@@ -432,6 +432,9 @@ var APS_CALLBACK  = IS_LOCAL
 var APS_PROXY     = IS_LOCAL
   ? 'http://localhost:3000/aps/token'
   : 'https://aps-oauth-proxy.zinnarox.workers.dev/token';
+var CLAUDE_PROXY  = IS_LOCAL
+  ? 'http://localhost:3000/claude/chat'
+  : 'https://aps-oauth-proxy.zinnarox.workers.dev/claude';
 var APS_SCOPES    = 'data:read viewables:read account:read bucket:read';
 var apsToken      = null;
 var viewer        = null;
@@ -1108,7 +1111,7 @@ async function llamarClaude(userMsg) {
   var msgFinal = contexto ? contexto + '\n\n---\nUsuario: ' + userMsg : userMsg;
   chatHistory.push({ role:'user', content: msgFinal });
 
-  var res = await fetch('/claude/chat', {
+  var res = await fetch(CLAUDE_PROXY, {
     method:'POST',
     headers:{ 'Content-Type':'application/json' },
     body: JSON.stringify({
