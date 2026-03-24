@@ -191,10 +191,15 @@ async function handleClaudeChat(req, res, body) {
     // Solicitud a Claude API
     const claudeUrl = 'https://api.anthropic.com/v1/messages';
     const claudeBody = JSON.stringify({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-opus-4-1-20250805',
       max_tokens: 1024,
       messages: data.messages || [{ role: 'user', content: 'Hola' }],
     });
+
+    console.log('[Claude API Request]');
+    console.log('  URL:', claudeUrl);
+    console.log('  API Key:', CLAUDE_API_KEY ? `${CLAUDE_API_KEY.substring(0, 20)}...` : 'FALTA');
+    console.log('  Body:', claudeBody.substring(0, 100) + '...');
 
     const response = await httpsRequest('POST', claudeUrl, claudeBody, {
       'Content-Type': 'application/json',
@@ -202,12 +207,18 @@ async function handleClaudeChat(req, res, body) {
       'anthropic-version': '2023-06-01',
     });
 
+    console.log('[Claude API Response]');
+    console.log('  Status:', response.status);
+    console.log('  Data:', JSON.stringify(response.data).substring(0, 200));
+
     if (response.status === 200) {
+      console.log('[Claude] ✅ Respuesta exitosa');
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(response.data));
     } else {
+      console.error('[Claude] ❌ Error:', response.status, response.data);
       res.writeHead(response.status, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Claude API error' }));
+      res.end(JSON.stringify({ error: 'Claude API error', details: response.data }));
     }
   } catch (err) {
     res.writeHead(500, { 'Content-Type': 'application/json' });
