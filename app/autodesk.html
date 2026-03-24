@@ -37,8 +37,21 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
 <style>
 /* ── HEADER ── */
 header { background:var(--navy); padding:11px 24px; display:flex; align-items:center; gap:14px; border-bottom:2px solid var(--aps); flex-shrink:0; }
-.hback { margin-left:auto; padding:5px 12px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:4px; font:600 9px var(--mono); cursor:pointer; text-transform:uppercase; letter-spacing:.1em; text-decoration:none; transition:all .15s; }
+.hback { padding:5px 12px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:4px; font:600 9px var(--mono); cursor:pointer; text-transform:uppercase; letter-spacing:.1em; text-decoration:none; transition:all .15s; }
 .hback:hover { border-color:var(--aps); color:var(--aps); }
+/* Botones de navegación del header */
+.hnav-group { display:flex; align-items:center; gap:4px; margin-left:18px; padding-left:18px; border-left:1px solid var(--border); }
+.hnav-btn { padding:5px 13px; background:transparent; color:var(--muted); border:1px solid transparent; border-radius:5px; font:600 9px var(--mono); cursor:pointer; text-transform:uppercase; letter-spacing:.08em; transition:all .15s; white-space:nowrap; }
+.hnav-btn:hover { background:rgba(0,144,255,.08); color:var(--text); border-color:var(--border); }
+.hnav-btn.active { background:rgba(0,144,255,.12); color:var(--aps); border-color:rgba(0,144,255,.3); }
+/* Separador derecho del header */
+.hright { display:flex; align-items:center; gap:10px; margin-left:auto; }
+/* Sidebar tabs en el header — override estilos de barra */
+.sidebar-tab.hnav-btn { flex:none; padding:5px 13px; border-bottom:none; border-radius:5px; border:1px solid transparent; }
+.sidebar-tab.hnav-btn.active { border-bottom:none; }
+.sidebar-tab.hnav-btn[data-tab="chat"].active    { background:rgba(199,125,255,.12); color:var(--claude); border-color:rgba(199,125,255,.3); }
+.sidebar-tab.hnav-btn[data-tab="props"].active   { background:rgba(0,200,83,.1); color:var(--green); border-color:rgba(0,200,83,.25); }
+.sidebar-tab.hnav-btn[data-tab="charts"].active  { background:rgba(124,77,255,.12); color:#b39ddb; border-color:rgba(124,77,255,.3); }
 @keyframes voxel-float { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-3px)} }
 @keyframes voxel-glow  { 0%,100%{filter:drop-shadow(0 0 4px rgba(0,144,255,.4))} 50%{filter:drop-shadow(0 0 10px rgba(0,144,255,.9))} }
 @keyframes voxel-edge  { 0%,100%{opacity:.5} 50%{opacity:1} }
@@ -47,7 +60,7 @@ header { background:var(--navy); padding:11px 24px; display:flex; align-items:ce
 /* ── LAYOUT ── */
 .workspace { display:flex; flex:1; overflow:hidden; position:relative; }
 /* ── PANEL IZQUIERDO ── */
-.panel-left { width:260px; flex-shrink:0; background:var(--blue); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+.panel-left { width:300px; flex-shrink:0; background:var(--blue); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
 .pl-header { padding:12px 16px; border-bottom:1px solid var(--border); flex-shrink:0; }
 .pl-title { font:700 9px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.2em; margin-bottom:10px; }
 .btn-login { width:100%; padding:10px; background:var(--aps); color:#fff; border:none; border-radius:6px; font:700 11px var(--mono); cursor:pointer; letter-spacing:.08em; text-transform:uppercase; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:8px; }
@@ -78,8 +91,8 @@ header { background:var(--navy); padding:11px 24px; display:flex; align-items:ce
 .pm-header { padding:10px 14px; border-bottom:1px solid var(--border); flex-shrink:0; display:flex; flex-direction:column; gap:6px; }
 .pm-title-row { display:flex; align-items:center; gap:8px; }
 .pm-project-name { font:600 12px var(--mono); color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; letter-spacing:.04em; }
-.pm-close { background:transparent; border:none; color:var(--muted); cursor:pointer; font-size:14px; padding:2px 4px; border-radius:3px; line-height:1; transition:color .12s; flex-shrink:0; }
-.pm-close:hover { color:#ff3d57; }
+.pm-back { background:transparent; border:none; color:rgba(199,125,255,.8); cursor:pointer; font-size:18px; padding:2px 6px; border-radius:3px; line-height:1; transition:all .12s; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+.pm-back:hover { color:var(--claude); background:rgba(199,125,255,.1); }
 .breadcrumb { display:flex; align-items:center; gap:4px; flex-wrap:wrap; min-height:20px; }
 .breadcrumb-item { font:400 9px var(--mono); color:var(--muted); cursor:pointer; padding:2px 5px; border-radius:3px; transition:all .12s; white-space:nowrap; }
 .breadcrumb-item:hover { color:var(--aps); background:rgba(0,144,255,.08); }
@@ -133,21 +146,36 @@ header { background:var(--navy); padding:11px 24px; display:flex; align-items:ce
 .tree::-webkit-scrollbar-thumb, .nav-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
 </style>
 <style>
-/* ══════════════════════════════════════════════
-   PANEL CLAUDE AI — FLOTANTE LATERAL DERECHO
-══════════════════════════════════════════════ */
-#claudePanel {
-  position:absolute; top:0; right:0; bottom:0;
-  width:420px; z-index:200;
-  background:linear-gradient(160deg, #0e0820 0%, #0d1526 60%, #060d18 100%);
-  border-left:1px solid rgba(199,125,255,.25);
-  display:flex; flex-direction:column;
-  transform:translateX(100%);
-  transition:transform .28s cubic-bezier(.4,0,.2,1);
-  box-shadow:-8px 0 40px rgba(0,0,0,.6);
+/* ── PANEL DERECHO ANCLADO (con tabs) ── */
+.panel-right-sidebar {
+  width:0; flex-shrink:0; background:var(--navy); border-left:1px solid transparent;
+  display:flex; flex-direction:column; overflow:hidden;
+  transition:width .22s ease, border-color .22s ease;
 }
-#claudePanel.open { transform:translateX(0); }
-/* Barra superior del panel Claude */
+.panel-right-sidebar.open {
+  width:420px; border-left-color:var(--border);
+}
+.sidebar-tabs {
+  display:flex; border-bottom:1px solid var(--border); background:rgba(0,0,0,.2); flex-shrink:0;
+}
+.sidebar-tab {
+  flex:1; padding:10px 2px; background:transparent; border:none; font:600 9px var(--mono);
+  color:rgba(199,125,255,.5); cursor:pointer; text-transform:uppercase; letter-spacing:.1em;
+  transition:all .15s; border-bottom:2px solid transparent; position:relative;
+}
+.sidebar-tab:hover { color:var(--claude); }
+.sidebar-tab.active {
+  color:var(--claude); border-bottom-color:var(--claude); background:rgba(199,125,255,.04);
+}
+.sidebar-tab[data-tab="props"] { color:rgba(0,200,83,.5); }
+.sidebar-tab[data-tab="props"]:hover { color:var(--green); }
+.sidebar-tab[data-tab="props"].active { color:var(--green); border-bottom-color:var(--green); background:rgba(0,200,83,.04); }
+.sidebar-tab[data-tab="charts"] { color:rgba(124,77,255,.5); }
+.sidebar-tab[data-tab="charts"]:hover { color:#b39ddb; }
+.sidebar-tab[data-tab="charts"].active { color:#b39ddb; border-bottom-color:#b39ddb; background:rgba(124,77,255,.04); }
+
+.sidebar-content { flex:1; overflow-y:auto; display:none; flex-direction:column; }
+.sidebar-content.active { display:flex; }
 .cp-header {
   padding:12px 16px; border-bottom:1px solid rgba(199,125,255,.15);
   flex-shrink:0; display:flex; align-items:center; gap:10px;
@@ -199,6 +227,36 @@ header { background:var(--navy); padding:11px 24px; display:flex; align-items:ce
 .sug-btn:hover { background:rgba(199,125,255,.15); color:var(--claude); border-color:rgba(199,125,255,.35); }
 </style>
 <style>
+/* ── PANEL PROPIEDADES INDEPENDIENTE ── */
+.panel-props {
+  width:0; flex-shrink:0; background:var(--navy); border-left:1px solid transparent;
+  display:flex; flex-direction:column; overflow:hidden;
+  transition:width .22s ease, border-color .22s ease;
+}
+.panel-props.open { width:320px; border-left-color:var(--border); }
+/* ── INTRO BURBUJA ── */
+.panel-intro {
+  margin:12px 12px 0; flex-shrink:0;
+  background:rgba(0,144,255,.06); border:1px solid rgba(0,144,255,.18);
+  border-radius:10px; padding:10px 12px; position:relative;
+}
+.panel-intro::before {
+  content:'ℹ'; position:absolute; top:-9px; left:12px;
+  font-size:11px; color:var(--aps);
+  background:var(--navy); padding:0 5px; line-height:1;
+}
+.panel-intro p { font:400 9px var(--mono); color:var(--muted); line-height:1.7; margin:0; }
+.panel-intro .intro-note {
+  display:inline-block; margin-top:6px; font:600 8px var(--mono);
+  color:rgba(255,107,53,.8); background:rgba(255,107,53,.08);
+  border:1px solid rgba(255,107,53,.25); border-radius:3px; padding:2px 7px;
+  letter-spacing:.05em;
+}
+/* Intro verde para propiedades */
+.panel-intro.props-intro {
+  background:rgba(0,200,83,.06); border-color:rgba(0,200,83,.18);
+}
+.panel-intro.props-intro::before { content:'ℹ'; color:var(--green); }
 /* ── TAB PROPIEDADES ── */
 .props-area { flex:1; overflow-y:auto; padding:10px 14px; }
 .props-area::-webkit-scrollbar { width:3px; }
@@ -219,9 +277,105 @@ header { background:var(--navy); padding:11px 24px; display:flex; align-items:ce
 .chart-card { background:rgba(255,255,255,.03); border:1px solid rgba(199,125,255,.12); border-radius:8px; padding:12px; }
 .chart-card-title { font:700 9px var(--mono); color:rgba(199,125,255,.6); text-transform:uppercase; letter-spacing:.15em; margin-bottom:10px; }
 .chart-empty { padding:20px; text-align:center; font:400 9px var(--mono); color:rgba(199,125,255,.25); line-height:1.8; }
-/* Botón reporte */
-.btn-report { width:100%; padding:10px; background:rgba(0,200,83,.08); border:1px solid rgba(0,200,83,.25); border-radius:6px; font:700 9px var(--mono); color:var(--green); cursor:pointer; letter-spacing:.1em; text-transform:uppercase; transition:all .18s; margin-top:4px; }
-.btn-report:hover { background:rgba(0,200,83,.15); box-shadow:0 0 16px rgba(0,200,83,.15); }
+/* ── TAB REPORTE ── */
+.rpt-area { flex:1; overflow-y:auto; padding:10px 0; }
+.rpt-area::-webkit-scrollbar { width:3px; }
+.rpt-area::-webkit-scrollbar-thumb { background:rgba(124,77,255,.2); border-radius:2px; }
+.rpt-empty { padding:30px 16px; text-align:center; font:400 10px var(--mono); color:rgba(124,77,255,.3); line-height:1.8; }
+/* Sección colapsable */
+.rpt-section { border-bottom:1px solid rgba(124,77,255,.08); }
+.rpt-section-hdr {
+  display:flex; align-items:center; gap:8px; padding:10px 16px;
+  cursor:pointer; transition:background .12s; user-select:none;
+}
+.rpt-section-hdr:hover { background:rgba(124,77,255,.06); }
+.rpt-arrow { font-size:9px; color:rgba(124,77,255,.5); transition:transform .15s; flex-shrink:0; }
+.rpt-section.open .rpt-arrow { transform:rotate(90deg); }
+.rpt-section-title { font:700 9px var(--mono); color:#b39ddb; text-transform:uppercase; letter-spacing:.15em; flex:1; }
+.rpt-section-body { display:none; padding:0 0 8px; }
+.rpt-section.open .rpt-section-body { display:block; }
+/* Filas de datos */
+.rpt-row { display:flex; gap:8px; padding:4px 16px; }
+.rpt-key { font:400 9px var(--mono); color:var(--muted); flex:0 0 44%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.rpt-val { font:500 9px var(--mono); color:#d0e8ff; flex:1; word-break:break-word; }
+/* Botones de nivel */
+.rpt-level-btn {
+  display:flex; align-items:center; justify-content:space-between;
+  margin:3px 12px; padding:7px 10px;
+  background:rgba(124,77,255,.06); border:1px solid rgba(124,77,255,.15);
+  border-radius:5px; cursor:pointer; transition:all .15s;
+}
+.rpt-level-btn:hover { background:rgba(124,77,255,.14); border-color:rgba(124,77,255,.35); }
+.rpt-level-btn.active { background:rgba(124,77,255,.2); border-color:#7c4dff; }
+.rpt-level-name { font:600 10px var(--mono); color:#d0c8ff; }
+.rpt-level-count { font:700 8px var(--mono); color:#7c4dff; background:rgba(124,77,255,.12); padding:2px 6px; border-radius:3px; }
+/* Recintos */
+.rpt-recinto-btn {
+  display:flex; align-items:center; gap:8px;
+  margin:3px 12px; padding:7px 10px;
+  background:rgba(0,200,83,.05); border:1px solid rgba(0,200,83,.15);
+  border-radius:5px; cursor:pointer; transition:all .15s;
+}
+.rpt-recinto-btn:hover { background:rgba(0,200,83,.12); border-color:rgba(0,200,83,.3); }
+.rpt-recinto-btn.active { background:rgba(0,200,83,.18); border-color:var(--green); }
+.rpt-recinto-num { font:700 9px var(--mono); color:var(--green); flex-shrink:0; min-width:28px; }
+.rpt-recinto-name { font:500 10px var(--mono); color:var(--text); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.rpt-recinto-area { font:400 8px var(--mono); color:var(--muted); flex-shrink:0; }
+/* Burbuja de selección activa */
+.rpt-selection-bubble {
+  display:none; margin:12px 12px 0; padding:12px 14px;
+  background:linear-gradient(135deg,rgba(124,77,255,.15),rgba(0,144,255,.1));
+  border:1px solid rgba(124,77,255,.35); border-radius:12px;
+  flex-shrink:0;
+}
+.rpt-selection-bubble.visible { display:block; }
+.rpt-bubble-count {
+  font:700 32px var(--mono); color:#fff; line-height:1;
+  text-shadow:0 0 20px rgba(124,77,255,.6);
+}
+.rpt-bubble-label { font:400 9px var(--mono); color:rgba(199,125,255,.7); margin-top:3px; letter-spacing:.08em; }
+.rpt-bubble-name  { font:600 10px var(--mono); color:#d0c8ff; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* ── PANEL ÁRBOL DEL MODELO ── */
+.panel-tree {
+  width:0; flex-shrink:0; background:var(--blue); border-right:1px solid transparent;
+  display:flex; flex-direction:column; overflow:hidden;
+  transition:width .22s ease, border-color .22s ease;
+}
+.panel-tree.open { width:280px; border-right-color:var(--border); }
+.pt-header {
+  padding:10px 14px; border-bottom:1px solid var(--border); flex-shrink:0;
+  display:flex; align-items:center; gap:8px;
+}
+.pt-title { font:700 9px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.18em; flex:1; }
+.pt-close { background:transparent; border:none; color:var(--muted); cursor:pointer; font-size:15px; padding:2px 5px; border-radius:3px; transition:color .12s; line-height:1; }
+.pt-close:hover { color:var(--aps); }
+.pt-list { flex:1; overflow-y:auto; padding:6px 0; }
+.pt-list::-webkit-scrollbar { width:3px; }
+.pt-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+.pt-cat { cursor:pointer; user-select:none; }
+.pt-cat-row { display:flex; align-items:center; gap:7px; padding:6px 14px; transition:background .12s; }
+.pt-cat-row:hover { background:rgba(0,144,255,.06); }
+.pt-cat-arrow { font-size:9px; color:var(--muted); transition:transform .15s; flex-shrink:0; }
+.pt-cat.open .pt-cat-arrow { transform:rotate(90deg); }
+.pt-cat-name { font:600 10px var(--mono); color:var(--text); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.pt-cat-count { font:700 8px var(--mono); color:var(--aps); background:rgba(0,144,255,.1); border:1px solid rgba(0,144,255,.2); padding:1px 5px; border-radius:3px; flex-shrink:0; }
+.pt-items { display:none; }
+.pt-cat.open .pt-items { display:block; }
+.pt-item { display:flex; align-items:center; gap:6px; padding:5px 14px 5px 30px; cursor:pointer; transition:background .1s; border-left:2px solid transparent; }
+.pt-item:hover { background:rgba(0,144,255,.06); }
+.pt-item.active { background:rgba(0,144,255,.1); border-left-color:var(--aps); }
+.pt-item-name { font:400 10px var(--mono); color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.pt-empty { padding:24px 14px; text-align:center; font:400 10px var(--mono); color:var(--muted); line-height:1.8; }
+/* ── OCULTAR BOTONES DUPLICADOS DEL VIEWER ── */
+#toolbar-modelStructureTool,
+#toolbar-propertyTool,
+#toolbar-explodeTool,
+[title="Properties"],
+[title="Propiedades"],
+[title="Model Browser"],
+[title="Explorador de modelos"],
+[title="Explode"],
+[title="Explotar"] { display:none !important; }
 /* ── NOTIFICACIÓN TOAST ── */
 .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(60px); background:rgba(13,21,38,.96); border:1px solid rgba(199,125,255,.3); border-radius:8px; padding:10px 18px; font:500 10px var(--mono); color:#e0c8ff; letter-spacing:.06em; z-index:9999; transition:transform .25s ease, opacity .25s ease; opacity:0; pointer-events:none; white-space:nowrap; }
 .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
@@ -254,18 +408,34 @@ if (!_hasCode && !_hasToken && !_hasAuth && window.location.protocol !== 'file:'
     <div style="font:700 13px var(--mono);color:#e0f0ff;letter-spacing:.05em;text-transform:uppercase;">Autodesk Platform Services</div>
     <div style="font:400 10px var(--mono);color:var(--muted);margin-top:1px;">Visor BIM &middot; ACC &middot; <span style="color:rgba(199,125,255,.6);">Claude AI</span></div>
   </div>
-  <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
+
+  <!-- Botones de navegación -->
+  <nav class="hnav-group">
+    <button class="hnav-btn active" id="hbtnUbicaciones" onclick="hnavClick('ubicaciones')">&#127968; Ubicaciones</button>
+    <button class="hnav-btn" id="hbtnDocumentos"  onclick="hnavClick('documentos')">&#128193; Documentos</button>
+    <button class="hnav-btn" id="hbtnArbol"        onclick="hnavClick('arbol')">&#127795; &Aacute;rbol de Proyecto</button>
+  </nav>
+
+  <div class="hright">
+    <!-- Tabs del panel derecho -->
+    <nav class="hnav-group">
+      <button class="sidebar-tab hnav-btn" data-tab="props"   onclick="cambiarSidebarTab('props', this)">&#128295; Propiedades</button>
+      <button class="sidebar-tab hnav-btn" data-tab="charts"  onclick="cambiarSidebarTab('charts', this)">&#128196; Reporte</button>
+      <button class="sidebar-tab hnav-btn" data-tab="chat" onclick="cambiarSidebarTab('chat', this)">&#10022; Chat IA &middot; Claude</button>
+    </nav>
     <div class="conn-dot" id="connDot"></div>
     <span id="connStatus" style="font:400 9px var(--mono);color:var(--muted);">Sin conexi&oacute;n</span>
+    <a href="/index.html" class="hback">&#8592; Portal</a>
   </div>
-  <a href="/" class="hback">&#8592; Portal</a>
 </header>
 
 <!-- WORKSPACE -->
 <div class="workspace">
   <!-- PANEL IZQUIERDO -->
   <div class="panel-left">
-    <div class="pl-header">
+
+    <!-- MODO CUENTA (login, plataforma) -->
+    <div class="pl-header" id="plAccountHeader">
       <div class="pl-title">Autodesk Account</div>
       <button class="btn-login" id="btnLogin" onclick="iniciarLogin()">
         <span>&#128279;</span> Conectar con Autodesk
@@ -283,6 +453,24 @@ if (!_hasCode && !_hasToken && !_hasAuth && window.location.protocol !== 'file:'
         </div>
       </div>
     </div>
+
+    <!-- MODO NAVEGACIÓN (árbol del proyecto) -->
+    <div id="plNavHeader" style="display:none; flex-shrink:0; border-bottom:1px solid var(--border);">
+      <div style="display:flex; align-items:center; gap:8px; padding:9px 12px; border-bottom:1px solid rgba(255,255,255,.04);">
+        <button class="pm-back" onclick="cerrarNavegador()" title="Volver a proyectos">&#10094;</button>
+        <span class="pm-project-name" id="pmProjectName" style="flex:1;min-width:0;">Proyecto</span>
+      </div>
+      <div id="pmFilePath" style="font:400 9px var(--mono);color:var(--muted);padding:5px 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,.04);" title="Ruta del archivo seleccionado"></div>
+      <div class="breadcrumb" id="breadcrumb" style="padding:5px 12px;"></div>
+      <div class="pm-filter" id="pmFilter" style="padding:6px 12px 8px;">
+        <button class="filter-btn active" id="fAll"  onclick="filtrarNav('all')">Todo</button>
+        <button class="filter-btn" id="fRVT"  onclick="filtrarNav('rvt')">RVT</button>
+        <button class="filter-btn" id="fIFC"  onclick="filtrarNav('ifc')">IFC</button>
+        <button class="filter-btn" id="fDWG"  onclick="filtrarNav('dwg')">DWG</button>
+      </div>
+    </div>
+
+    <!-- Lista de hubs/proyectos -->
     <div class="tree" id="projectTree">
       <div style="padding:20px 16px;text-align:center;">
         <div style="font:400 10px var(--mono);color:var(--muted);line-height:1.8;">
@@ -290,25 +478,22 @@ if (!_hasCode && !_hasToken && !_hasAuth && window.location.protocol !== 'file:'
         </div>
       </div>
     </div>
+
+    <!-- Lista de carpetas/archivos del proyecto -->
+    <div class="nav-list" id="navList" style="display:none;">
+      <div class="nav-empty">Selecciona un proyecto</div>
+    </div>
+
   </div>
 
-  <!-- PANEL CENTRAL -->
-  <div class="panel-mid hidden" id="panelMid">
-    <div class="pm-header">
-      <div class="pm-title-row">
-        <span class="pm-project-name" id="pmProjectName">Proyecto</span>
-        <button class="pm-close" onclick="cerrarNavegador()" title="Cerrar">&#10005;</button>
-      </div>
-      <div class="breadcrumb" id="breadcrumb"></div>
+  <!-- PANEL ÁRBOL DEL MODELO -->
+  <div class="panel-tree" id="panelTree">
+    <div class="pt-header">
+      <span class="pt-title">&#127795; Árbol del Modelo</span>
+      <button class="pt-close" onclick="toggleArbol()" title="Cerrar">&#10005;</button>
     </div>
-    <div class="pm-filter" id="pmFilter">
-      <button class="filter-btn active" id="fAll"  onclick="filtrarNav('all')">Todo</button>
-      <button class="filter-btn" id="fRVT"  onclick="filtrarNav('rvt')">RVT</button>
-      <button class="filter-btn" id="fIFC"  onclick="filtrarNav('ifc')">IFC</button>
-      <button class="filter-btn" id="fDWG"  onclick="filtrarNav('dwg')">DWG</button>
-    </div>
-    <div class="nav-list" id="navList">
-      <div class="nav-empty">Selecciona un proyecto</div>
+    <div class="pt-list" id="ptList">
+      <div class="pt-empty">Carga un modelo para ver<br>el árbol de elementos</div>
     </div>
   </div>
 
@@ -317,10 +502,6 @@ if (!_hasCode && !_hasToken && !_hasAuth && window.location.protocol !== 'file:'
     <div class="viewer-toolbar" id="viewerToolbar" style="display:none;">
       <span class="vt-title" id="viewerTitle">Sin modelo</span>
       <span class="vt-badge" id="viewerBadge">APS Viewer</span>
-      <button class="btn-claude" id="btnClaudePanel" onclick="toggleClaudePanel()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M8 12h8M12 8v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        Claude AI
-      </button>
     </div>
 
     <div id="viewerContainer" style="flex:1;position:relative;display:flex;flex-direction:column;">
@@ -334,91 +515,71 @@ if (!_hasCode && !_hasToken && !_hasAuth && window.location.protocol !== 'file:'
         <div class="load-spinner"></div>
         <div class="load-text" id="loadText">Cargando...</div>
       </div>
-
-      <!-- ══ PANEL CLAUDE AI (flotante dentro del visor) ══ -->
-      <div id="claudePanel">
-        <div class="cp-header">
-          <div class="cp-logo">✦</div>
-          <div>
-            <div class="cp-title">Claude AI &nbsp;·&nbsp; BIM Assistant</div>
-            <div class="cp-model">claude-sonnet-4-20250514 &nbsp;·&nbsp; Bilingual</div>
-          </div>
-          <button class="cp-close" onclick="toggleClaudePanel()" title="Cerrar">&#10005;</button>
-        </div>
-        <!-- Pestañas -->
-        <div class="cp-tabs">
-          <button class="cp-tab active" onclick="cambiarTab('chat',this)">💬 Chat</button>
-          <button class="cp-tab" onclick="cambiarTab('props',this)">🔩 Propiedades</button>
-          <button class="cp-tab" onclick="cambiarTab('charts',this)">📊 Gráficos</button>
-        </div>
-
-        <!-- TAB CHAT -->
-        <div class="cp-pane active" id="pane-chat">
-          <div class="chat-messages" id="chatMessages">
-            <div class="msg assistant">
-              <div class="msg-bubble">Hola! Soy tu asistente BIM potenciado por Claude.<br><br>Selecciona un elemento en el visor 3D y podré analizar sus propiedades, responder preguntas sobre el modelo o generar reportes.<br><br><span style="opacity:.6;font-size:9px;">// Hello! I'm your Claude-powered BIM assistant. Select an element in the 3D viewer to get started.</span></div>
-              <div class="msg-time" id="initTime"></div>
-            </div>
-          </div>
-          <div class="chat-suggestions" id="chatSuggestions">
-            <button class="sug-btn" onclick="enviarSugerencia(this)">Oculta los muros</button>
-            <button class="sug-btn" onclick="enviarSugerencia(this)">Aísla las estructuras</button>
-            <button class="sug-btn" onclick="enviarSugerencia(this)">Muestra todo</button>
-            <button class="sug-btn" onclick="enviarSugerencia(this)">Colorea las puertas de rojo</button>
-            <button class="sug-btn" onclick="enviarSugerencia(this)">¿Qué es este elemento?</button>
-            <button class="sug-btn" onclick="enviarSugerencia(this)">Genera un reporte</button>
-          </div>
-          <div class="chat-input-area">
-            <div class="chat-context-tag" id="contextTag">📍 Elemento seleccionado como contexto</div>
-            <div class="chat-input-row">
-              <textarea class="chat-input" id="chatInput" placeholder="Pregunta sobre el modelo..." rows="1"
-                onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();enviarMensaje();}"></textarea>
-              <button class="chat-send" id="chatSendBtn" onclick="enviarMensaje()">Send</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- TAB PROPIEDADES -->
-        <div class="cp-pane" id="pane-props">
-          <div class="props-area" id="propsArea">
-            <div class="props-empty">
-              Selecciona un elemento<br>en el visor 3D para ver sus propiedades.<br><br>
-              <span style="opacity:.5;font-size:9px;">// Click any element in the 3D viewer</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- TAB GRÁFICOS -->
-        <div class="cp-pane" id="pane-charts">
-          <div class="charts-area">
-            <div class="chart-card">
-              <div class="chart-card-title">📊 Categorías BIM del modelo</div>
-              <div id="donutContainer" style="position:relative;height:200px;display:flex;align-items:center;justify-content:center;">
-                <div class="chart-empty" id="donutEmpty">Carga un modelo para ver<br>la distribución por categorías</div>
-                <canvas id="donutChart" style="display:none;"></canvas>
-              </div>
-            </div>
-            <div class="chart-card" id="elementStatsCard" style="display:none;">
-              <div class="chart-card-title">🔩 Elemento seleccionado</div>
-              <div id="elementMiniStats"></div>
-            </div>
-            <button class="btn-report" id="btnGenerarReporte" onclick="generarReporte()" style="display:none;">
-              📄 Generar reporte con Claude AI
-            </button>
-          </div>
-        </div>
-      </div>
-      <!-- FIN PANEL CLAUDE -->
-
     </div><!-- fin viewerContainer -->
   </div><!-- fin panel-right -->
+
+  <!-- PANEL PROPIEDADES — independiente -->
+  <div class="panel-props" id="panelProps">
+    <div class="panel-intro props-intro">
+      <p>Selecciona un elemento en el visor 3D para inspeccionar sus parámetros BIM. Puedes analizar el elemento con Claude AI desde esta sección.</p>
+    </div>
+    <div class="props-area" id="propsArea">
+      <div class="props-empty">
+        Selecciona un elemento en el visor 3D para ver sus propiedades.
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL DERECHO ANCLADO — Chat / Reporte -->
+  <div class="panel-right-sidebar">
+
+    <!-- TAB: CHAT -->
+    <div class="sidebar-content" data-content="chat">
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg assistant">
+          <div class="msg-bubble">Hola! Soy tu asistente BIM potenciado por Claude.<br><br>Selecciona un elemento en el visor 3D y podré analizar sus propiedades, responder preguntas sobre el modelo o generar reportes.</div>
+          <div class="msg-time" id="initTime"></div>
+        </div>
+      </div>
+      <div class="chat-suggestions" id="chatSuggestions">
+        <button class="sug-btn" onclick="enviarSugerencia(this)">Oculta los muros</button>
+        <button class="sug-btn" onclick="enviarSugerencia(this)">Aísla estructuras</button>
+        <button class="sug-btn" onclick="enviarSugerencia(this)">Muestra todo</button>
+        <button class="sug-btn" onclick="enviarSugerencia(this)">Colorea puertas</button>
+      </div>
+      <div class="chat-input-area">
+        <div class="chat-context-tag" id="contextTag">📍 Elemento seleccionado como contexto</div>
+        <div class="chat-input-row">
+          <textarea class="chat-input" id="chatInput" placeholder="Pregunta..." rows="1"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();enviarMensaje();}"></textarea>
+          <button class="chat-send" id="chatSendBtn" onclick="enviarMensaje()">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: REPORTE -->
+    <div class="sidebar-content" data-content="charts">
+      <div class="panel-intro">
+        <p>Información estructurada del modelo activo. Incluye datos de origen, parámetros del proyecto, niveles y categorías geométricas. Selecciona un nivel o categoría para aislar sus elementos en el visor.</p>
+        <span class="intro-note">&#9888; Solo funciona en RVT por el momento</span>
+      </div>
+      <div class="rpt-selection-bubble" id="rptBubble">
+        <div class="rpt-bubble-count" id="rptBubbleCount">0</div>
+        <div class="rpt-bubble-label">elementos seleccionados</div>
+        <div class="rpt-bubble-name" id="rptBubbleName"></div>
+      </div>
+      <div class="rpt-area" id="rptArea">
+        <div class="rpt-empty">Carga un modelo para ver el reporte</div>
+      </div>
+    </div>
+  </div>
 </div><!-- fin workspace -->
 
 <div class="toast" id="toast"></div>
 
 <footer style="text-align:center;padding:6px;font:400 9px var(--mono);color:var(--muted);border-top:1px solid var(--border);letter-spacing:.08em;flex-shrink:0;">
-  &copy; 2026 Carlos Estay Ruggieri &mdash; Coordinaci&oacute;n BIM &mdash; MIT License
-  &nbsp;&middot;&nbsp; <span style="color:rgba(199,125,255,.4);">Claude AI Integration v4.0</span>
+  &copy; 2026 VoxelBIM &mdash; Coordinación BIM &mdash; MIT License
+  &nbsp;&middot;&nbsp; <span style="color:rgba(199,125,255,.4);">Claude AI v4.0</span>
 </footer>
 
 <script>
@@ -429,7 +590,7 @@ var IS_LOCAL      = window.location.hostname === 'localhost' || window.location.
 var APS_CLIENT_ID = 'kOJ4igA0Lm8a9ZHA3KGkATKASthAdjiWBjY9ventTQBnGVab';
 var APS_CALLBACK  = IS_LOCAL
   ? 'http://localhost:3000/app/autodesk.html'
-  : 'https://revisor-ifc-pages.pages.dev/app/autodesk.html';
+  : 'https://revisor-ifc-pages.pages.dev/autodesk.html';
 var APS_PROXY     = IS_LOCAL
   ? 'http://localhost:3000/aps/token'
   : 'https://voxelbim.zinnarox.workers.dev/token';
@@ -439,33 +600,123 @@ var CLAUDE_PROXY  = IS_LOCAL
 var APS_SCOPES    = 'data:read viewables:read account:read bucket:read';
 var apsToken      = null;
 var viewer        = null;
-
-// Estado Claude
-var claudePanelOpen  = false;
-var selectedProps    = null;  // propiedades del elemento seleccionado
-var selectedName     = '';
-var chatHistory      = [];    // historial para API Claude
-var donutChartInst   = null;
-var viewerIniciado   = false;
-
-// Timestamp inicial
-document.getElementById('initTime').textContent = new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+var selectedProps = null;
+var selectedName  = '';
+var chatHistory   = [];
+var donutChartInst = null;
+var viewerIniciado = false;
 
 // ============================================================
-// PANEL CLAUDE — toggle
+// HEADER NAV BUTTONS — Ubicaciones / Documentos / Árbol
 // ============================================================
-function toggleClaudePanel() {
-  claudePanelOpen = !claudePanelOpen;
-  document.getElementById('claudePanel').classList.toggle('open', claudePanelOpen);
-  document.getElementById('btnClaudePanel').style.background = claudePanelOpen
-    ? 'rgba(199,125,255,.25)' : 'rgba(199,125,255,.1)';
+function hnavClick(modo) {
+  // Actualizar estado visual de los botones
+  document.getElementById('hbtnUbicaciones').classList.toggle('active', modo === 'ubicaciones');
+  document.getElementById('hbtnDocumentos').classList.toggle('active',  modo === 'documentos');
+  document.getElementById('hbtnArbol').classList.toggle('active',       modo === 'arbol');
+
+  if (modo === 'ubicaciones') {
+    // Volver al listado de hubs/proyectos
+    cerrarNavegador();
+  } else if (modo === 'documentos') {
+    // Si hay un proyecto activo y estamos en modo navegación, no hacer nada
+    // Si estamos en modo cuenta, mostrar mensaje orientativo
+    if (!navState.projectId) {
+      mostrarToast('Selecciona primero un proyecto para ver sus documentos');
+      document.getElementById('hbtnUbicaciones').classList.add('active');
+      document.getElementById('hbtnDocumentos').classList.remove('active');
+    }
+  } else if (modo === 'arbol') {
+    toggleArbol();
+    // No mantener activo — es un toggle
+    document.getElementById('hbtnArbol').classList.remove('active');
+  }
 }
 
-function cambiarTab(nombre, el) {
-  document.querySelectorAll('.cp-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.cp-pane').forEach(p => p.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('pane-' + nombre).classList.add('active');
+function toggleArbol() {
+  var panel = document.getElementById('panelTree');
+  var abriendo = !panel.classList.contains('open');
+  panel.classList.toggle('open');
+  if (abriendo) {
+    if (modelIndex) {
+      renderArbolModelo();
+    } else if (viewer && viewer.model) {
+      document.getElementById('ptList').innerHTML = '<div class="pt-empty">Construyendo índice...<br>Espera un momento</div>';
+      construirIndiceModelo(function(idx) { if (idx) renderArbolModelo(); });
+    } else {
+      document.getElementById('ptList').innerHTML = '<div class="pt-empty">Carga un modelo para ver<br>el árbol de elementos</div>';
+    }
+  }
+}
+
+function renderArbolModelo() {
+  if (!modelIndex) return;
+  var list = document.getElementById('ptList');
+  list.innerHTML = '';
+  var cats = Object.keys(modelIndex).filter(esCategoriaGeometrica).sort();
+  if (!cats.length) {
+    list.innerHTML = '<div class="pt-empty">Sin elementos en el modelo</div>';
+    return;
+  }
+  cats.forEach(function(cat) {
+    var items = modelIndex[cat];
+    var div = document.createElement('div');
+    div.className = 'pt-cat';
+    div.innerHTML =
+      '<div class="pt-cat-row" onclick="this.parentElement.classList.toggle(\'open\')">'
+      + '<span class="pt-cat-arrow">&#9658;</span>'
+      + '<span class="pt-cat-name">' + cat + '</span>'
+      + '<span class="pt-cat-count">' + items.length + '</span>'
+      + '</div>'
+      + '<div class="pt-items"></div>';
+    var itemsDiv = div.querySelector('.pt-items');
+    items.forEach(function(el) {
+      var row = document.createElement('div');
+      row.className = 'pt-item';
+      row.innerHTML = '<span class="pt-item-name" title="' + el.nombre + '">' + el.nombre + '</span>';
+      row.onclick = function() {
+        document.querySelectorAll('.pt-item').forEach(function(r) { r.classList.remove('active'); });
+        row.classList.add('active');
+        if (viewer) {
+          viewer.select([el.id]);
+          viewer.fitToView([el.id]);
+        }
+      };
+      itemsDiv.appendChild(row);
+    });
+    list.appendChild(div);
+  });
+}
+
+// ============================================================
+// SIDEBAR TABS
+// ============================================================
+function cambiarSidebarTab(tabName, el) {
+  var yaActivo = el.classList.contains('active');
+  document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+
+  if (tabName === 'props') {
+    // Panel independiente de propiedades
+    var panelProps = document.getElementById('panelProps');
+    if (yaActivo) {
+      panelProps.classList.remove('open');
+    } else {
+      el.classList.add('active');
+      panelProps.classList.add('open');
+    }
+  } else {
+    // Sidebar derecho (Chat / Reporte)
+    var sidebar = document.querySelector('.panel-right-sidebar');
+    document.querySelectorAll('.sidebar-content').forEach(c => c.classList.remove('active'));
+    if (yaActivo) {
+      sidebar.classList.remove('open');
+    } else {
+      el.classList.add('active');
+      document.querySelector('[data-content="' + tabName + '"]').classList.add('active');
+      sidebar.classList.add('open');
+      if (tabName === 'charts') renderReporte();
+    }
+  }
 }
 
 // ============================================================
@@ -722,21 +973,36 @@ var navState = {
 };
 
 function abrirNavegador(projectId, hubId, rootFolderId, projectName, elProyecto) {
-  document.querySelectorAll('#projectTree .tree-item').forEach(i => i.classList.remove('active'));
-  if (elProyecto) elProyecto.classList.add('active');
   navState.projectId = projectId; navState.hubId = hubId;
   navState.stack = [{ id: rootFolderId, name: projectName }]; navState.filtro = 'all';
   document.getElementById('pmProjectName').textContent = projectName;
+  document.getElementById('pmFilePath').textContent = '';
   ['fAll','fRVT','fIFC','fDWG'].forEach(function(id) {
     document.getElementById(id).classList.toggle('active', id === 'fAll');
   });
-  document.getElementById('panelMid').classList.remove('hidden');
-  navegarCarpeta(rootFolderId);
+  // Cambiar a modo navegación en el panel izquierdo
+  document.getElementById('plAccountHeader').style.display = 'none';
+  document.getElementById('projectTree').style.display = 'none';
+  document.getElementById('plNavHeader').style.display = 'block';
+  document.getElementById('navList').style.display = 'block';
+  // Reflejar en header
+  document.getElementById('hbtnUbicaciones').classList.remove('active');
+  document.getElementById('hbtnDocumentos').classList.add('active');
+  document.getElementById('hbtnArbol').classList.remove('active');
+  navegarCarpeta(rootFolderId, true);
 }
 
 function cerrarNavegador() {
-  document.getElementById('panelMid').classList.add('hidden');
+  // Volver a modo cuenta en el panel izquierdo
+  document.getElementById('plNavHeader').style.display = 'none';
+  document.getElementById('navList').style.display = 'none';
+  document.getElementById('plAccountHeader').style.display = 'block';
+  document.getElementById('projectTree').style.display = 'block';
   navState.projectId = null;
+  // Reflejar en header
+  document.getElementById('hbtnUbicaciones').classList.add('active');
+  document.getElementById('hbtnDocumentos').classList.remove('active');
+  document.getElementById('hbtnArbol').classList.remove('active');
 }
 
 function actualizarBreadcrumb() {
@@ -762,7 +1028,7 @@ function filtrarNav(tipo) {
   renderNavItems(navState.allItems);
 }
 
-async function navegarCarpeta(folderId) {
+async function navegarCarpeta(folderId, esRaiz) {
   actualizarBreadcrumb();
   var list = document.getElementById('navList');
   list.innerHTML = '<div class="nav-loading"><div class="nav-spin"></div><span class="nav-load-text">Cargando contenido...</span></div>';
@@ -771,8 +1037,23 @@ async function navegarCarpeta(folderId) {
       headers: { 'Authorization': 'Bearer ' + apsToken }
     });
     var data = await res.json();
-    navState.allItems = data.data || [];
-    renderNavItems(navState.allItems);
+    var items = data.data || [];
+
+    // En la raíz, entrar automáticamente a "Project Files"
+    if (esRaiz) {
+      var projectFiles = items.find(function(i) {
+        var nombre = (i.attributes && i.attributes.name || '').toLowerCase();
+        return i.type === 'folders' && (nombre === 'project files' || nombre === 'archivos del proyecto');
+      });
+      if (projectFiles) {
+        navState.stack.push({ id: projectFiles.id, name: projectFiles.attributes.name });
+        navegarCarpeta(projectFiles.id);
+        return;
+      }
+    }
+
+    navState.allItems = items;
+    renderNavItems(items);
   } catch(e) {
     list.innerHTML = '<div class="nav-empty" style="color:#ff3d57;">Error: ' + e.message + '</div>';
   }
@@ -839,7 +1120,16 @@ function cargarVisor(urn, nombre) {
   document.getElementById('forgeViewer').style.display = 'block';
   document.getElementById('viewerToolbar').style.display = 'flex';
   document.getElementById('viewerTitle').textContent = nombre;
+  // Actualizar ruta del archivo
+  var rutaArchivo = navState.stack.map(function(item) { return item.name; }).join('/') + '/' + nombre;
+  document.getElementById('pmFilePath').textContent = rutaArchivo;
   mostrarLoading('Iniciando visor...');
+  // Resetear índice al cargar nuevo modelo
+  modelIndex = null;
+  modelIndexBuilding = false;
+  nivelActivo = null;
+  document.getElementById('ptList').innerHTML = '<div class="pt-empty">Carga un modelo para ver<br>el árbol de elementos</div>';
+  document.getElementById('rptArea').innerHTML = '<div class="rpt-empty">Cargando modelo...</div>';
   var docUrn = 'urn:' + urn;
 
   function arrancarVisor() {
@@ -850,6 +1140,11 @@ function cargarVisor(urn, nombre) {
     var startCode = viewer.start();
     if (startCode > 0) { ocultarLoading(); mostrarError('Error iniciando visor (código ' + startCode + ').'); return; }
     document.getElementById('loadText').textContent = 'Cargando modelo...';
+
+    // Descargar extensiones que agregan los botones duplicados
+    ['Autodesk.ModelStructure', 'Autodesk.PropertiesManager', 'Autodesk.Explode'].forEach(function(ext) {
+      viewer.unloadExtension(ext);
+    });
 
     Autodesk.Viewing.Document.load(
       docUrn,
@@ -866,7 +1161,12 @@ function cargarVisor(urn, nombre) {
             // Construir índice completo del modelo en background
             setTimeout(function() {
               construirIndiceModelo(function(idx) {
-                if (idx) construirDonutDesdeIndice(idx);
+                if (idx) {
+                  construirDonutDesdeIndice(idx);
+                  // Regenerar reporte si el tab está abierto
+                  var rptContent = document.querySelector('[data-content="charts"]');
+                  if (rptContent && rptContent.classList.contains('active')) renderReporte();
+                }
               });
             }, 1000);
           })
@@ -895,6 +1195,13 @@ function cargarVisor(urn, nombre) {
 // ============================================================
 function onElementSelected(event) {
   var ids = event.dbIdArray;
+
+  // Selección masiva desde el reporte — no abrir propiedades individuales
+  if (seleccionDesdeReporte) {
+    seleccionDesdeReporte = false;
+    return;
+  }
+
   if (!ids || ids.length === 0) {
     selectedProps = null; selectedName = '';
     document.getElementById('contextTag').classList.remove('visible');
@@ -909,7 +1216,33 @@ function onElementSelected(event) {
     document.getElementById('contextTag').classList.add('visible');
     renderPropsPanel(result);
     renderElementStats(result);
+    // Abrir automáticamente el panel Propiedades
+    var btnProps = document.querySelector('.sidebar-tab[data-tab="props"]');
+    if (btnProps && !btnProps.classList.contains('active')) {
+      cambiarSidebarTab('props', btnProps);
+    } else {
+      document.getElementById('panelProps').classList.add('open');
+    }
   });
+}
+
+function limpiarUnidad(u) {
+  if (!u) return '';
+  // Extraer nombre limpio de strings tipo "autodesk.unit.unit:centimeters-1.0.1"
+  var m = u.match(/autodesk\.unit\.unit:([a-zA-Z]+)/i);
+  if (m) {
+    var map = {
+      centimeters:'cm', meters:'m', millimeters:'mm', inches:'in',
+      feet:'ft', squaremeters:'m²', squarefeet:'ft²', squarecentimeters:'cm²',
+      cubicmeters:'m³', cubicfeet:'ft³', cubiccentimeters:'cm³',
+      degrees:'°', radians:'rad', kilograms:'kg', pounds:'lb',
+      metersperminute:'m/min', literspersecond:'l/s', gallonsperminute:'GPM',
+      pascals:'Pa', kilopascals:'kPa', celsius:'°C', fahrenheit:'°F'
+    };
+    var key = m[1].toLowerCase();
+    return map[key] || m[1];
+  }
+  return u;
 }
 
 function renderPropsPanel(result) {
@@ -927,11 +1260,10 @@ function renderPropsPanel(result) {
       if (!p.displayValue && p.displayValue !== 0) return;
       html += '<div class="prop-row">'
             + '<div class="prop-key" title="' + p.attributeName + '">' + p.displayName + '</div>'
-            + '<div class="prop-val">' + p.displayValue + (p.units ? ' <span style="opacity:.5;font-size:8px;">' + p.units + '</span>' : '') + '</div>'
+            + '<div class="prop-val">' + p.displayValue + (p.units ? ' <span style="opacity:.5;font-size:8px;">' + limpiarUnidad(p.units) + '</span>' : '') + '</div>'
             + '</div>';
     });
   });
-  html += '<button class="btn-analyze" onclick="analizarConClaude()">✦ Analizar con Claude AI &nbsp;·&nbsp; Analyze</button>';
   area.innerHTML = html;
 }
 
@@ -950,6 +1282,306 @@ function renderElementStats(result) {
 </script>
 
 <script>
+// ============================================================
+// REPORTE — Secciones: Origen / Parámetros / Niveles
+// ============================================================
+var nivelActivo = null;
+var seleccionDesdeReporte = false;
+
+function renderReporte() {
+  var area = document.getElementById('rptArea');
+  if (!modelIndex) {
+    area.innerHTML = '<div class="rpt-empty">Carga un modelo para ver el reporte</div>';
+    return;
+  }
+  area.innerHTML = '';
+  area.appendChild(crearSeccionOrigen());
+  area.appendChild(crearSeccionParametros());
+  area.appendChild(crearSeccionNiveles());
+  area.appendChild(crearSeccionRecintos());
+  area.appendChild(crearSeccionCategorias());
+}
+
+function crearSeccion(titulo, icono) {
+  var sec = document.createElement('div');
+  sec.className = 'rpt-section';
+  sec.innerHTML = '<div class="rpt-section-hdr" onclick="this.parentElement.classList.toggle(\'open\')">'
+    + '<span class="rpt-arrow">&#9658;</span>'
+    + '<span class="rpt-section-title">' + icono + '&nbsp; ' + titulo + '</span>'
+    + '</div>'
+    + '<div class="rpt-section-body"></div>';
+  return sec;
+}
+
+function agregarFila(body, clave, valor) {
+  if (!valor && valor !== 0) return;
+  body.insertAdjacentHTML('beforeend',
+    '<div class="rpt-row">'
+    + '<div class="rpt-key">' + clave + '</div>'
+    + '<div class="rpt-val">' + valor + '</div>'
+    + '</div>');
+}
+
+function getDocProps() {
+  var docCat = Object.keys(modelIndex).find(function(k) { return k.toLowerCase().includes('document'); });
+  return (docCat && modelIndex[docCat].length) ? modelIndex[docCat][0].props : {};
+}
+
+function crearSeccionOrigen() {
+  var sec = crearSeccion('Origen', '&#128196;');
+  var body = sec.querySelector('.rpt-section-body');
+  var dp = getDocProps();
+
+  // Nombre del archivo y formato
+  var nombre = document.getElementById('viewerTitle').textContent;
+  agregarFila(body, 'Archivo', dp['INFO_NombreArchivo'] || nombre);
+  agregarFila(body, 'Tipo de archivo', dp['INFO_TipoArchivo'] || null);
+
+  // Detectar formato
+  var ext = nombre.split('.').pop().toUpperCase();
+  var formatoExt = ['RVT','IFC','DWG','NWD','NWC'].indexOf(ext) !== -1 ? ext : null;
+  var cats = Object.keys(modelIndex);
+  var esRevit = cats.some(function(c) { return c.toLowerCase().startsWith('revit'); });
+  var esIFC   = cats.some(function(c) { return c.toLowerCase().startsWith('ifc'); });
+  var formatoFinal = formatoExt
+    ? formatoExt + ((esRevit || esIFC) ? ' · ' + (esRevit ? 'Revit' : 'IFC') : '')
+    : (esRevit ? 'Revit' : esIFC ? 'IFC' : 'Desconocido');
+  agregarFila(body, 'Formato', formatoFinal);
+  agregarFila(body, 'Exportación', (esRevit || formatoExt === 'RVT') ? 'Traducción APS (SVF2)' : (esIFC ? 'IFC nativo' : null));
+
+  // Info técnica del modelo
+  agregarFila(body, 'Versión Revit',     dp['INFO_VersionRevit'] || null);
+  agregarFila(body, 'Especialidad',      dp['INFO_Especialidad'] || null);
+  agregarFila(body, 'Fecha revisión',    dp['INFO_FechaRevision'] || null);
+  agregarFila(body, 'Comentarios',       dp['INFO_ComentariosArchivos'] || null);
+
+  if (!body.children.length) {
+    body.innerHTML = '<div style="padding:8px 16px;font:400 9px var(--mono);color:var(--muted);">Sin datos disponibles</div>';
+  }
+  return sec;
+}
+
+function crearSeccionParametros() {
+  var sec = crearSeccion('Parámetros de edificio y sitio', '&#127963;');
+  var body = sec.querySelector('.rpt-section-body');
+  var dp = getDocProps();
+
+  // Identificación del edificio y sitio
+  agregarFila(body, 'Nombre del edificio',  dp['Nombre del edificio'] || null);
+  agregarFila(body, 'Nombre de organización', dp['Nombre de organización'] || null);
+  agregarFila(body, 'Nombre corto',         dp['BT_Nombre_Corto'] || null);
+  agregarFila(body, 'Nombre técnico',       dp['BT_Nombre_Técnico'] || null);
+  agregarFila(body, 'Nombre de proyecto',   dp['Nombre de proyecto'] || null);
+  agregarFila(body, 'Número de proyecto',   dp['Número de proyecto'] || null);
+  agregarFila(body, 'Nombre de cliente',    dp['Nombre de cliente'] || null);
+  agregarFila(body, 'Dirección',            dp['Dirección de proyecto'] || null);
+  agregarFila(body, 'Estado',               dp['Estado de proyecto'] || null);
+  agregarFila(body, 'Fecha de emisión',     dp['Fecha de emisión de proyecto'] || null);
+
+  // Equipo del proyecto
+  agregarFila(body, 'Director de proyecto', dp['INFO_DirectorProyecto'] || null);
+  agregarFila(body, 'Coordinador',          dp['INFO_CoordinadorProyecto'] || null);
+  agregarFila(body, 'BIM Manager',          dp['INFO_BIMManager'] || null);
+
+  if (!body.children.length) {
+    body.innerHTML = '<div style="padding:8px 16px;font:400 9px var(--mono);color:var(--muted);">Sin parámetros disponibles</div>';
+  }
+  return sec;
+}
+
+function crearSeccionNiveles() {
+  var sec = crearSeccion('Niveles', '&#127968;');
+  sec.classList.add('open'); // abierto por defecto
+  var body = sec.querySelector('.rpt-section-body');
+
+  // Extraer niveles únicos con conteo
+  var niveles = {};
+  Object.values(modelIndex).forEach(function(items) {
+    items.forEach(function(el) {
+      var nivel = el.props['Level'] || el.props['Nivel'] || el.props['Piso'];
+      if (nivel) {
+        if (!niveles[nivel]) niveles[nivel] = { ids: [], count: 0 };
+        niveles[nivel].ids.push(el.id);
+        niveles[nivel].count++;
+      }
+    });
+  });
+
+  var keys = Object.keys(niveles).sort();
+  if (!keys.length) {
+    body.innerHTML = '<div style="padding:8px 16px;font:400 9px var(--mono);color:var(--muted);">Sin niveles detectados</div>';
+    return sec;
+  }
+
+  keys.forEach(function(nivel) {
+    var btn = document.createElement('div');
+    btn.className = 'rpt-level-btn';
+    btn.dataset.nivel = nivel;
+    btn.innerHTML = '<span class="rpt-level-name">&#9776; ' + nivel + '</span>'
+      + '<span class="rpt-level-count">' + niveles[nivel].count + '</span>';
+    btn.onclick = function() {
+      var yaActivo = btn.classList.contains('active');
+      document.querySelectorAll('.rpt-level-btn').forEach(function(b) { b.classList.remove('active'); });
+      if (yaActivo) {
+        if (viewer) { viewer.clearSelection(); viewer.showAll(); }
+        nivelActivo = null;
+        mostrarBurbujaReporte(null);
+      } else {
+        btn.classList.add('active');
+        nivelActivo = nivel;
+        if (viewer) {
+          seleccionDesdeReporte = true;
+          viewer.select(niveles[nivel].ids);
+          viewer.fitToView(niveles[nivel].ids);
+        }
+        mostrarBurbujaReporte(nivel, niveles[nivel].ids.length);
+      }
+    };
+    body.appendChild(btn);
+  });
+  return sec;
+}
+
+// Categorías no geométricas a omitir
+var CATS_EXCLUIR = [
+  'document','family type','tipo de familia',
+  'eje','ejes',
+  'cota','cotas','dimension',
+  'texto','textos','text note',
+  'anotaci','símbolo','simbolo','annotation',
+  'línea de detalle','linea de detalle','detail line',
+  'separaci','límite','limite','boundary',
+  'cuadrícula','cuadricula','grid',
+  'vista','vistas','view',
+  'leyenda','legend',
+  'región rellena','region rellena','filled region',
+  'habitaci','room','espacio','space',
+  '<área>','<area>','area boundary',
+  'referencia de nivel','level datum'
+];
+
+function esCategoriaGeometrica(cat) {
+  var cl = cat.toLowerCase();
+  return !CATS_EXCLUIR.some(function(ex) { return cl.includes(ex); });
+}
+
+function mostrarBurbujaReporte(nombre, count) {
+  var bubble = document.getElementById('rptBubble');
+  if (!nombre) {
+    bubble.classList.remove('visible');
+    return;
+  }
+  document.getElementById('rptBubbleCount').textContent = count;
+  document.getElementById('rptBubbleName').textContent = nombre;
+  bubble.classList.add('visible');
+}
+
+function crearSeccionRecintos() {
+  var sec = crearSeccion('Recintos', '&#127968;');
+  var body = sec.querySelector('.rpt-section-body');
+
+  // Buscar categorías de habitaciones/rooms en el índice
+  var claves = ['habitaci', 'room', 'recinto', 'espacio', 'space'];
+  var recintos = [];
+
+  Object.keys(modelIndex).forEach(function(cat) {
+    if (claves.some(function(k) { return cat.toLowerCase().includes(k); })) {
+      modelIndex[cat].forEach(function(el) {
+        var numero = el.props['Number'] || el.props['Número'] || el.props['Numero'] || '';
+        var nombre = el.props['Name']   || el.props['Nombre'] || el.nombre || '';
+        var area   = el.props['Area']   || el.props['Área']   || el.props['Superficie'] || '';
+        var nivel  = el.props['Level']  || el.props['Nivel']  || '';
+        if (numero || nombre) {
+          recintos.push({ id: el.id, numero: numero, nombre: nombre, area: area, nivel: nivel });
+        }
+      });
+    }
+  });
+
+  if (!recintos.length) {
+    body.innerHTML = '<div style="padding:8px 16px;font:400 9px var(--mono);color:var(--muted);">Sin recintos detectados en este modelo</div>';
+    return sec;
+  }
+
+  // Ordenar por número
+  recintos.sort(function(a, b) {
+    var na = parseInt(a.numero) || 0, nb = parseInt(b.numero) || 0;
+    return na !== nb ? na - nb : a.nombre.localeCompare(b.nombre);
+  });
+
+  recintos.forEach(function(r) {
+    var btn = document.createElement('div');
+    btn.className = 'rpt-recinto-btn';
+    var areaLimpia = r.area ? parseFloat(r.area).toFixed(2) + ' m²' : '';
+    btn.innerHTML = '<span class="rpt-recinto-num">' + (r.numero || '—') + '</span>'
+      + '<span class="rpt-recinto-name" title="' + r.nombre + '">' + (r.nombre || 'Sin nombre') + '</span>'
+      + (areaLimpia ? '<span class="rpt-recinto-area">' + areaLimpia + '</span>' : '');
+
+    btn.onclick = function() {
+      var yaActivo = btn.classList.contains('active');
+      document.querySelectorAll('.rpt-recinto-btn').forEach(function(b) { b.classList.remove('active'); });
+      if (yaActivo) {
+        if (viewer) { viewer.clearSelection(); viewer.showAll(); }
+        mostrarBurbujaReporte(null);
+      } else {
+        btn.classList.add('active');
+        if (viewer) {
+          seleccionDesdeReporte = true;
+          viewer.select([r.id]);
+          viewer.fitToView([r.id]);
+        }
+        mostrarBurbujaReporte((r.numero ? r.numero + ' · ' : '') + r.nombre, 1);
+      }
+    };
+    body.appendChild(btn);
+  });
+
+  return sec;
+}
+
+function crearSeccionCategorias() {
+  var sec = crearSeccion('Categorías / Entidades', '&#127775;');
+  var body = sec.querySelector('.rpt-section-body');
+
+  var cats = Object.keys(modelIndex)
+    .filter(function(c) { return modelIndex[c].length > 0 && esCategoriaGeometrica(c); })
+    .sort(function(a, b) { return modelIndex[b].length - modelIndex[a].length; });
+
+  if (!cats.length) {
+    body.innerHTML = '<div style="padding:8px 16px;font:400 9px var(--mono);color:var(--muted);">Sin categorías detectadas</div>';
+    return sec;
+  }
+
+  cats.forEach(function(cat) {
+    var ids = modelIndex[cat].map(function(el) { return el.id; });
+    // Limpiar prefijo "Revit " o "Ifc" para mostrar nombre limpio
+    var label = cat.replace(/^Revit\s+/i, '').replace(/^Ifc/i, 'IFC · ');
+    var btn = document.createElement('div');
+    btn.className = 'rpt-level-btn';
+    btn.dataset.cat = cat;
+    btn.innerHTML = '<span class="rpt-level-name">&#9632; ' + label + '</span>'
+      + '<span class="rpt-level-count">' + ids.length + '</span>';
+    btn.onclick = function() {
+      var yaActivo = btn.classList.contains('active');
+      document.querySelectorAll('.rpt-level-btn[data-cat]').forEach(function(b) { b.classList.remove('active'); });
+      if (yaActivo) {
+        if (viewer) { viewer.clearSelection(); viewer.showAll(); }
+        mostrarBurbujaReporte(null);
+      } else {
+        btn.classList.add('active');
+        if (viewer) {
+          seleccionDesdeReporte = true;
+          viewer.select(ids);
+          viewer.fitToView(ids);
+        }
+        mostrarBurbujaReporte(label, ids.length);
+      }
+    };
+    body.appendChild(btn);
+  });
+  return sec;
+}
+
 // ============================================================
 // GRÁFICO DONA — categorías BIM del modelo
 // ============================================================
@@ -1033,7 +1665,7 @@ function construirIndiceModelo(callback) {
           r.properties.forEach(function(p) {
             if (!p.hidden && p.displayValue !== null && p.displayValue !== '' &&
                 !p.attributeName.startsWith('_') && p.displayCategory !== '__child__') {
-              props[p.displayName] = p.displayValue + (p.units ? ' ' + p.units : '');
+              props[p.displayName] = p.displayValue + (p.units ? ' ' + limpiarUnidad(p.units) : '');
             }
           });
           index[cat].push({ id: dbId, nombre: r.name || 'Sin nombre', props: props });
@@ -1098,7 +1730,7 @@ function construirContexto() {
     if (!p.displayValue && p.displayValue !== 0) return;
     var cat = p.displayCategory || 'General';
     if (!grupos[cat]) grupos[cat] = [];
-    grupos[cat].push(p.displayName + ': ' + p.displayValue + (p.units ? ' ' + p.units : ''));
+    grupos[cat].push(p.displayName + ': ' + p.displayValue + (p.units ? ' ' + limpiarUnidad(p.units) : ''));
   });
   Object.keys(grupos).forEach(function(cat) {
     lines.push('\n[' + cat + ']');
@@ -1110,10 +1742,13 @@ function construirContexto() {
 async function llamarClaude(userMsg) {
   var SYSTEM = 'Eres un asistente BIM experto en Autodesk Revit, IFC y ACC. Respondes en el idioma del usuario.\n'
     + 'Cuando el usuario pide una ACCION sobre el visor 3D (ocultar, mostrar, aislar, colorear, restaurar),\n'
-    + 'responde SIEMPRE con un bloque JSON al inicio con este formato:\n\n'
+    + 'responde SIEMPRE con un bloque JSON al inicio con este formato EXACTO en una sola línea:\n\n'
     + 'VIEWER_CMD:{"action":"hide","category":"muros","message":"texto"}\n\n'
-    + 'Acciones: hide, show, isolate, showAll, color, fitView\n'
-    + 'Categorias del modelo: muros, suelos, puertas, ventanas, pilares, cubiertas, techos, escaleras, rampas, barandillas, estructura, tuberias, muro cortina, ALL\n\n'
+    + 'Acciones disponibles: hide, show, isolate, showAll, color, fitView\n'
+    + 'Categorias: muros, suelos, puertas, ventanas, pilares, cubiertas, techos, escaleras, rampas, barandillas, estructura, tuberias, muro cortina, ALL\n\n'
+    + 'Para la acción "color" SIEMPRE incluye el campo "color" con un hex válido, ejemplo:\n'
+    + 'VIEWER_CMD:{"action":"color","category":"puertas","color":"#ff0000","message":"Puertas coloreadas de rojo"}\n\n'
+    + 'IMPORTANTE: El bloque VIEWER_CMD debe estar en UNA SOLA LÍNEA, sin saltos de línea dentro del JSON.\n'
     + 'Si el usuario NO pide accion de visor, responde normalmente sin VIEWER_CMD.\n'
     + 'Eres conciso y tecnico. Si tienes propiedades BIM en contexto, usalas.';
 
@@ -1131,7 +1766,7 @@ async function llamarClaude(userMsg) {
     method:'POST',
     headers:{ 'Content-Type':'application/json' },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-5',
       max_tokens: 1000,
       system: SYSTEM,
       messages: chatHistory
@@ -1143,13 +1778,14 @@ async function llamarClaude(userMsg) {
   if (chatHistory.length > 20) chatHistory = chatHistory.slice(-16);
 
   // Detectar y ejecutar comandos de visor
-  var cmdMatch = reply.match(/VIEWER_CMD:(\{.*?\})/s);
+  var cmdMatch = reply.match(/VIEWER_CMD:(\{[^}]+\})/);
+  if (!cmdMatch) cmdMatch = reply.match(/VIEWER_CMD:(\{.*?\})/s);
   if (cmdMatch) {
     try {
       var cmd = JSON.parse(cmdMatch[1]);
       ejecutarComandoVisor(cmd);
       // Devolver solo el mensaje amigable al chat
-      reply = reply.replace(/VIEWER_CMD:\{.*?\}/s, '').trim();
+      reply = reply.replace(/VIEWER_CMD:\{[^}]+\}/g, '').replace(/VIEWER_CMD:\{.*?\}/sg, '').trim();
       if (!reply && cmd.message) reply = cmd.message;
     } catch(e) { console.warn('VIEWER_CMD parse error:', e); }
   }
@@ -1161,52 +1797,67 @@ async function llamarClaude(userMsg) {
 // ============================================================
 function obtenerDbIdsPorCategoria(categoria, callback) {
   if (!viewer || !viewer.model) return callback([]);
-  viewer.model.getObjectTree(function(tree) {
-    var ids = [];
-    var total = 0, procesados = 0;
-    function checkDone() { if (++procesados >= total) callback(ids); }
 
-    // Normalizar la query del usuario
-    var query = categoria.toLowerCase().trim();
+  var query = categoria.toLowerCase().trim();
 
-    // Mapa de términos del usuario → fragmentos de categoría Revit (en español e inglés)
-    var mapa = {
-      'walls':'muros', 'muros':'muros', 'muro':'muros',
-      'floors':'suelos', 'suelos':'suelos', 'pisos':'suelos', 'losas':'suelos',
-      'doors':'puertas', 'puertas':'puertas', 'puerta':'puertas',
-      'windows':'ventanas', 'ventanas':'ventanas', 'ventana':'ventanas',
-      'columns':'pilares', 'pilares':'pilares', 'columnas':'pilares',
-      'roofs':'cubiertas', 'cubiertas':'cubiertas', 'techos':'techos',
-      'ceilings':'techos', 'techo':'techos',
-      'stairs':'escaleras', 'escaleras':'escaleras',
-      'ramps':'rampas', 'rampas':'rampas',
-      'railings':'barandillas', 'barandillas':'barandillas',
-      'structural':'armazón', 'estructura':'armazón', 'vigas':'armazón',
-      'curtain wall':'muro cortina', 'muro cortina':'muro cortina',
-      'pipes':'tuberías', 'tuberías':'tuberías', 'tubería':'tuberías',
-      'furniture':'mobiliario', 'mobiliario':'mobiliario',
-      'generic':'genéricos', 'genéricos':'genéricos',
-      'all':'all'
-    };
+  // Categorías especiales
+  if (query === 'all') {
+    viewer.model.getObjectTree(function(tree) {
+      var ids = [];
+      tree.enumNodeChildren(tree.getRootId(), function(id) { ids.push(id); }, true);
+      callback(ids);
+    });
+    return;
+  }
 
-    var termino = mapa[query] || query;
+  // Mapa términos usuario → términos en inglés (como aparecen en Revit)
+  var mapa = {
+    'muros':'walls','muro':'walls','walls':'walls',
+    'suelos':'floors','piso':'floors','losas':'floors','floors':'floors',
+    'puertas':'doors','puerta':'doors','doors':'doors',
+    'ventanas':'windows','ventana':'windows','windows':'windows',
+    'pilares':'columns','columnas':'columns','columns':'columns',
+    'cubiertas':'roofs','techo':'ceilings','techos':'ceilings','roofs':'roofs','ceilings':'ceilings',
+    'escaleras':'stairs','stairs':'stairs',
+    'rampas':'ramps','ramps':'ramps',
+    'barandillas':'railings','railings':'railings',
+    'estructura':'structural framing','vigas':'structural framing','structural':'structural framing',
+    'muro cortina':'curtain walls','curtain wall':'curtain walls',
+    'tuberías':'pipes','tubería':'pipes','pipes':'pipes',
+    'mobiliario':'furniture','furniture':'furniture',
+    'genéricos':'generic models','genericos':'generic models',
+  };
 
-    tree.enumNodeChildren(tree.getRootId(), function(dbId) {
-      total++;
-      viewer.getProperties(dbId, function(r) {
-        var catProp = (r.properties||[]).find(function(p){
-          return p.attributeName === 'Category' || p.displayName === 'Category' ||
-                 p.displayName === 'Categoría';
-        });
-        if (catProp && catProp.displayValue) {
-          var cat = catProp.displayValue.toLowerCase();
-          if (termino === 'all' || cat.includes(termino)) ids.push(dbId);
-        }
-        checkDone();
-      });
-    }, true);
-    if (total === 0) callback([]);
-  });
+  var termino = mapa[query] || query;
+
+  // Usar búsqueda nativa del viewer — mucho más rápida
+  viewer.search(termino, function(ids) {
+    if (ids && ids.length) return callback(ids);
+
+    // Fallback: buscar por propiedades si la búsqueda no dio resultado
+    viewer.model.getObjectTree(function(tree) {
+      var resultIds = [];
+      var pending = 0;
+      var done = false;
+
+      tree.enumNodeChildren(tree.getRootId(), function(dbId) {
+        pending++;
+        viewer.model.getProperties(dbId, function(r) {
+          var catProp = (r.properties||[]).find(function(p){
+            return p.attributeName === 'Category' || p.displayName === 'Category' || p.displayName === 'Categoría';
+          });
+          if (catProp && catProp.displayValue) {
+            var cat = catProp.displayValue.toLowerCase();
+            if (cat.includes(termino) || cat.includes(query)) resultIds.push(dbId);
+          }
+          pending--;
+          if (pending === 0 && done) callback(resultIds);
+        }, function() { pending--; if (pending === 0 && done) callback(resultIds); });
+      }, true);
+      done = true;
+      if (pending === 0) callback(resultIds);
+    });
+  }, function() { callback([]); }, ['Category', 'name']);
 }
 
 function ejecutarComandoVisor(cmd) {
@@ -1236,15 +1887,19 @@ function ejecutarComandoVisor(cmd) {
     } else if (acc === 'isolate') {
       viewer.isolate(ids);
       mostrarToast('✓ ' + (cmd.message || 'Aislado: ' + cat + ' (' + ids.length + ')'));
-    } else if (acc === 'color' && cmd.color) {
-      var threeColor = cmd.color.replace('#','');
-      var r = parseInt(threeColor.substr(0,2),16)/255;
-      var g = parseInt(threeColor.substr(2,2),16)/255;
-      var b = parseInt(threeColor.substr(4,2),16)/255;
+    } else if (acc === 'color') {
+      var hex = (cmd.color || cmd.hex || '#ff0000').replace('#','');
+      if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+      var r = parseInt(hex.substr(0,2),16)/255;
+      var g = parseInt(hex.substr(2,2),16)/255;
+      var b = parseInt(hex.substr(4,2),16)/255;
+      var ThreeVec = (window.THREE && THREE.Vector4)
+        ? THREE.Vector4
+        : Autodesk.Viewing.Private.THREE.Vector4;
       ids.forEach(function(id){
-        viewer.setThemingColor(id, new THREE.Vector4(r,g,b,1));
+        viewer.setThemingColor(id, new ThreeVec(r,g,b,1));
       });
-      mostrarToast('✓ ' + (cmd.message || 'Coloreado: ' + cat));
+      mostrarToast('✓ ' + (cmd.message || 'Coloreado: ' + cat + ' (' + ids.length + ')'));
     }
   });
 }

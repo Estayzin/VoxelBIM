@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoxelBIM — Visor IFC</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#060d18; --blue:#0a1628; --accent:#00d4ff; --green:#00c853;
+  --bg:#0a0f1e; --card:#0d1526; --text:#c8d8f0; --muted:#4a6080;
+  --border:#1a2a40; --mono:'JetBrains Mono',monospace; --sans:'Inter',sans-serif;
+  --accent2:#7c4dff; --warn:#ff6b35; --red:#ff3d57;
+}
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html,body { height:100%; overflow:hidden; }
+body { font-family:var(--sans); background:var(--bg); color:var(--text); display:flex; flex-direction:column; height:100vh; font-size:13px; }
+
+/* HEADER */
+header { background:var(--navy); padding:8px 16px; display:flex; align-items:center; gap:10px; border-bottom:2px solid var(--accent); flex-shrink:0; box-shadow:0 2px 20px rgba(0,212,255,.08); }
+.hicon { width:28px; height:28px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
+.htitle { font:600 11px var(--mono); color:var(--text); letter-spacing:.08em; text-transform:uppercase; }
+.hsub { font:400 9px var(--mono); color:var(--muted); margin-top:1px; }
+.hback { padding:4px 10px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:4px; font:600 9px var(--mono); text-transform:uppercase; letter-spacing:.1em; text-decoration:none; transition:all .15s; cursor:pointer; white-space:nowrap; }
+.hback:hover { border-color:var(--accent); color:var(--accent); }
+
+/* TOOLBAR SUPERIOR */
+.header-toolbar { display:flex; align-items:center; gap:4px; margin-left:12px; padding-left:12px; border-left:1px solid var(--border); }
+.header-toolbar-sep { width:1px; height:20px; background:var(--border); margin:0 4px; }
+.hbar-btn { padding:5px 10px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:4px; font:600 9px var(--mono); cursor:pointer; transition:all .15s; text-transform:uppercase; letter-spacing:.07em; display:flex; align-items:center; gap:5px; white-space:nowrap; }
+.hbar-btn:hover { border-color:var(--accent); color:var(--accent); background:rgba(0,212,255,.05); }
+.hbar-btn.active { border-color:var(--accent); color:#000; background:var(--accent); }
+.hbar-btn.disabled { opacity:.4; cursor:not-allowed; }
+.hbar-btn.disabled:hover { border-color:var(--border); color:var(--muted); background:transparent; }
+.hbar-btn .hb-icon { font-size:12px; }
+.hbar-tag { font:600 7px var(--mono); padding:1px 4px; border-radius:2px; background:rgba(255,107,53,.15); color:var(--warn); letter-spacing:.08em; margin-left:3px; }
+
+/* Modo claro */
+body.light-mode {
+  --navy:#f0f4f8; --blue:#e4eaf0; --accent:#0077aa; --green:#00804d;
+  --bg:#dce3ea; --card:#f5f8fb; --text:#1a2a3a; --muted:#6a8aaa;
+  --border:#b0c4d8; --accent2:#5533aa; --warn:#cc4400; --red:#cc0022;
+}
+body.light-mode .viewer-wrap { background:#c8d8e8; }
+body.light-mode #overlay { background:#c8d8e8; }
+body.light-mode .ov-icon { opacity:.3; }
+body.light-mode .ov-text { color:#4a6080; }
+body.light-mode header { box-shadow:0 2px 20px rgba(0,119,170,.1); }
+body.light-mode .hsub { color:#4a6080; }
+</style>
+<style>
+/* LAYOUT */
+.main { display:flex; flex:1; overflow:hidden; }
+
+/* SIDEBAR */
+.sidebar { width:240px; flex-shrink:0; background:var(--blue); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+.sb-header { padding:10px 12px; border-bottom:1px solid var(--border); flex-shrink:0; display:flex; flex-direction:column; gap:8px; }
+.sb-title { font:700 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.2em; }
+
+/* Dropzone */
+.dropzone { border:1px dashed var(--border); border-radius:6px; padding:12px 10px; text-align:center; cursor:pointer; transition:all .2s; background:rgba(0,212,255,.02); }
+.dropzone:hover,.dropzone.over { border-color:var(--accent); background:rgba(0,212,255,.06); }
+.dz-icon { font-size:20px; opacity:.5; margin-bottom:3px; }
+.dz-label { font:600 9px var(--mono); color:var(--text); text-transform:uppercase; letter-spacing:.08em; }
+.dz-sub { font:400 9px var(--mono); color:var(--muted); margin-top:2px; }
+
+/* Progreso */
+.progress-wrap { display:none; flex-direction:column; gap:5px; }
+.progress-wrap.show { display:flex; }
+.progress-label { font:400 9px var(--mono); color:var(--accent); letter-spacing:.05em; }
+.progress-bar-bg { height:3px; background:rgba(255,255,255,.08); border-radius:2px; }
+.progress-bar-fill { height:100%; background:linear-gradient(90deg,var(--accent),#00bcd4); width:0%; transition:width .3s ease; border-radius:2px; }
+
+/* INFO MODELO */
+.model-info { display:none; background:var(--card); border-radius:5px; border-left:3px solid var(--accent); padding:6px 10px; }
+.model-info.show { display:block; }
+.mi-name { font:600 9px var(--mono); color:var(--accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mi-meta { font:400 8px var(--mono); color:var(--muted); margin-top:2px; }
+</style>
+<style>
+/* LISTA DE MODELOS */
+.sb-models-section { padding:8px 12px; border-bottom:1px solid var(--border); flex-shrink:0; }
+.sb-models-title { font:700 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.2em; margin-bottom:6px; }
+.models-list { display:flex; flex-direction:column; gap:3px; max-height:120px; overflow-y:auto; }
+.model-item { display:flex; align-items:center; gap:7px; padding:5px 8px; background:var(--card); border:1px solid var(--border); border-radius:4px; transition:all .15s; }
+.model-item:hover { border-color:var(--accent); }
+.model-item-name { font:500 9px var(--mono); color:var(--text); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.model-item-toggle { background:none; border:none; cursor:pointer; font-size:13px; padding:0 2px; transition:opacity .15s; line-height:1; }
+.model-item-toggle.hidden { opacity:.3; }
+.models-empty { font:400 9px var(--mono); color:var(--muted); text-align:center; padding:8px 0; opacity:.6; }
+
+/* CONTROLES SIDEBAR */
+.sb-controls { padding:4px 12px; display:flex; flex-direction:column; gap:6px; flex-shrink:0; }
+.ctrl-title { font:700 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.15em; margin-bottom:1px; }
+.ctrl-btn { width:100%; padding:6px 10px; background:transparent; color:var(--text); border:1px solid var(--border); border-radius:4px; font:600 9px var(--mono); cursor:pointer; transition:all .15s; text-align:left; text-transform:uppercase; letter-spacing:.08em; display:flex; align-items:center; gap:7px; }
+.ctrl-btn:hover { border-color:var(--accent); color:var(--accent); background:rgba(0,212,255,.04); }
+.ctrl-btn.active { border-color:var(--accent); color:#000; background:var(--accent); }
+.ctrl-btn .icon { font-size:13px; }
+.ctrl-sep { height:1px; background:var(--border); margin:3px 0; }
+/* Oculto visualmente pero funcional */
+.ctrl-btn.nav-hidden { display:none; }
+</style>
+<style>
+/* TOOLTIP */
+#tooltip {
+  display:none; position:fixed; pointer-events:none; z-index:9999;
+  background:var(--navy); border:1px solid var(--accent); border-radius:6px;
+  padding:8px 12px; min-width:160px;
+  box-shadow:0 0 20px rgba(0,212,255,.2);
+}
+#tt-header { display:flex; align-items:center; gap:7px; margin-bottom:5px; }
+#tt-icon { font-size:14px; }
+#tt-class { font:700 9px var(--mono); color:var(--accent); text-transform:uppercase; letter-spacing:.12em; }
+#tt-name { font:400 10px var(--mono); color:var(--text); margin-top:2px; }
+#tt-id { font:400 8px var(--mono); color:var(--muted); margin-top:3px; letter-spacing:.06em; }
+
+/* VISOR */
+.viewer-wrap { flex:1; position:relative; background:#050b14; overflow:hidden; }
+#container { position:absolute; inset:0; width:100%; height:100%; }
+
+/* GIZMO */
+#gizmo { position:absolute; bottom:16px; left:16px; width:70px; height:70px; z-index:10; pointer-events:none; }
+#gizmo canvas { width:100%; height:100%; }
+
+/* OVERLAY WELCOME */
+#overlay { position:absolute; inset:0; background:#050b14; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; z-index:20; pointer-events:none; }
+#overlay.hidden { display:none; }
+.ov-icon { font-size:40px; opacity:.15; }
+.ov-text { font:400 10px var(--mono); color:var(--muted); letter-spacing:.1em; text-transform:uppercase; }
+
+/* PANEL DERECHO COMBINADO */
+#rightPanel { width:270px; flex-shrink:0; background:var(--blue); border-left:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+
+/* PANEL PROPIEDADES — consistente con reporte BIM */
+#propsPanel { display:flex; flex-direction:column; overflow:hidden; flex:1; border-bottom:1px solid var(--border); min-height:0; }
+.pp-header { padding:9px 12px 8px; border-bottom:1px solid var(--border); flex-shrink:0; display:flex; align-items:center; gap:8px; }
+.pp-title { font:700 9px var(--mono); color:var(--accent); text-transform:uppercase; letter-spacing:.12em; flex:1; }
+.pp-close { background:none; border:none; color:var(--muted); cursor:pointer; font-size:13px; padding:2px 5px; border-radius:3px; line-height:1; }
+.pp-close:hover { color:var(--text); background:rgba(255,255,255,.05); }
+.pp-empty { padding:20px 12px; font:400 9px var(--mono); color:var(--muted); text-align:center; line-height:1.7; text-transform:uppercase; letter-spacing:.08em; opacity:.6; }
+.pp-body { flex:1; overflow-y:auto; padding:8px; }
+
+/* PROPS CUSTOM */
+.props-elem-hdr { padding:10px 12px; border-bottom:1px solid var(--border); background:rgba(0,212,255,.04); flex-shrink:0; }
+.props-elem-icon { font-size:18px; margin-bottom:4px; }
+.props-elem-cls { font:700 8px var(--mono); color:var(--accent); text-transform:uppercase; letter-spacing:.15em; }
+.props-elem-name { font:600 11px var(--mono); color:var(--text); margin-top:3px; word-break:break-word; }
+.props-elem-id { font:400 8px var(--mono); color:var(--muted); margin-top:2px; }
+.props-sec { background:var(--navy); border:1px solid var(--border); border-radius:5px; overflow:hidden; margin-bottom:6px; }
+.props-sec-hdr { padding:6px 10px; display:flex; align-items:center; gap:6px; cursor:pointer; transition:background .12s; }
+.props-sec-hdr:hover { background:rgba(255,255,255,.02); }
+.props-sec-title { font:700 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.15em; flex:1; }
+.props-sec-body { border-top:1px solid var(--border); }
+.props-row { display:flex; padding:5px 10px; border-bottom:1px solid rgba(26,42,64,.4); gap:8px; }
+.props-row:last-child { border-bottom:none; }
+.props-key { font:400 9px var(--mono); color:var(--muted); flex:0 0 90px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.props-val { font:500 9px var(--mono); color:var(--text); flex:1; min-width:0; word-break:break-word; }
+#propsBody, #propsBody * {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 10px !important;
+  color: var(--text) !important;
+}
+#propsBody bim-label, #propsBody bim-input, #propsBody bim-button {
+  --bim-ui_size-base: 10px !important;
+}
+#propsBody [style*="font-family"], #propsBody [style*="font-size"] {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 10px !important;
+}
+
+/* NAVEGADOR DEL MODELO */
+#navPanel { display:flex; flex-direction:column; overflow:hidden; flex:1; min-height:50%; border-top:1px solid var(--border); }
+.nav-header { padding:9px 12px 8px; border-bottom:1px solid var(--border); flex-shrink:0; display:flex; align-items:center; gap:8px; }
+.nav-title { font:700 9px var(--mono); color:var(--accent); text-transform:uppercase; letter-spacing:.18em; flex:1; }
+.nav-body { flex:1; overflow-y:auto; padding:6px 0; display:flex; flex-direction:column; }
+.nav-empty { padding:16px 12px; font:400 9px var(--mono); color:var(--muted); text-align:center; line-height:1.7; text-transform:uppercase; letter-spacing:.08em; opacity:.6; }
+/* Grupos colapsables */
+.nav-group { flex-shrink:0; }
+.nav-group-hdr { display:flex; align-items:center; gap:6px; padding:5px 8px; cursor:pointer; transition:background .12s; user-select:none; }
+.nav-group-hdr:hover { background:rgba(0,212,255,.05); }
+.nav-group-arrow { font-size:9px; color:var(--muted); transition:transform .15s; flex-shrink:0; }
+.nav-group-arrow.open { transform:rotate(90deg); }
+.nav-group-title { font:700 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.15em; flex:1; }
+.nav-group-badge { font:700 8px var(--mono); padding:1px 5px; border-radius:3px; background:rgba(0,212,255,.08); color:var(--accent); flex-shrink:0; }
+.nav-group-body { display:none; }
+.nav-group-body.open { display:block; }
+/* Items */
+.nav-item { display:flex; align-items:center; gap:6px; padding:4px 8px; cursor:pointer; transition:background .12s; border:1px solid transparent; border-radius:3px; margin:1px 4px; }
+.nav-item:hover { background:rgba(0,212,255,.06); border-color:var(--border); }
+.nav-item.nav-active { background:rgba(0,212,255,.12); border-color:var(--accent); }
+.nav-item.nav-active .nav-item-name { color:var(--accent); }
+.nav-indent-1 { padding-left:18px; }
+.nav-indent-2 { padding-left:32px; }
+.nav-item-icon { font-size:11px; flex-shrink:0; opacity:.7; }
+.nav-item-name { font:500 9px var(--mono); color:var(--text); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.nav-item-badge { font:700 8px var(--mono); padding:1px 5px; border-radius:3px; background:rgba(0,212,255,.08); color:var(--accent); flex-shrink:0; }
+.nav-sep { height:1px; background:var(--border); margin:4px 8px; opacity:.5; }
+
+/* PANEL REPORTE */
+#reportePanel { width:270px; flex-shrink:0; background:var(--blue); border-left:1px solid var(--border); display:none; flex-direction:column; overflow:hidden; position:absolute; top:0; right:0; bottom:0; z-index:5; }
+#reportePanel.show { display:flex; }
+.rp-header { padding:9px 12px 8px; border-bottom:1px solid var(--border); flex-shrink:0; display:flex; align-items:center; gap:8px; }
+.rp-title { font:700 9px var(--mono); color:var(--accent); text-transform:uppercase; letter-spacing:.12em; flex:1; }
+.rp-esp-row { padding:7px 12px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:7px; flex-shrink:0; }
+.rp-esp-label { font:400 9px var(--mono); color:var(--muted); white-space:nowrap; }
+.rp-esp-sel { flex:1; background:var(--navy); color:var(--text); border:1px solid var(--border); border-radius:4px; font:500 10px var(--mono); padding:4px 8px; cursor:pointer; outline:none; }
+.rp-esp-sel:focus { border-color:var(--accent); }
+.rp-body { flex:1; overflow-y:auto; padding:8px 0; display:flex; flex-direction:column; gap:6px; }
+.rp-sec { background:var(--navy); border:1px solid var(--border); border-radius:5px; overflow:hidden; margin:0 8px; }
+.rp-sec-hdr { padding:6px 10px; display:flex; align-items:center; gap:6px; cursor:pointer; }
+.rp-sec-hdr:hover { background:rgba(255,255,255,.02); }
+.rp-sec-title { font:700 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.15em; flex:1; }
+.rp-badge { font:700 8px var(--mono); padding:2px 6px; border-radius:3px; }
+.rp-ok { background:rgba(0,200,83,.12); color:#00c853; }
+.rp-err { background:rgba(255,61,87,.12); color:#ff3d57; }
+.rp-warn { background:rgba(255,107,53,.12); color:#ff6b35; }
+.rp-info { background:rgba(0,212,255,.08); color:var(--accent); }
+.rp-content { border-top:1px solid var(--border); overflow-y:visible; }
+.rp-table { width:100%; border-collapse:collapse; }
+.rp-table td { padding:5px 10px; border-bottom:1px solid rgba(26,42,64,.4); font:400 10px var(--mono); color:var(--text); vertical-align:middle; }
+.rp-table tr:last-child td { border-bottom:none; }
+.td-name { max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.td-cls { font-size:8px; color:var(--muted); }
+.td-qty { text-align:right; font-weight:700; color:var(--accent); }
+.td-qty.zero { color:var(--muted); font-weight:400; }
+.td-ok { text-align:center; width:24px; }
+.ic-ok { color:#00c853; } .ic-err { color:#ff3d57; }
+.rp-msg { padding:8px 10px; margin:0 8px; font:400 10px var(--mono); color:var(--muted); line-height:1.5; }
+.btn-hide-row { padding:2px 6px; background:transparent; border:1px solid var(--border); border-radius:3px; font:600 8px var(--mono); color:var(--muted); cursor:pointer; transition:all .15s; white-space:nowrap; }
+.btn-hide-row:hover { border-color:var(--accent); color:var(--accent); }
+.btn-hide-row.isolated { border-color:var(--green); color:var(--green); background:rgba(0,200,83,.08); }
+
+/* Filas clickeables — sección 4 */
+.rp-table tr.ent-row { transition:background .12s; cursor:pointer; }
+.rp-table tr.ent-row:hover td { background:rgba(0,212,255,.07); }
+.rp-table tr.ent-row.ent-active td { background:rgba(0,212,255,.15); color:var(--accent); }
+.rp-table tr.ent-row.ent-active .td-cls { color:var(--accent); opacity:.8; }
+.rp-table tr.ent-row.ent-active .td-qty { color:var(--accent); }
+/* Filas clickeables — sección 5 */
+.rp-table tr.tipo-row { transition:background .12s; cursor:pointer; }
+.rp-table tr.tipo-row:hover td { background:rgba(0,212,255,.07); }
+.rp-table tr.tipo-row.tipo-active td { background:rgba(0,212,255,.15); color:var(--accent); }
+.rp-table tr.tipo-row.tipo-active .td-cls { color:var(--accent); opacity:.8; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="hicon">⬡</div>
+    <div>
+      <div class="htitle">VoxelBIM</div>
+      <div class="hsub">Carlos Estay Ruggieri · v1.0 | 2026</div>
+    </div>
+
+    <!-- Grupo 1: Navegación 3D -->
+    <div class="header-toolbar">
+      <button class="hbar-btn" id="btn3D"><span class="hb-icon">🧊</span> Vista 3D</button>
+      <button class="hbar-btn" id="btnFit"><span class="hb-icon">🎯</span> Zoom Extents</button>
+      <button class="hbar-btn" id="btnFitSel"><span class="hb-icon">🔍</span> Zoom Selección</button>
+      <button class="hbar-btn" id="btnResetVis"><span class="hb-icon">👁️</span> Mostrar todo</button>
+    </div>
+
+    <div class="header-toolbar-sep"></div>
+
+    <!-- Grupo 2: Modo claro y grilla -->
+    <div class="header-toolbar">
+      <button class="hbar-btn" id="btnLightMode" title="Modo claro/oscuro"><span class="hb-icon">🌓</span> Modo claro</button>
+      <button class="hbar-btn" id="btnToggleGrid" title="Mostrar/ocultar grilla"><span class="hb-icon">⊞</span> Grilla</button>
+    </div>
+
+    <div class="header-toolbar-sep"></div>
+
+    <!-- Grupo 3: Próximamente -->
+    <div class="header-toolbar">
+      <button class="hbar-btn disabled" id="btnClip" title="Próximamente"><span class="hb-icon">✂️</span> Corte <span class="hbar-tag">PRÓX.</span></button>
+      <button class="hbar-btn" id="btnMeasure" title="Medir distancias entre puntos"><span class="hb-icon">📏</span> Medir</button>
+      <button class="hbar-btn disabled" id="btnPlan" title="Próximamente"><span class="hb-icon">📐</span> Planta <span class="hbar-tag">PRÓX.</span></button>
+    </div>
+
+    <div class="header-toolbar-sep"></div>
+
+    <!-- Grupo 4: Paneles -->
+    <div class="header-toolbar">
+      <button class="hbar-btn" id="btnProps"><span class="hb-icon">📋</span> Propiedades</button>
+      <button class="hbar-btn" id="btnReporte"><span class="hb-icon">📊</span> Reporte</button>
+    </div>
+
+    <button class="hback" onclick="history.length > 1 ? history.back() : window.location.href='/'" style="margin-left:auto;">← Volver</button>
+  </header>
+
+  <div class="main">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sb-header">
+        <div class="sb-title">Cargar modelo</div>
+        <div class="dropzone" id="dropzone">
+          <input type="file" id="fileInput" accept=".ifc" style="display:none">
+          <div class="dz-icon">📂</div>
+          <div class="dz-label">Arrastra tu IFC aquí</div>
+          <div class="dz-sub">o haz clic para seleccionar</div>
+        </div>
+        <div class="progress-wrap" id="progressWrap">
+          <div class="progress-label" id="progressLabel">Convirtiendo IFC... 0%</div>
+          <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+        </div>
+        <div class="model-info" id="modelInfo">
+          <div class="mi-name" id="modelName">—</div>
+          <div class="mi-meta" id="modelMeta">—</div>
+        </div>
+      </div>
+
+      <!-- LISTA DE MODELOS CARGADOS -->
+      <div class="sb-models-section">
+        <div class="sb-models-title">Modelos cargados</div>
+        <div class="models-list" id="modelsList">
+          <div class="models-empty" id="modelsEmpty">Sin modelos cargados</div>
+        </div>
+      </div>
+
+      <div class="sb-controls">
+        <!-- Botones de navegación ocultos visualmente pero funcionales -->
+        <button class="ctrl-btn nav-hidden" id="btnFitSb"></button>
+        <button class="ctrl-btn nav-hidden" id="btnOrbitSb"></button>
+        <button class="ctrl-btn nav-hidden" id="btnPlanSb"></button>
+      </div>
+
+      <!-- NAVEGADOR DEL MODELO -->
+      <div id="navPanel" style="flex:1;display:flex;flex-direction:column;overflow:hidden;border-top:1px solid var(--border);min-height:0;">
+        <div class="nav-header">
+          <div class="nav-title">🗂 Navegador</div>
+        </div>
+        <div class="nav-body" id="navBody">
+          <div class="nav-empty">Carga un modelo IFC<br>para navegar su estructura</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VISOR 3D -->
+    <div class="viewer-wrap">
+      <div id="container"></div>
+      <div id="overlay">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;">
+          <div style="width:56px;height:56px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 0 30px rgba(0,212,255,.3);opacity:.9;">⬡</div>
+          <div style="font:700 22px var(--mono);color:#e0f0ff;letter-spacing:.08em;text-transform:uppercase;margin-top:4px;">VoxelBIM</div>
+          <div style="font:400 10px var(--mono);color:var(--accent);letter-spacing:.2em;text-transform:uppercase;opacity:.7;">Visor & Revisor IFC</div>
+          <div style="width:40px;height:1px;background:var(--border);margin:4px 0;"></div>
+          <div style="font:400 10px var(--mono);color:var(--muted);letter-spacing:.08em;text-transform:uppercase;max-width:260px;line-height:1.8;">Carga un archivo IFC para comenzar la revisión</div>
+          <div style="font:400 9px var(--mono);color:var(--muted);opacity:.5;margin-top:2px;">Arrastra el archivo o usa el panel izquierdo</div>
+        </div>
+      </div>
+      <div id="tooltip">
+        <div id="tt-header">
+          <span id="tt-icon"></span>
+          <span id="tt-class"></span>
+        </div>
+        <div id="tt-name"></div>
+        <div id="tt-id"></div>
+      </div>
+      <!-- GIZMO de orientación -->
+      <canvas id="gizmo" width="70" height="70"></canvas>
+    </div>
+
+    <!-- PANEL DERECHO: Propiedades + Navegador (por defecto) -->
+    <div id="rightPanel">
+
+      <!-- PROPIEDADES -->
+      <div id="propsPanel">
+        <div class="pp-header" style="border-top:2px solid var(--accent);">
+          <div class="pp-title">Propiedades</div>
+          <button class="pp-close" id="propsClose">✕</button>
+        </div>
+        <div style="margin:8px;padding:10px 12px;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.15);border-left:3px solid var(--accent);border-radius:5px;flex-shrink:0;">
+          <div style="font:700 9px var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.15em;margin-bottom:4px;">🔍 Propiedades IFC</div>
+          <div style="font:400 9px var(--mono);color:var(--muted);line-height:1.7;">Solo se muestran propiedades básicas del elemento para reducir la carga del modelo.</div>
+        </div>
+        <div class="pp-empty" id="propsEmpty">Selecciona un elemento<br>en el modelo</div>
+        <div class="pp-body" id="propsBody"></div>
+      </div>
+
+    </div>
+
+    <!-- PANEL REPORTE (aparece al hacer clic en Reporte) -->
+    <div id="reportePanel" style="position:relative;">
+      <div class="rp-header" style="border-top:2px solid var(--accent);">
+        <div class="rp-title">Reporte BIM</div>
+        <button class="pp-close" id="reporteClose">✕</button>
+      </div>
+      <div class="rp-esp-row" style="display:none">
+        <span class="rp-esp-label">Especialidad:</span>
+        <select class="rp-esp-sel" id="espSel"></select>
+      </div>
+      <div class="rp-body" id="rpBody">
+        <div class="rp-msg">Carga un modelo IFC para ver el reporte.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CONFIGURACIÓN REPORTE -->
+  <div id="modalCfg" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);align-items:center;justify-content:center;">
+    <div style="background:var(--blue);border:1px solid var(--border);border-top:2px solid var(--accent);border-radius:8px;padding:20px;width:300px;display:flex;flex-direction:column;gap:12px;box-shadow:0 0 40px rgba(0,212,255,.15);">
+      <div style="font:700 10px var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.15em;">⚙️ Configuración del Reporte</div>
+
+      <!-- Especialidad -->
+      <div>
+        <label style="display:block;font:600 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:5px;">Especialidad</label>
+        <select id="mcfgEsp" style="width:100%;padding:6px 8px;background:var(--navy);color:var(--text);border:1px solid var(--border);border-radius:4px;font:500 10px var(--mono);outline:none;cursor:pointer;"></select>
+      </div>
+
+      <!-- Coordenadas origen -->
+      <div>
+        <label style="display:block;font:600 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:5px;">Posición Local esperada</label>
+        <div style="display:flex;gap:6px;">
+          <div style="flex:1;"><label style="font:400 8px var(--mono);color:var(--muted);">X</label><input id="mcfgX" type="number" value="0" step="any" style="width:100%;padding:5px 6px;background:var(--navy);color:var(--text);border:1px solid var(--border);border-radius:3px;font:400 10px var(--mono);text-align:center;outline:none;"></div>
+          <div style="flex:1;"><label style="font:400 8px var(--mono);color:var(--muted);">Y</label><input id="mcfgY" type="number" value="0" step="any" style="width:100%;padding:5px 6px;background:var(--navy);color:var(--text);border:1px solid var(--border);border-radius:3px;font:400 10px var(--mono);text-align:center;outline:none;"></div>
+          <div style="flex:1;"><label style="font:400 8px var(--mono);color:var(--muted);">Z</label><input id="mcfgZ" type="number" value="0" step="any" style="width:100%;padding:5px 6px;background:var(--navy);color:var(--text);border:1px solid var(--border);border-radius:3px;font:400 10px var(--mono);text-align:center;outline:none;"></div>
+        </div>
+      </div>
+
+      <!-- Caracteres Sitio -->
+      <div>
+        <label style="display:block;font:600 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:5px;">N° caracteres IfcSite</label>
+        <input id="mcfgSite" type="number" value="3" min="1" max="50" style="width:100%;padding:6px 8px;background:var(--navy);color:var(--text);border:1px solid var(--border);border-radius:4px;font:400 11px var(--mono);text-align:center;outline:none;">
+      </div>
+
+      <!-- Caracteres Edificio -->
+      <div>
+        <label style="display:block;font:600 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:5px;">N° caracteres IfcBuilding</label>
+        <input id="mcfgBuilding" type="number" value="2" min="1" max="50" style="width:100%;padding:6px 8px;background:var(--navy);color:var(--text);border:1px solid var(--border);border-radius:4px;font:400 11px var(--mono);text-align:center;outline:none;">
+      </div>
+
+      <!-- Caracteres Niveles -->
+      <div>
+        <label style="display:block;font:600 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:5px;">N° caracteres IfcBuildingStorey</label>
+        <input id="mcfgStorey" type="number" value="5" min="1" max="50" style="width:100%;padding:6px 8px;background:var(--navy);color:var(--text);border:1px solid var(--border);border-radius:4px;font:400 11px var(--mono);text-align:center;outline:none;">
+      </div>
+
+      <!-- Botones -->
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button id="mcfgCancel" style="flex:1;padding:8px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:4px;font:600 9px var(--mono);cursor:pointer;text-transform:uppercase;letter-spacing:.1em;">Cancelar</button>
+        <button id="mcfgOk" style="flex:2;padding:8px;background:linear-gradient(135deg,var(--accent),#00bcd4);color:#000;border:none;border-radius:4px;font:700 9px var(--mono);cursor:pointer;text-transform:uppercase;letter-spacing:.1em;">▶ Generar Reporte</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/app/src/main.js"></script>
+</body>
+</html>
