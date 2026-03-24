@@ -1,0 +1,192 @@
+================================================================================
+                        ESTRUCTURA DEL PROYECTO VOXELBIM
+================================================================================
+Fecha: 24 de Marzo de 2026
+Descripción: Documento que contiene la estructura completa de archivos y
+             directorios del proyecto VoxelBIM
+
+================================================================================
+RAÍZ DEL PROYECTO (d:\Usuario\Documents\GitHub\VoxelBIM)
+================================================================================
+
+ARCHIVOS EN LA RAÍZ:
+├── .git/                      - Repositorio Git
+├── .gitattributes             - Configuración de atributos de Git
+├── .nojekyll                  - Archivo para páginas de GitHub
+├── _headers                   - Encabezados HTTP personalizados
+├── build.bat                  - Script de compilación (Windows)
+├── build.sh                   - Script de compilación (Unix/Linux)
+├── commit.bat                 - Script para commits
+├── index.html                 - Página principal del proyecto
+├── iniciar.bat                - Script para iniciar el proyecto
+├── LICENSE                    - Licencia del proyecto
+├── README.md                  - Documentación principal
+├── server.js                  - Servidor Node.js
+├── test_claude.js             - Archivo de prueba
+└── wrangler.toml              - Configuración de Wrangler
+
+================================================================================
+DIRECTORIO: /app
+================================================================================
+Descripción: Aplicación principal del proyecto
+
+ARCHIVOS EN /app:
+├── autodesk.html              - Página de integración con Autodesk
+├── iniciar.bat                - Script para iniciar app
+├── server.js                  - Servidor de la aplicación
+├── servidor.js                - Archivo de servidor alternativo
+├── voxelbim.html              - Página principal de VoxelBIM
+└── wasm/                       - Directorio con archivos WASM
+
+SUBDIRECTORIOS EN /app:
+
+  /app/js
+  ├── OrbitControls.js         - Control de órbita para Three.js
+  ├── three.min.js             - Librería Three.js minificada
+  ├── web-ifc-api-st.js        - API de Web-IFC (versión ST)
+  ├── web-ifc-api.js           - API de Web-IFC
+  ├── _descarga_nota.txt       - Nota sobre descargas
+  └── wasm/
+      ├── web-ifc-mt.wasm      - Web-IFC compilado (multi-thread)
+      └── web-ifc.wasm         - Web-IFC compilado
+
+  /app/src
+  ├── main.js                  - Archivo principal de JavaScript
+
+  /app/viewer
+  ├── style.css                - Estilos del visor
+  └── viewer3D.min.js          - Visor 3D minificado
+
+  /app/wasm
+  ├── web-ifc-mt.wasm          - Web-IFC compilado (multi-thread)
+  ├── web-ifc-st.wasm          - Web-IFC compilado (single-thread)
+  └── web-ifc.wasm             - Web-IFC compilado
+
+  /app/_archive
+  ├── .gitkeep                 - Archivo para mantener directorio
+  ├── explorer.html            - Explorador archivado
+  └── revisor.html             - Revisor archivado
+
+================================================================================
+DIRECTORIO: /aps-worker
+================================================================================
+Descripción: Worker para APS (Autodesk Platform Services)
+
+ARCHIVOS EN /aps-worker:
+├── index.js                   - Punto de entrada del worker
+├── wrangler.toml              - Configuración de Wrangler
+└── .wrangler/                 - Directorio de caché de Wrangler
+
+================================================================================
+DIRECTORIO: /scripts
+================================================================================
+Descripción: Scripts de utilidad y automatización
+
+ARCHIVOS EN /scripts:
+├── build_explorer.py          - Script Python para compilar explorer
+├── limpiar.ps1                - Script PowerShell para limpiar
+├── patch.js                   - Script de parches JavaScript
+├── patch2.js                  - Script de parches JavaScript (v2)
+├── patch_explorer.py          - Script Python para parchear explorer
+└── patch2_explorer.py         - Script Python para parchear explorer (v2)
+
+================================================================================
+DIRECTORIO: /visor
+================================================================================
+Descripción: Visor principal de la aplicación (Vite)
+
+ARCHIVOS EN /visor:
+├── .gitignore                 - Archivos a ignorar en Git
+├── package.json               - Dependencias del proyecto
+├── package-lock.json          - Lock de dependencias
+├── vite.config.js             - Configuración de Vite
+├── voxelbim.html              - HTML principal del visor
+├── dist/                      - Directorio de salida compilado
+├── node_modules/              - Dependencias instaladas
+└── src/
+    └── main.js                - Punto de entrada de la aplicación
+
+SUBDIRECTORIOS EN /visor:
+
+  /visor/public
+  ├── worker.mjs               - Web Worker
+  └── web-ifc/                 - Librería Web-IFC
+      ├── ifc-schema.d.ts      - Tipos TypeScript para esquema IFC
+      ├── LICENSE.md           - Licencia de Web-IFC
+      ├── package.json         - Package.json de Web-IFC
+      ├── README.md            - Documentación de Web-IFC
+      ├── web-ifc-api-iife.js  - Web-IFC API (formato IIFE)
+      ├── web-ifc-api-node.d.ts - Tipos TypeScript (Node.js)
+      ├── web-ifc-api-node.js  - Web-IFC API para Node.js
+      ├── web-ifc-api.d.ts     - Tipos TypeScript principales
+      ├── web-ifc-api.js       - Web-IFC API principal
+      ├── web-ifc-mt.wasm      - Web-IFC compilado (multi-thread)
+      ├── web-ifc-node.wasm    - Web-IFC compilado (Node.js)
+      ├── web-ifc.wasm         - Web-IFC compilado
+      └── helpers/
+          ├── log.d.ts         - Tipos TypeScript para log
+          └── properties.d.ts  - Tipos TypeScript para properties
+
+================================================================================
+RESUMEN ESTADÍSTICO
+================================================================================
+
+Directorios principales: 4
+  - /app
+  - /aps-worker
+  - /scripts
+  - /visor
+
+Subdirectorios: 11
+  - app/js
+  - app/js/wasm
+  - app/src
+  - app/viewer
+  - app/wasm
+  - app/_archive
+  - aps-worker/.wrangler
+  - visor/dist
+  - visor/node_modules
+  - visor/src
+  - visor/public
+
+Archivos principales (raíz): 15
+Archivos de configuración: 3 (wrangler.toml, vite.config.js, package.json)
+Archivos HTML: 4 (index.html, autodesk.html, voxelbim.html en app y visor)
+Archivos JavaScript: Múltiples (en varios directorios)
+Archivos WASM: 6 (compilados IFC)
+Archivos de estilo: 1 (style.css)
+Archivos de documentación: 3 (README.md, LICENSE.md en web-ifc)
+
+================================================================================
+DESCRIPCIÓN POR CARPETA
+================================================================================
+
+ROOT - RAÍZ DEL PROYECTO
+  Contiene archivos de configuración global, scripts de inicio y 
+  documentación principal del proyecto.
+
+/app
+  Aplicación principal que contiene:
+  - Integraciones con Autodesk (autodesk.html)
+  - Aplicación VoxelBIM (voxelbim.html)
+  - Librerías JavaScript (Three.js, Web-IFC, OrbitControls)
+  - Assets WASM compilados
+  - Visor 3D
+
+/aps-worker
+  Worker (Cloudflare Workers) para integración con Autodesk Platform Services.
+
+/scripts
+  Utilidades y scripts de automatización en Python y JavaScript para 
+  compilación y parching de componentes.
+
+/visor
+  Aplicación principal construida con Vite y Node.js
+  - Punto de entrada: src/main.js
+  - Salida compilada: dist/
+  - Incluye librería Web-IFC completa
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================
