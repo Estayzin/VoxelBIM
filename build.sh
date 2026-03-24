@@ -18,5 +18,9 @@ cp -r app visor/dist/app
 sed 's|src="./assets/|src="../assets/|g; s|href="./assets/|href="../assets/|g' \
   visor/dist/voxelbim.html > visor/dist/app/voxelbim.html
 
-# 5. Copiar _headers para que Cloudflare Pages aplique las cabeceras CORS/COOP
+# 5. Sobreescribir worker.mjs con el bundle compilado (tiene todas las deps incluidas)
+#    El raw worker.mjs de public/ usa bare imports que el navegador no puede resolver
+cp visor/dist/assets/worker-*.mjs visor/dist/worker.mjs
+
+# 6. Copiar _headers para que Cloudflare Pages aplique las cabeceras CORS/COOP
 cp _headers visor/dist/_headers
