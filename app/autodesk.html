@@ -317,10 +317,18 @@ if (!_hasCode && !_hasToken && !_hasAuth && window.location.protocol !== 'file:'
     <div class="viewer-toolbar" id="viewerToolbar" style="display:none;">
       <span class="vt-title" id="viewerTitle">Sin modelo</span>
       <span class="vt-badge" id="viewerBadge">APS Viewer</span>
-      <button class="btn-claude" id="btnClaudePanel" onclick="toggleClaudePanel()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M8 12h8M12 8v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        Claude AI
-      </button>
+      <div style="margin-left:auto;display:flex;gap:8px;">
+        <button class="btn-claude" id="btnPropsPanel" onclick="togglePropsPanel()" title="Propiedades">
+          🔩 Props
+        </button>
+        <button class="btn-claude" id="btnChartsPanel" onclick="toggleChartsPanel()" title="Gráficos">
+          📊 Charts
+        </button>
+        <button class="btn-claude" id="btnClaudePanel" onclick="toggleClaudePanel()" title="Claude AI Chat">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M8 12h8M12 8v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Claude
+        </button>
+      </div>
     </div>
 
     <div id="viewerContainer" style="flex:1;position:relative;display:flex;flex-direction:column;">
@@ -335,25 +343,19 @@ if (!_hasCode && !_hasToken && !_hasAuth && window.location.protocol !== 'file:'
         <div class="load-text" id="loadText">Cargando...</div>
       </div>
 
-      <!-- ══ PANEL CLAUDE AI (flotante dentro del visor) ══ -->
+      <!-- ══ PANEL CLAUDE AI (flotante - SOLO CHAT) ══ -->
       <div id="claudePanel">
         <div class="cp-header">
           <div class="cp-logo">✦</div>
           <div>
-            <div class="cp-title">Claude AI &nbsp;·&nbsp; BIM Assistant</div>
-            <div class="cp-model">claude-sonnet-4-5 &nbsp;·&nbsp; Bilingual</div>
+            <div class="cp-title">Claude AI &nbsp;·&nbsp; Chat</div>
+            <div class="cp-model">claude-opus-4-1 &nbsp;·&nbsp; Bilingual</div>
           </div>
           <button class="cp-close" onclick="toggleClaudePanel()" title="Cerrar">&#10005;</button>
         </div>
-        <!-- Pestañas -->
-        <div class="cp-tabs">
-          <button class="cp-tab active" onclick="cambiarTab('chat',this)">💬 Chat</button>
-          <button class="cp-tab" onclick="cambiarTab('props',this)">🔩 Propiedades</button>
-          <button class="cp-tab" onclick="cambiarTab('charts',this)">📊 Gráficos</button>
-        </div>
 
-        <!-- TAB CHAT -->
-        <div class="cp-pane active" id="pane-chat">
+        <!-- SOLO TAB CHAT (sin pestañas) -->
+        <div class="cp-pane active" id="pane-chat" style="display:flex;">
           <div class="chat-messages" id="chatMessages">
             <div class="msg assistant">
               <div class="msg-bubble">Hola! Soy tu asistente BIM potenciado por Claude.<br><br>Selecciona un elemento en el visor 3D y podré analizar sus propiedades, responder preguntas sobre el modelo o generar reportes.<br><br><span style="opacity:.6;font-size:9px;">// Hello! I'm your Claude-powered BIM assistant. Select an element in the 3D viewer to get started.</span></div>
@@ -377,38 +379,55 @@ if (!_hasCode && !_hasToken && !_hasAuth && window.location.protocol !== 'file:'
             </div>
           </div>
         </div>
+      </div>
+      <!-- FIN PANEL CLAUDE -->
 
-        <!-- TAB PROPIEDADES -->
-        <div class="cp-pane" id="pane-props">
-          <div class="props-area" id="propsArea">
-            <div class="props-empty">
-              Selecciona un elemento<br>en el visor 3D para ver sus propiedades.<br><br>
-              <span style="opacity:.5;font-size:9px;">// Click any element in the 3D viewer</span>
-            </div>
+      <!-- ══ PANEL PROPIEDADES (flotante independiente) ══ -->
+      <div id="propsPanel" style="position:absolute;top:0;right:440px;bottom:0;width:380px;z-index:199;background:linear-gradient(160deg,#0e1820 0%,#081020 60%,#050d18 100%);border-left:1px solid rgba(0,200,83,.25);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:-8px 0 40px rgba(0,0,0,.6);">
+        <div class="cp-header" style="background:rgba(0,200,83,.05);border-bottom:1px solid rgba(0,200,83,.15);">
+          <div class="cp-logo" style="background:linear-gradient(135deg,#00c853,#00a040);">◆</div>
+          <div>
+            <div class="cp-title" style="color:#c8f5d8;">Propiedades</div>
+            <div class="cp-model" style="color:rgba(0,200,83,.5);">BIM Properties</div>
           </div>
+          <button class="cp-close" onclick="togglePropsPanel()" title="Cerrar">&#10005;</button>
         </div>
-
-        <!-- TAB GRÁFICOS -->
-        <div class="cp-pane" id="pane-charts">
-          <div class="charts-area">
-            <div class="chart-card">
-              <div class="chart-card-title">📊 Categorías BIM del modelo</div>
-              <div id="donutContainer" style="position:relative;height:200px;display:flex;align-items:center;justify-content:center;">
-                <div class="chart-empty" id="donutEmpty">Carga un modelo para ver<br>la distribución por categorías</div>
-                <canvas id="donutChart" style="display:none;"></canvas>
-              </div>
-            </div>
-            <div class="chart-card" id="elementStatsCard" style="display:none;">
-              <div class="chart-card-title">🔩 Elemento seleccionado</div>
-              <div id="elementMiniStats"></div>
-            </div>
-            <button class="btn-report" id="btnGenerarReporte" onclick="generarReporte()" style="display:none;">
-              📄 Generar reporte con Claude AI
-            </button>
+        <div class="props-area" id="propsArea">
+          <div class="props-empty">
+            Selecciona un elemento<br>en el visor 3D para ver sus propiedades.
           </div>
         </div>
       </div>
-      <!-- FIN PANEL CLAUDE -->
+      <script>propsPanel = document.getElementById('propsPanel');</script>
+
+      <!-- ══ PANEL GRÁFICOS (flotante independiente) ══ -->
+      <div id="chartsPanel" style="position:absolute;top:0;right:440px;bottom:0;width:420px;z-index:198;background:linear-gradient(160deg,#0e1820 0%,#081528 60%,#050d18 100%);border-left:1px solid rgba(124,77,255,.25);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:-8px 0 40px rgba(0,0,0,.6);">
+        <div class="cp-header" style="background:rgba(124,77,255,.05);border-bottom:1px solid rgba(124,77,255,.15);">
+          <div class="cp-logo" style="background:linear-gradient(135deg,#7c4dff,#5e35c1);">◆</div>
+          <div>
+            <div class="cp-title" style="color:#e0d4ff;">Gráficos & Reportes</div>
+            <div class="cp-model" style="color:rgba(124,77,255,.5);">BIM Analytics</div>
+          </div>
+          <button class="cp-close" onclick="toggleChartsPanel()" title="Cerrar">&#10005;</button>
+        </div>
+        <div class="charts-area">
+          <div class="chart-card">
+            <div class="chart-card-title">📊 Categorías BIM del modelo</div>
+            <div id="donutContainer" style="position:relative;height:200px;display:flex;align-items:center;justify-content:center;">
+              <div class="chart-empty" id="donutEmpty">Carga un modelo para ver<br>la distribución por categorías</div>
+              <canvas id="donutChart" style="display:none;"></canvas>
+            </div>
+          </div>
+          <div class="chart-card" id="elementStatsCard" style="display:none;">
+            <div class="chart-card-title">🔩 Elemento seleccionado</div>
+            <div id="elementMiniStats"></div>
+          </div>
+          <button class="btn-report" id="btnGenerarReporte" onclick="generarReporte()" style="display:none;">
+            📄 Generar reporte con Claude AI
+          </button>
+        </div>
+      </div>
+      <script>chartsPanel = document.getElementById('chartsPanel');</script>
 
     </div><!-- fin viewerContainer -->
   </div><!-- fin panel-right -->
@@ -440,25 +459,39 @@ var APS_SCOPES    = 'data:read viewables:read account:read bucket:read';
 var apsToken      = null;
 var viewer        = null;
 
-// Estado Claude
-var claudePanelOpen  = false;
+// Estado elementos seleccionados
 var selectedProps    = null;  // propiedades del elemento seleccionado
 var selectedName     = '';
 var chatHistory      = [];    // historial para API Claude
 var donutChartInst   = null;
 var viewerIniciado   = false;
 
-// Timestamp inicial
-document.getElementById('initTime').textContent = new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
-
 // ============================================================
 // PANEL CLAUDE — toggle
 // ============================================================
+var claudePanelOpen = false;
+var propsPanelOpen = false;
+var chartsPanelOpen = false;
+
 function toggleClaudePanel() {
   claudePanelOpen = !claudePanelOpen;
-  document.getElementById('claudePanel').classList.toggle('open', claudePanelOpen);
+  document.getElementById('claudePanel').style.transform = claudePanelOpen ? 'translateX(0)' : 'translateX(100%)';
   document.getElementById('btnClaudePanel').style.background = claudePanelOpen
     ? 'rgba(199,125,255,.25)' : 'rgba(199,125,255,.1)';
+}
+
+function togglePropsPanel() {
+  propsPanelOpen = !propsPanelOpen;
+  document.getElementById('propsPanel').style.transform = propsPanelOpen ? 'translateX(0)' : 'translateX(100%)';
+  document.getElementById('btnPropsPanel').style.background = propsPanelOpen
+    ? 'rgba(0,200,83,.25)' : 'rgba(0,200,83,.1)';
+}
+
+function toggleChartsPanel() {
+  chartsPanelOpen = !chartsPanelOpen;
+  document.getElementById('chartsPanel').style.transform = chartsPanelOpen ? 'translateX(0)' : 'translateX(100%)';
+  document.getElementById('btnChartsPanel').style.background = chartsPanelOpen
+    ? 'rgba(124,77,255,.25)' : 'rgba(124,77,255,.1)';
 }
 
 function cambiarTab(nombre, el) {
