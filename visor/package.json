@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "postbuild": "node -e \"const fs=require('fs'),d='dist/assets',f=fs.readdirSync(d).find(x=>x.startsWith('worker-')&&x.endsWith('.mjs'));if(f){fs.copyFileSync(d+'/'+f,'dist/worker.mjs');console.log('worker.mjs actualizado:',f);}\"",
     "preview": "vite preview"
   },
   "dependencies": {
