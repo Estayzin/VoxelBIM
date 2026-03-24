@@ -10,7 +10,7 @@ const path  = require('path');
 const url   = require('url');
 
 const PORT = 3000;
-const ROOT = __dirname;
+const ROOT = require('path').resolve(__dirname, '..');
 
 // ============================================================
 // APS CONFIG — nunca expuesto al browser
@@ -141,10 +141,9 @@ http.createServer(function(req, res) {
   if (pathname === '/' || pathname === '') pathname = '/index.html';
   if (pathname === '/favicon.ico') { res.writeHead(204); return res.end(); }
 
-  // Resolver rutas relativas a la raíz del proyecto (un nivel arriba de /app)
-  var projectRoot = path.join(ROOT, '..');
-  var file = path.join(projectRoot, pathname);
-  if (file.indexOf(projectRoot) !== 0) { res.writeHead(403); return res.end('403'); }
+  // Resolver rutas relativas a la raíz del proyecto
+  var file = path.join(ROOT, pathname);
+  if (file.indexOf(ROOT) !== 0) { res.writeHead(403); return res.end('403'); }
 
   fs.readFile(file, function(err, data) {
     if (err) { res.writeHead(404); return res.end('404: ' + pathname); }
