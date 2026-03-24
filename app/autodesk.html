@@ -591,12 +591,12 @@ var IS_LOCAL      = window.location.hostname === 'localhost' || window.location.
 var APS_CLIENT_ID = 'kOJ4igA0Lm8a9ZHA3KGkATKASthAdjiWBjY9ventTQBnGVab';
 var APS_CALLBACK  = IS_LOCAL
   ? 'http://localhost:3000/app/autodesk.html'
-  : 'https://revisor-ifc-pages.pages.dev/app/autodesk.html';
+  : 'https://voxelbim.pages.dev/app/autodesk.html';
 var APS_PROXY     = IS_LOCAL
-  ? 'http://localhost:3000/aps/token'
+  ? 'https://voxelbim.zinnarox.workers.dev/token'
   : 'https://voxelbim.zinnarox.workers.dev/token';
 var CLAUDE_PROXY  = IS_LOCAL
-  ? 'http://localhost:3000/claude/chat'
+  ? 'https://voxelbim.zinnarox.workers.dev/claude'
   : 'https://voxelbim.zinnarox.workers.dev/claude';
 var APS_SCOPES    = 'data:read viewables:read account:read bucket:read';
 var apsToken      = null;
