@@ -3,6 +3,11 @@
   Cross-Origin-Embedder-Policy: credentialless
   Cross-Origin-Resource-Policy: cross-origin
 
+# voxelbim.html: desactivar crossOriginIsolated para forzar web-ifc single-thread
+/voxelbim.html
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: unsafe-none
+
 /app/autodesk.html
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Embedder-Policy: credentialless

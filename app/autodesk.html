@@ -427,6 +427,7 @@ if (!_hasCode && !_hasToken && !_hasAuth && window.location.protocol !== 'file:'
     <span id="connStatus" style="font:400 9px var(--mono);color:var(--muted);">Sin conexi&oacute;n</span>
     <a href="/index.html" class="hback">&#8592; Portal</a>
   </div>
+  <a href="index.html" class="hback">&#8592; Portal</a>
 </header>
 
 <!-- WORKSPACE -->
@@ -590,7 +591,7 @@ var IS_LOCAL      = window.location.hostname === 'localhost' || window.location.
 var APS_CLIENT_ID = 'kOJ4igA0Lm8a9ZHA3KGkATKASthAdjiWBjY9ventTQBnGVab';
 var APS_CALLBACK  = IS_LOCAL
   ? 'http://localhost:3000/app/autodesk.html'
-  : 'https://revisor-ifc-pages.pages.dev/autodesk.html';
+  : 'https://revisor-ifc-pages.pages.dev/app/autodesk.html';
 var APS_PROXY     = IS_LOCAL
   ? 'http://localhost:3000/aps/token'
   : 'https://voxelbim.zinnarox.workers.dev/token';

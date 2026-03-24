@@ -40,9 +40,11 @@ grid.config.primarySize = 1;
 grid.config.secondarySize = 10;
 grid.config.visible = false;
 
-const workerUrl = window.location.origin + "/worker.mjs";
+const _isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const _base = _isLocal ? '/visor/dist' : '';
+const workerUrl = window.location.origin + _base + "/worker.mjs";
 const fragments = components.get(OBC.FragmentsManager);
-fragments.init(workerUrl);
+fragments.init(workerUrl, { classicWorker: false });
 
 world.camera.controls.addEventListener("update", () => fragments.core.update());
 world.onCameraChanged.add((camera) => {
@@ -67,7 +69,7 @@ fragments.core.models.materials.list.onItemSet.add(({ value: material }) => {
 });
 
 const ifcLoader = components.get(OBC.IfcLoader);
-await ifcLoader.setup({ autoSetWasm: false, wasm: { path: "/web-ifc/", absolute: true } });
+await ifcLoader.setup({ autoSetWasm: false, wasm: { path: _base + "/web-ifc/", absolute: true } });
 
 const overlay = document.getElementById("overlay");
 const progressWrap = document.getElementById("progressWrap");
@@ -109,10 +111,16 @@ const loadIfc = async (file) => {
   _nombreArchivoActual = file.name;
   _espActual = detectarEspecialidad(file.name);
   _estActual = est;
-  setProgress(1);
-  await ifcLoader.load(new Uint8Array(buffer), false, file.name, { processData: { progressCallback: setProgress } });
-  await renderNavegador(est);
-  if (world.camera.fitToItems) await world.camera.fitToItems();
+  try {
+    await ifcLoader.load(new Uint8Array(buffer), false, file.name, { processData: { progressCallback: setProgress } });
+    setProgress(1);
+    await renderNavegador(est);
+    if (world.camera.fitToItems) await world.camera.fitToItems();
+  } catch(err) {
+    console.error('[VoxelBIM] Error cargando IFC:', err);
+    progressLabel.textContent = `Error: ${err?.message || err}`;
+    progressFill.style.background = '#ff3d57';
+  }
 };
 
 const dropzone = document.getElementById("dropzone");

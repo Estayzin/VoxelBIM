@@ -190,7 +190,7 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
 
       <!-- GRILLA DEMO -->
       <div id="gridDemo" class="modules-grid pro-grid" style="display:none;">
-        <a href="/visor/dist/voxelbim.html" class="module-card">
+        <a id="linkExplorerDemo" href="/voxelbim.html" class="module-card">
           <div class="mc-icon" style="background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.2);">🗂️</div>
           <div>
             <div class="mc-title">Explorador BIM</div>
@@ -242,7 +242,7 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
 
       <!-- GRILLA PRO -->
       <div id="gridPro" class="modules-grid pro-grid" style="display:none;">
-        <a href="/visor/dist/voxelbim.html" class="module-card">
+        <a id="linkExplorerPro" href="/voxelbim.html" class="module-card">
           <div class="mc-icon" style="background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.2);">🗂️</div>
           <div>
             <div class="mc-title">Explorador BIM</div>
@@ -250,7 +250,7 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
           </div>
           <div class="mc-tags"><span class="mc-tag tag-live">Activo</span><span class="mc-tag" style="background:rgba(0,212,255,.06);color:var(--muted);border:1px solid var(--border);">3D · Planos · Docs</span></div>
         </a>
-        <a href="/app/autodesk.html" class="module-card" onclick="abrirModulo('/app/autodesk.html'); return false;">
+        <a id="linkAutodesk" href="/app/autodesk.html" class="module-card" onclick="abrirModulo('/app/autodesk.html'); return false;">
           <div class="mc-icon" style="background:rgba(0,144,255,.1);border:1px solid rgba(0,144,255,.2);">🔗</div>
           <div>
             <div class="mc-title">Autodesk APS</div>
@@ -310,10 +310,15 @@ const HASHES = {
   '1794bf57ce0108bc9577d4ccf4ffebd0b76327d0c667659d9a85dcc13b8efef2': 'demo'
 };
 
+function getBase() {
+  var h = window.location.hostname;
+  return (h === 'localhost' || h === '127.0.0.1') ? '/visor/dist' : '';
+}
+
 function abrirModulo(url) {
   // Transferir sesión al módulo via sessionStorage antes de navegar
   sessionStorage.setItem('ifc_auth', '1');
-  window.location.href = url;
+  window.location.href = getBase() + url;
 }
 
 async function doLogin() {
@@ -363,6 +368,16 @@ function cerrarSesion() {
 }
 
 (function(){
+  // Ajustar rutas según entorno (localhost vs producción)
+  var base = getBase();
+  if (base) {
+    document.getElementById('linkExplorerDemo').href = base + '/voxelbim.html';
+    document.getElementById('linkExplorerPro').href  = base + '/voxelbim.html';
+    var la = document.getElementById('linkAutodesk');
+    la.href = base + '/app/autodesk.html';
+    la.onclick = function(){ abrirModulo('/app/autodesk.html'); return false; };
+  }
+
   if (sessionStorage.getItem('ifc_auth') === '1') {
     document.getElementById('loginScreen').classList.add('hidden');
     mostrarPortal(sessionStorage.getItem('ifc_plan') || 'demo');

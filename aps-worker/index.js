@@ -4,7 +4,7 @@ const CLIENT_SECRET = 'GFwhQIEpFLUGFEfS5Iug0m8Q869JAhO9Dfk83L11BCPmuuVdwkv6GDOuB
 const APS_TOKEN_URL = 'https://developer.api.autodesk.com/authentication/v2/token';
 
 const ALLOWED_ORIGINS = [
-  'https://revisor-ifc-pages.pages.dev',
+  'https://voxelbim.pages.dev',
   'http://localhost:3000',
 ];
 
@@ -21,8 +21,8 @@ function getCORS(origin) {
 
 // Callback URL según origen
 const CALLBACK_URLS = {
-  'https://revisor-ifc-pages.pages.dev': 'https://revisor-ifc-pages.pages.dev/app/autodesk.html',
-  'http://localhost:3000':               'http://localhost:3000/app/autodesk.html',
+  'https://voxelbim.pages.dev': 'https://voxelbim.pages.dev/app/autodesk.html',
+  'http://localhost:3000':      'http://localhost:3000/app/autodesk.html',
 };
 
 export default {
