@@ -190,7 +190,7 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
 
       <!-- GRILLA DEMO -->
       <div id="gridDemo" class="modules-grid pro-grid" style="display:none;">
-        <a id="linkExplorerDemo" href="/voxelbim.html" class="module-card">
+        <a id="linkExplorerDemo" href="#" onclick="abrirModulo(getVisorUrl());return false;" class="module-card">
           <div class="mc-icon" style="background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.2);">🗂️</div>
           <div>
             <div class="mc-title">Explorador BIM</div>
@@ -242,7 +242,7 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
 
       <!-- GRILLA PRO -->
       <div id="gridPro" class="modules-grid pro-grid" style="display:none;">
-        <a id="linkExplorerPro" href="/voxelbim.html" class="module-card">
+        <a id="linkExplorerPro" href="#" onclick="abrirModulo(getVisorUrl());return false;" class="module-card">
           <div class="mc-icon" style="background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.2);">🗂️</div>
           <div>
             <div class="mc-title">Explorador BIM</div>
@@ -310,15 +310,16 @@ const HASHES = {
   '1794bf57ce0108bc9577d4ccf4ffebd0b76327d0c667659d9a85dcc13b8efef2': 'demo'
 };
 
-function getBase() {
+function getVisorUrl() {
+  // En localhost el servidor sirve desde la raíz del repo → visor en /visor/dist/
+  // En Cloudflare Pages el build output es visor/dist/ → visor en la raíz /
   var h = window.location.hostname;
-  return (h === 'localhost' || h === '127.0.0.1') ? '/visor/dist' : '';
+  return (h === 'localhost' || h === '127.0.0.1') ? '/visor/dist/voxelbim.html' : '/voxelbim.html';
 }
 
 function abrirModulo(url) {
-  // Transferir sesión al módulo via sessionStorage antes de navegar
   sessionStorage.setItem('ifc_auth', '1');
-  window.location.href = getBase() + url;
+  window.location.href = url;
 }
 
 async function doLogin() {
@@ -368,16 +369,6 @@ function cerrarSesion() {
 }
 
 (function(){
-  // Ajustar rutas según entorno (localhost vs producción)
-  var base = getBase();
-  if (base) {
-    document.getElementById('linkExplorerDemo').href = base + '/voxelbim.html';
-    document.getElementById('linkExplorerPro').href  = base + '/voxelbim.html';
-    var la = document.getElementById('linkAutodesk');
-    la.href = '/app/autodesk.html';
-    la.onclick = function(){ sessionStorage.setItem('ifc_auth','1'); window.location.href='/app/autodesk.html'; return false; };
-  }
-
   if (sessionStorage.getItem('ifc_auth') === '1') {
     document.getElementById('loginScreen').classList.add('hidden');
     mostrarPortal(sessionStorage.getItem('ifc_plan') || 'demo');
