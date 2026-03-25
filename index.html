@@ -374,8 +374,8 @@ function cerrarSesion() {
     document.getElementById('linkExplorerDemo').href = base + '/voxelbim.html';
     document.getElementById('linkExplorerPro').href  = base + '/voxelbim.html';
     var la = document.getElementById('linkAutodesk');
-    la.href = base + '/app/autodesk.html';
-    la.onclick = function(){ abrirModulo('/app/autodesk.html'); return false; };
+    la.href = '/app/autodesk.html';
+    la.onclick = function(){ sessionStorage.setItem('ifc_auth','1'); window.location.href='/app/autodesk.html'; return false; };
   }
 
   if (sessionStorage.getItem('ifc_auth') === '1') {
