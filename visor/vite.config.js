@@ -16,10 +16,6 @@ export default {
       'application/javascript': ['mjs', 'js']
     }
   },
-  worker: {
-    format: 'es',
-    entry: 'public/worker.mjs'
-  },
   optimizeDeps: {
     rolldownOptions: {
       format: 'esm',
