@@ -2,6 +2,7 @@
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Embedder-Policy: credentialless
   Cross-Origin-Resource-Policy: cross-origin
+  Content-Type: application/javascript
 
 # voxelbim.html: desactivar crossOriginIsolated para forzar web-ifc single-thread
 /voxelbim.html
@@ -16,3 +17,13 @@
 /app/viewer/*
   Cross-Origin-Embedder-Policy: require-corp
   Cross-Origin-Resource-Policy: cross-origin
+
+# Asegurar que .mjs se sirva como módulo ES6
+/*.mjs
+  Content-Type: application/javascript
+
+/assets/*.mjs
+  Content-Type: application/javascript
+
+/worker.mjs
+  Content-Type: application/javascript

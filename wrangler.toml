@@ -1,3 +1,7 @@
 name = "voxelbim"
 main = "aps-worker/index.js"
 compatibility_date = "2024-01-01"
+
+# Para Cloudflare Pages: usar ./visor/dist como directorio de public
+[site]
+bucket = "./visor/dist"

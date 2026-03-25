@@ -2,7 +2,7 @@ import { resolve } from 'path';
 
 export default {
   // base vacío = rutas relativas → funciona tanto en servidor local como en Cloudflare Pages
-  base: '',
+  base: '/',
   publicDir: 'public',
   server: {
     middlewareMode: false,
@@ -12,8 +12,13 @@ export default {
       'Access-Control-Allow-Headers': 'Content-Type',
     },
     mimeTypes: {
-      'application/wasm': ['wasm']
+      'application/wasm': ['wasm'],
+      'application/javascript': ['mjs', 'js']
     }
+  },
+  worker: {
+    format: 'es',
+    entry: 'public/worker.mjs'
   },
   optimizeDeps: {
     rolldownOptions: {
@@ -27,7 +32,13 @@ export default {
     chunkSizeWarningLimit: 10000,
     rollupOptions: {
       input: resolve(__dirname, 'voxelbim.html'),
+      output: {
+        entryFileNames: '[name].js',
+        chunkFileNames: '[name].js',
+      }
     },
     assetsInlineLimit: 0,
+    sourcemap: false,
+    minify: true,
   }
 };
