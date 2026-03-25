@@ -1,26 +1,14 @@
-/*
-  Cross-Origin-Opener-Policy: same-origin
-  Cross-Origin-Embedder-Policy: credentialless
-  Cross-Origin-Resource-Policy: cross-origin
-  Content-Type: application/javascript
-
-# voxelbim.html: desactivar crossOriginIsolated para forzar web-ifc single-thread
-/voxelbim.html
-  Cross-Origin-Opener-Policy: same-origin
-  Cross-Origin-Embedder-Policy: unsafe-none
-
-/app/autodesk.html
-  Cross-Origin-Opener-Policy: same-origin
-  Cross-Origin-Embedder-Policy: credentialless
-  Cross-Origin-Resource-Policy: cross-origin
-
-/app/viewer/*
-  Cross-Origin-Embedder-Policy: require-corp
-  Cross-Origin-Resource-Policy: cross-origin
-
 # Archivos HTML
 /*.html
   Content-Type: text/html; charset=utf-8
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: unsafe-none
+
+# voxelbim.html específico
+/voxelbim.html
+  Content-Type: text/html; charset=utf-8
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: unsafe-none
 
 # Asegurar que .mjs se sirva como módulo ES6
 /*.mjs
@@ -30,5 +18,4 @@
   Content-Type: application/javascript
 
 /worker.mjs
-  Content-Type: application/javascript
   Content-Type: application/javascript
