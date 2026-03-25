@@ -1,0 +1,10 @@
+# Redirect rules for Cloudflare Pages
+
+# Redirect /voxelbim to /voxelbim.html
+/voxelbim /voxelbim.html 200
+
+# Redirect /app/* routes (if needed)
+/app/* /app/index.html 200
+
+# Catch-all for SPA (if needed)
+/* /index.html 200
