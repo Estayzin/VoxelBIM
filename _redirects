@@ -1,0 +1,4 @@
+# Redirects para Cloudflare Pages — VoxelBIM
+
+# Atajo sin .html
+/voxelbim /visor/dist/voxelbim.html 302

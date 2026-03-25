@@ -1,10 +1,7 @@
 name = "voxelbim"
-main = "aps-worker/index.js"
 compatibility_date = "2024-01-01"
 
-# Configuración para Cloudflare Pages
-[site]
-bucket = "./visor/dist"
-
-[env.pages]
-vars = { ENVIRONMENT = "production" }
+# El deploy a Cloudflare Pages se hace via GitHub integration.
+# Build command:  cd visor && npm install && npm run build
+# Build output:   visor/dist
+# (configurado en el dashboard de Cloudflare Pages)

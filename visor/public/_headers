@@ -1,16 +1,12 @@
-# Archivos HTML
+# Headers para Cloudflare Pages — VoxelBIM
+
+# Todos los HTML
 /*.html
   Content-Type: text/html; charset=utf-8
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Embedder-Policy: unsafe-none
 
-# voxelbim.html específico
-/voxelbim.html
-  Content-Type: text/html; charset=utf-8
-  Cross-Origin-Opener-Policy: same-origin
-  Cross-Origin-Embedder-Policy: unsafe-none
-
-# Asegurar que .mjs se sirva como módulo ES6
+# Módulos ES
 /*.mjs
   Content-Type: application/javascript
 
@@ -19,3 +15,7 @@
 
 /worker.mjs
   Content-Type: application/javascript
+
+# WASM
+/*.wasm
+  Content-Type: application/wasm

@@ -48,15 +48,7 @@ const getWorkerUrl = () => {
   }
   
   // En Cloudflare Pages: el worker está servido desde la raíz
-  // Determinar la ruta base actual
-  const pathname = window.location.pathname;
-  
-  // Si estamos en una subruta (ej: /voxelbim/), usar esa como base
-  if (pathname.includes('/voxelbim')) {
-    return '/worker.mjs';
-  }
-  
-  // Default: asumir que estamos en la raíz
+  // Siempre usar ruta absoluta desde la raíz del dominio
   return '/worker.mjs';
 };
 

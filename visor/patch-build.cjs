@@ -1,7 +1,8 @@
 // Post-build patch: fixes Emscripten pthread worker URL in ES module context.
 // document.currentScript.src is null for <script type="module">, causing pthread
 // workers to spawn with URL "undefined" → MIME errors. Fix: fall back to import.meta.url.
-const fs = require('fs');
+// También copia index.html y app/ a dist/ para que Cloudflare Pages los sirva.
+const fs   = require('fs');
 const path = require('path');
 
 const assetsDir = 'dist/assets';
@@ -21,7 +22,6 @@ if (mainFile) {
   let code = fs.readFileSync(filePath, 'utf8');
   let patched = false;
 
-  // Fix 1: use import.meta.url as fallback when document.currentScript.src is null (ES module)
   const SRC_ORIG = 'var e=globalThis.document?.currentScript?.src;';
   const SRC_FIX  = 'var e=globalThis.document?.currentScript?.src??import.meta.url;';
   if (code.includes(SRC_ORIG)) {
@@ -32,7 +32,6 @@ if (mainFile) {
     console.warn('[patch] AVISO: patrón Fix 1 no encontrado');
   }
 
-  // Fix 2: create pthread workers as module workers (so import.meta works inside them)
   const WORKER_ORIG = 'new Worker(n,{name:`em-pthread`})';
   const WORKER_FIX  = 'new Worker(n,{name:`em-pthread`,type:`module`})';
   if (code.includes(WORKER_ORIG)) {
@@ -48,3 +47,37 @@ if (mainFile) {
     console.log('[patch] Bundle actualizado:', mainFile);
   }
 }
+
+// 3. Copiar index.html (portal login) a dist/
+const rootDir  = path.resolve(__dirname, '..');
+const distDir  = path.resolve(__dirname, 'dist');
+
+const indexSrc = path.join(rootDir, 'index.html');
+if (fs.existsSync(indexSrc)) {
+  fs.copyFileSync(indexSrc, path.join(distDir, 'index.html'));
+  console.log('[patch] index.html copiado a dist/');
+}
+
+// 4. Copiar carpeta app/ a dist/app/ (explorador BIM + autodesk.html)
+function copyDir(src, dest) {
+  fs.mkdirSync(dest, { recursive: true });
+  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    if (entry.name === '_archive') continue;
+    const s = path.join(src, entry.name);
+    const d = path.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      copyDir(s, d);
+    } else {
+      fs.copyFileSync(s, d);
+    }
+  }
+}
+
+const appSrc  = path.join(rootDir, 'app');
+const appDest = path.join(distDir, 'app');
+if (fs.existsSync(appSrc)) {
+  copyDir(appSrc, appDest);
+  console.log('[patch] app/ copiado a dist/app/');
+}
+
+console.log('[patch] Post-build completo ✓');
