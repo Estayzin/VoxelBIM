@@ -10,4 +10,6 @@ Todos los cambios en esta rama seran revisados antes de pasar a main.
 - OAuth Fix: APS_CALLBACK ahora es dinámico para soportar entornos de Preview (Cloudflare) y Local sin redireccionar al main.
 - Nuevo Módulo: Creada base de app/inventario.html con diseño de tablas de cuantificación.
 - Portal: Activada tarjeta de "Inventario y Tablas" en la grilla Pro.
-- Inventario: Implementado sistema de carga de modelos (Dropzone) y lógica mock de cuantificación.
+- Inventario: Implementado sistema de carga de modelos (Dropzone).
+- Inventario: Sustitución de lógica mock por extracción real con web-ifc.
+- Inventario: Detección automática de niveles (IfcBuildingStorey) y agrupación por piso.
