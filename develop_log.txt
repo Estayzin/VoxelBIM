@@ -30,3 +30,4 @@ Todos los cambios en esta rama seran revisados antes de pasar a main.
 - Explorador BIM: **Header Premium**. Se ha unificado la estética con el módulo de Autodesk, incluyendo el logo SVG isométrico, tipografía de 13px y un indicador de estado dinámico ("Modelo Listo").
 - Explorador BIM: **Limpieza de Toolbar**. Se han convertido los botones de navegación 3D a solo iconos para reducir el ruido visual y se ha marcado la herramienta "Medir" como próximamente.
 - Explorador BIM: **Header Refined**. Se ha limpiado el subtítulo y reubicado el indicador de estado a la derecha de "Claude IA" con un separador visual para un look más integrado y profesional.
+- Explorador BIM: **Aesthetic Refinement**. Se han eliminado los bordes estáticos de los botones de la barra de herramientas y se han sustituido los emojis coloridos por iconos monocromáticos profesionales (`⬚`, `⤢`, `🔎`, `⌬`, etc.).
