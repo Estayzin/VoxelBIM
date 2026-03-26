@@ -23,3 +23,4 @@ Todos los cambios en esta rama seran revisados antes de pasar a main.
 - Explorador BIM: Sección 3.4 ahora muestra un checkmark (✓) en elementos sin clasificar si la cantidad es 0.
 - Explorador BIM: Validación de nombres de niveles (3.3.b) ahora requiere COINCIDENCIA EXACTA del largo configurado.
 - Explorador BIM: Todas las secciones del reporte aparecen desplegadas por defecto para mayor rapidez.
+- Explorador BIM: Paneles de Propiedades y Reporte desacoplados. Ahora son independientes y aparecen uno al lado del otro (Propiedades a la izquierda, Reporte a la derecha) con scrolls individuales.

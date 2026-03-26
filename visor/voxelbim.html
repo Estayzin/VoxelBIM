@@ -165,17 +165,21 @@ body.light-mode .hsub { color:#4a6080; }
 .ov-icon { font-size:40px; opacity:.15; }
 .ov-text { font:400 10px var(--mono); color:var(--muted); letter-spacing:.1em; text-transform:uppercase; }
 
-/* PANEL DERECHO COMBINADO */
-#rightPanel { width:270px; flex-shrink:0; background:var(--blue); border-left:1px solid var(--border); display:flex; flex-direction:column; overflow-y:scroll; overflow-x:hidden; position:relative; }
-
-/* Scrollbar personalizado para el panel derecho */
-#rightPanel::-webkit-scrollbar { width:6px; }
-#rightPanel::-webkit-scrollbar-track { background:var(--blue); }
-#rightPanel::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
-#rightPanel::-webkit-scrollbar-thumb:hover { background:var(--muted); }
+/* CONTENEDOR DE PANELES DERECHOS */
+#rightPanels { display:flex; flex-direction:row; height:100%; flex-shrink:0; border-left:1px solid var(--border); pointer-events:auto; }
 
 /* PANEL PROPIEDADES — consistente con reporte BIM */
-#propsPanel { display:flex; flex-direction:column; border-bottom:1px solid var(--border); }
+#propsPanel { width:270px; flex-shrink:0; background:var(--blue); border-right:1px solid var(--border); display:none; flex-direction:column; overflow-y:scroll; overflow-x:hidden; position:relative; }
+
+/* PANEL REPORTE */
+#reportePanel { width:300px; flex-shrink:0; background:var(--blue); display:none; flex-direction:column; overflow-y:scroll; overflow-x:hidden; position:relative; }
+
+/* Scrollbars individuales */
+#propsPanel::-webkit-scrollbar, #reportePanel::-webkit-scrollbar { width:6px; }
+#propsPanel::-webkit-scrollbar-track, #reportePanel::-webkit-scrollbar-track { background:var(--blue); }
+#propsPanel::-webkit-scrollbar-thumb, #reportePanel::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+#propsPanel::-webkit-scrollbar-thumb:hover, #reportePanel::-webkit-scrollbar-thumb:hover { background:var(--muted); }
+
 .pp-header { padding:9px 12px 8px; border-bottom:1px solid var(--border); flex-shrink:0; display:flex; align-items:center; gap:8px; }
 .pp-title { font:700 9px var(--mono); color:var(--accent); text-transform:uppercase; letter-spacing:.12em; flex:1; }
 .pp-close { background:none; border:none; color:var(--muted); cursor:pointer; font-size:13px; padding:2px 5px; border-radius:3px; line-height:1; }
@@ -405,37 +409,31 @@ body.light-mode .hsub { color:#4a6080; }
       <canvas id="gizmo" width="70" height="70"></canvas>
     </div>
 
-    <!-- PANEL DERECHO: Propiedades + Navegador (por defecto) -->
-    <div id="rightPanel">
-
-      <!-- PROPIEDADES -->
+    <!-- PANELES DERECHOS: Propiedades (Izquierda) + Reporte (Derecha) -->
+    <div id="rightPanels" style="display:none">
+      
+      <!-- PANEL PROPIEDADES -->
       <div id="propsPanel">
-        <div class="pp-header" style="border-top:2px solid var(--accent);">
-          <div class="pp-title">Propiedades</div>
-          <button class="pp-close" id="propsClose">✕</button>
+        <div class="pp-header">
+          <span class="pp-title">Propiedades</span>
+          <button class="pp-close" onclick="window.togglePanel('propsPanel')">✕</button>
         </div>
-        <div style="margin:8px;padding:10px 12px;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.15);border-left:3px solid var(--accent);border-radius:5px;flex-shrink:0;">
-          <div style="font:700 9px var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.15em;margin-bottom:4px;">🔍 Propiedades IFC</div>
-          <div style="font:400 9px var(--mono);color:var(--muted);line-height:1.7;">Solo se muestran propiedades básicas del elemento para reducir la carga del modelo.</div>
+        <div id="propsBody" class="pp-body">
+          <div class="pp-empty">Selecciona un elemento para ver sus propiedades</div>
         </div>
-        <div class="pp-empty" id="propsEmpty">Selecciona un elemento<br>en el modelo</div>
-        <div class="pp-body" id="propsBody"></div>
       </div>
 
-      <!-- PANEL REPORTE (dentro de rightPanel para scroll unificado) -->
+      <!-- PANEL REPORTE -->
       <div id="reportePanel">
-        <div class="rp-header" style="border-top:2px solid var(--accent);">
-          <div class="rp-title">Reporte BIM</div>
-          <button class="pp-close" id="reporteClose">✕</button>
-        </div>
-        <div class="rp-esp-row" style="display:none">
-          <span class="rp-esp-label">Especialidad:</span>
-          <select class="rp-esp-sel" id="espSel"></select>
+        <div class="pp-header">
+          <span class="pp-title">Reporte BIM</span>
+          <button class="pp-close" onclick="window.togglePanel('reportePanel')">✕</button>
         </div>
         <div class="rp-body" id="rpBody">
           <div class="rp-msg">Carga un modelo IFC para ver el reporte.</div>
         </div>
       </div>
+
     </div>
   </div>
 
