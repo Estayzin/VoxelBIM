@@ -190,22 +190,22 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
 
       <!-- GRILLA DEMO -->
       <div id="gridDemo" class="modules-grid pro-grid" style="display:none;">
-        <a id="linkExplorerDemo" href="#" onclick="abrirModulo(getVisorUrl());return false;" class="module-card">
+        <a id="linkExplorerDemo" href="#" class="module-card">
           <div class="mc-icon" style="background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.2);">🗂️</div>
           <div>
             <div class="mc-title">Explorador BIM</div>
             <div class="mc-desc">Navegador de proyectos con visor 3D, planos y documentos integrados.</div>
           </div>
-          <div class="mc-tags"><span class="mc-tag tag-live">Activo</span><span class="mc-tag" style="background:rgba(0,212,255,.06);color:var(--muted);border:1px solid var(--border);">3D · Planos · Docs</span></div>
+          <div class="mc-tags"><span class="mc-tag">Estado</span><span class="mc-tag" style="background:rgba(0,212,255,.06);color:var(--muted);border:1px solid var(--border);">3D · Planos · Docs</span></div>
         </a>
-        <div class="module-card disabled locked">
-          <div class="mc-icon" style="background:rgba(0,144,255,.06);border:1px solid var(--border);">🔗</div>
+        <a id="linkAutodeskDemo" href="#" class="module-card">
+          <div class="mc-icon" style="background:rgba(0,144,255,.1);border:1px solid rgba(0,144,255,.2);">🔗</div>
           <div>
             <div class="mc-title">Autodesk APS</div>
-            <div class="mc-desc">Revisión de modelos Revit y acceso a proyectos BIM 360 / ACC.</div>
+            <div class="mc-desc">Revisión de modelos Revit y acceso a proyectos BIM 360 / ACC via Autodesk Platform Services.</div>
           </div>
-          <div class="mc-tags"><span class="mc-tag tag-lock">Solo Pro</span><span class="mc-tag tag-beta">Próximamente</span></div>
-        </div>
+          <div class="mc-tags"><span class="mc-tag">Estado</span><span class="mc-tag tag-beta">Próximamente</span></div>
+        </a>
         <div class="module-card disabled locked">
           <div class="mc-icon" style="background:rgba(245,197,24,.06);border:1px solid var(--border);">📊</div>
           <div>
@@ -256,31 +256,31 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
             <div class="mc-title">Autodesk APS</div>
             <div class="mc-desc">Revisión de modelos Revit y acceso a proyectos BIM 360 / ACC via Autodesk Platform Services.</div>
           </div>
-          <div class="mc-tags"><span class="mc-tag tag-beta">Próximamente</span><span class="mc-tag" style="background:rgba(0,212,255,.06);color:var(--muted);border:1px solid var(--border);">RVT · BIM 360</span></div>
+          <div class="mc-tags"><span class="mc-tag tag-live">Activo</span><span class="mc-tag" style="background:rgba(0,212,255,.06);color:var(--muted);border:1px solid var(--border);">RVT · BIM 360</span></div>
         </a>
-        <div class="module-card disabled">
-          <div class="mc-icon" style="background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.2);">📊</div>
+        <div class="module-card disabled locked">
+          <div class="mc-icon" style="background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.2);">📊</div>
           <div>
             <div class="mc-title">Generación de Reportes</div>
             <div class="mc-desc">Reportes detallados por disciplina, fecha y proyecto en formato estándar.</div>
           </div>
-          <div class="mc-tags"><span class="mc-tag tag-dev">En desarrollo</span></div>
+          <div class="mc-tags"><span class="mc-tag tag-soon">Próximamente</span></div>
         </div>
-        <div class="module-card disabled">
-          <div class="mc-icon" style="background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.2);">📤</div>
+        <div class="module-card disabled locked">
+          <div class="mc-icon" style="background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.2);">📤</div>
           <div>
             <div class="mc-title">Inventario y Tablas</div>
             <div class="mc-desc">Exportación de inventarios y tablas de elementos BIM en PDF y XLS.</div>
           </div>
-          <div class="mc-tags"><span class="mc-tag tag-dev">En desarrollo</span></div>
+          <div class="mc-tags"><span class="mc-tag tag-soon">Próximamente</span></div>
         </div>
-        <div class="module-card disabled">
+        <div class="module-card disabled locked">
           <div class="mc-icon" style="background:rgba(124,77,255,.1);border:1px solid rgba(124,77,255,.2);">📋</div>
           <div>
             <div class="mc-title">Revisor IDS</div>
             <div class="mc-desc">Validación de modelos IFC contra Information Delivery Specifications.</div>
           </div>
-          <div class="mc-tags"><span class="mc-tag tag-dev">En desarrollo</span></div>
+          <div class="mc-tags"><span class="mc-tag tag-soon">Próximamente</span></div>
         </div>
         <a href="mailto:c.estay@outlook.com" class="module-card">
           <div class="mc-icon" style="background:rgba(124,77,255,.1);border:1px solid rgba(124,77,255,.2);">✉️</div>
@@ -299,15 +299,15 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
 <script>
 // Hash SHA-256 de las credenciales
 // Pro:    usuario "admin"  + contraseña "221472"
-// Demo 1: usuario "demo1"  + contraseña "5167"
-// Demo 2: usuario "demo2"  + contraseña "1472"
+// Demo 1: usuario "demo1"  + contraseña "5167" (Explorador BIM)
+// Demo 2: usuario "demo2"  + contraseña "1472" (Autodesk APS)
 const HASHES = {
   // hash de "admin:221472"
   'd231f71a9d546eb5fb328f99bb495fcd50ff32a4dc7226519131b5f9fa695fce': 'pro',
   // hash de "demo1:5167"
-  '5417b77699089c0d0ad6085ae6fb3a8b5b49ec9cf2d2d35e97f9169d74156bef': 'demo',
+  '5417b77699089c0d0ad6085ae6fb3a8b5b49ec9cf2d2d35e97f9169d74156bef': 'demo_explorer',
   // hash de "demo2:1472"
-  '1794bf57ce0108bc9577d4ccf4ffebd0b76327d0c667659d9a85dcc13b8efef2': 'demo'
+  '1794bf57ce0108bc9577d4ccf4ffebd0b76327d0c667659d9a85dcc13b8efef2': 'demo_autodesk'
 };
 
 function getVisorUrl() {
@@ -346,18 +346,51 @@ async function doLogin() {
 function mostrarPortal(plan) {
   var portal = document.getElementById('portal');
   portal.style.display = 'flex';
+  var isPro = plan === 'pro';
   // Badge en header
   var hb = document.getElementById('headerPlanBadge');
-  hb.textContent = plan === 'pro' ? '★ Pro' : 'Demo';
-  hb.className = 'header-plan ' + plan;
+  hb.textContent = isPro ? '★ Pro' : 'Demo';
+  hb.className = 'header-plan ' + (isPro ? 'pro' : 'demo');
   // Badge en portal
   var wrap = document.getElementById('planBadgeWrap');
-  wrap.innerHTML = plan === 'pro'
-    ? '<div class="plan-badge pro"><div class="plan-badge-dot"></div>Plan Pro — acceso completo</div>'
-    : '<div class="plan-badge demo"><div class="plan-badge-dot"></div>Plan Demo — acceso limitado</div>';
+  if (isPro) {
+    wrap.innerHTML = '<div class="plan-badge pro"><div class="plan-badge-dot"></div>Plan Pro — acceso completo</div>';
+  } else if (plan === 'demo_explorer') {
+    wrap.innerHTML = '<div class="plan-badge demo"><div class="plan-badge-dot"></div>Plan Demo — Explorador BIM</div>';
+  } else {
+    wrap.innerHTML = '<div class="plan-badge demo"><div class="plan-badge-dot"></div>Plan Demo — Autodesk APS</div>';
+  }
+
   // Mostrar grilla correcta
-  document.getElementById('gridDemo').style.display = plan === 'demo' ? 'grid' : 'none';
-  document.getElementById('gridPro').style.display  = plan === 'pro'  ? 'grid' : 'none';
+  document.getElementById('gridPro').style.display  = isPro ? 'grid' : 'none';
+  document.getElementById('gridDemo').style.display = isPro ? 'none' : 'grid';
+
+  if (!isPro) {
+    var cardExp = document.getElementById('linkExplorerDemo');
+    var cardAut = document.getElementById('linkAutodeskDemo');
+    
+    if (plan === 'demo_explorer') {
+      activarCard(cardExp, getVisorUrl(), 'Activo');
+      bloquearCard(cardAut, 'Solo Pro');
+    } else {
+      bloquearCard(cardExp, 'Solo Pro');
+      activarCard(cardAut, '/app/autodesk.html', 'Activo');
+    }
+  }
+}
+
+function activarCard(el, url, label) {
+  el.classList.remove('disabled', 'locked');
+  el.onclick = function() { abrirModulo(url); return false; };
+  var tag = el.querySelector('.mc-tags span:first-child');
+  if (tag) { tag.textContent = label; tag.className = 'mc-tag tag-live'; }
+}
+
+function bloquearCard(el, label) {
+  el.classList.add('disabled', 'locked');
+  el.onclick = function() { return false; };
+  var tag = el.querySelector('.mc-tags span:first-child');
+  if (tag) { tag.textContent = label; tag.className = 'mc-tag tag-lock'; }
 }
 
 function cerrarSesion() {
