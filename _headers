@@ -4,11 +4,11 @@
 /*
   Access-Control-Allow-Origin: *
 
-# MIME Types corregidos
-/*.mjs
+# MIME Types corregidos (recursivo)
+/**/*.mjs
   Content-Type: application/javascript
 
-/*.wasm
+/**/*.wasm
   Content-Type: application/wasm
 
 /visor/dist/web-ifc/*.wasm
