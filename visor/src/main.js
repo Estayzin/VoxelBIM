@@ -1608,14 +1608,11 @@ window.onNivelClick = async (id, e) => {
   actualizarSec5(null, allElemIds.length ? new Set(allElemIds) : null);
 };
 
-const espSel = document.getElementById('espSel');
-Object.keys(ESP).forEach(k=>{ const opt=document.createElement('option'); opt.value=ESP[k].cod; opt.textContent=k; if(ESP[k].cod==='ARQ')opt.selected=true; espSel.append(opt); });
-espSel.addEventListener('change', () => { _espActual=espSel.value; _tiposCache=null; _clsFiltroActiva=null; if(_estActual)renderReporte(_estActual); });
+// (espSel fue removido del HTML, la especialidad se cambia desde el reporte mismo o el modal)
 
 // Cambiar especialidad desde sección 0
 window._cambiarEsp = (cod) => {
   _espActual = cod;
-  espSel.value = cod;
   _tiposCache = null;
   _clsFiltroActiva = null;
   if (_estActual) renderReporte(_estActual);
@@ -1687,7 +1684,6 @@ document.getElementById('mcfgOk').addEventListener('click', () => {
   _cfgSite = parseInt(document.getElementById('mcfgSite').value) || 3;
   _cfgBuilding = parseInt(document.getElementById('mcfgBuilding').value) || 2;
   _cfgStorey = parseInt(document.getElementById('mcfgStorey').value) || 5;
-  espSel.value = _espActual;
   _tiposCache = null;
   _clsFiltroActiva = null;
   modalCfg.style.display = 'none';
