@@ -1236,7 +1236,7 @@ function getPunto(r,inst,t){if(!r||!inst[r]||inst[r].cls!=='IFCCARTESIANPOINT')r
 function getOffset(plRef,inst,t){if(!plRef||!inst[plRef])return null;const lp=splitAttrs(extraerRaw(t,inst[plRef].pos));let ap=null;for(let i=0;i<lp.length;i++){const r=refId(lp[i]);if(r&&inst[r]&&(inst[r].cls==='IFCAXIS2PLACEMENT3D'||inst[r].cls==='IFCAXIS2PLACEMENT2D')){ap=r;break;}}if(!ap)return null;return getPunto(refId(splitAttrs(extraerRaw(t,inst[ap].pos))[0]),inst,t);}
 function verificarOrigen(est){const res=[];['IFCSITE','IFCBUILDING'].forEach(tipo=>{for(const id in est.instancias){if(est.instancias[id].cls===tipo){const attrs=splitAttrs(extraerRaw(est.texto,est.instancias[id].pos));const nombre=strVal(attrs[2])||strVal(attrs[1])||'(sin nombre)';let plRef=null;for(let i=3;i<=8&&i<attrs.length;i++){const rid=refId(attrs[i]);if(rid&&est.instancias[rid]&&est.instancias[rid].cls==='IFCLOCALPLACEMENT'){plRef=rid;break;}}let x=null,y=null,z=null;if(plRef){const off=getOffset(plRef,est.instancias,est.texto);if(off){x=off.x;y=off.y;z=off.z;}}res.push({tipo,nombre,x,y,z,ok:x===null||(Math.abs(x-_cfgX)<0.001&&Math.abs(y-_cfgY)<0.001&&Math.abs(z-_cfgZ)<0.001)});break;}}});return res;}
 function verificarNombres(est){const res=[];[{tipo:'IFCSITE',min:_cfgSite},{tipo:'IFCBUILDING',min:_cfgBuilding}].forEach(cfg=>{for(const id in est.instancias){if(est.instancias[id].cls===cfg.tipo){const attrs=splitAttrs(extraerRaw(est.texto,est.instancias[id].pos));const nombre=strVal(attrs[2])||strVal(attrs[1])||'';res.push({tipo:cfg.tipo,nombre,largo:nombre.length,ok:nombre.length>=cfg.min});break;}}});return res;}
-function verificarNiveles(est){const niveles=[];for(const id in est.instancias){if(est.instancias[id].cls==='IFCBUILDINGSTOREY'){const attrs=splitAttrs(extraerRaw(est.texto,est.instancias[id].pos));const nombre=strVal(attrs[2])||strVal(attrs[1])||'';niveles.push({id:'#'+id,nombre,largo:nombre.length,ok:nombre.length>=_cfgStorey});}}return niveles;}
+function verificarNiveles(est){const niveles=[];for(const id in est.instancias){if(est.instancias[id].cls==='IFCBUILDINGSTOREY'){const attrs=splitAttrs(extraerRaw(est.texto,est.instancias[id].pos));const nombre=strVal(attrs[2])||strVal(attrs[1])||'';niveles.push({id:'#'+id,nombre,largo:nombre.length,ok:nombre.length === _cfgStorey});}}return niveles;}
 function rpSec(t,b,bc,inner,open){return`<div class="rp-sec"><div class="rp-sec-hdr" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'"><span class="rp-sec-title">${t}</span><span class="rp-badge ${bc}">${b}</span></div><div class="rp-content" style="display:${open?'block':'none'}">${inner}</div></div>`;}
 
 function renderReporte(est) {
@@ -1293,7 +1293,7 @@ function renderReporte(est) {
         <td class="td-ok">${r.ok ? '<span class="ic-ok">✓</span>' : '<span class="ic-err">✗</span>'}</td>
       </tr>`;
     }).join('');
-    html += rpSec(`3.3.b Denominación de los niveles del edificio`, `${nOk}/${nivs.length} OK`, ok ? 'rp-ok' : nOk > 0 ? 'rp-warn' : 'rp-err', `<div class="rp-msg">Requerimiento: ≥${_cfgStorey} car.</div><table class="rp-table">${filas}</table>`, !ok);
+    html += rpSec(`3.3.b Denominación de los niveles del edificio`, `${nOk}/${nivs.length} OK`, ok ? 'rp-ok' : nOk > 0 ? 'rp-warn' : 'rp-err', `<div class="rp-msg">Requerimiento: ${_cfgStorey} car.</div><table class="rp-table">${filas}</table>`, !ok);
   }
   const espKey=Object.keys(ESP).find(k=>ESP[k].cod===_espActual)||'Arquitectura'; const espEnts=ESP[espKey].ents;
   let filasP='',filasA='',presentes=0;
