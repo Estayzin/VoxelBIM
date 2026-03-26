@@ -234,7 +234,7 @@ body.light-mode .hsub { color:#4a6080; }
 .nav-sep { height:1px; background:var(--border); margin:4px 8px; opacity:.5; }
 
 /* PANEL REPORTE */
-#reportePanel { width:270px; flex-shrink:0; background:var(--blue); border-left:1px solid var(--border); display:none; flex-direction:column; overflow:hidden; position:absolute; top:0; right:0; bottom:0; z-index:5; }
+#reportePanel { background:var(--blue); display:none; flex-direction:column; border-top:1px solid var(--border); }
 #reportePanel.show { display:flex; }
 .rp-header { padding:9px 12px 8px; border-bottom:1px solid var(--border); flex-shrink:0; display:flex; align-items:center; gap:8px; }
 .rp-title { font:700 9px var(--mono); color:var(--accent); text-transform:uppercase; letter-spacing:.12em; flex:1; }
@@ -242,7 +242,7 @@ body.light-mode .hsub { color:#4a6080; }
 .rp-esp-label { font:400 9px var(--mono); color:var(--muted); white-space:nowrap; }
 .rp-esp-sel { flex:1; background:var(--navy); color:var(--text); border:1px solid var(--border); border-radius:4px; font:500 10px var(--mono); padding:4px 8px; cursor:pointer; outline:none; }
 .rp-esp-sel:focus { border-color:var(--accent); }
-.rp-body { flex:1; overflow-y:auto; padding:8px 0; display:flex; flex-direction:column; gap:6px; }
+.rp-body { padding:8px 0; display:flex; flex-direction:column; gap:6px; }
 .rp-sec { background:var(--navy); border:1px solid var(--border); border-radius:5px; overflow:hidden; margin:0 8px; }
 .rp-sec-hdr { padding:6px 10px; display:flex; align-items:center; gap:6px; cursor:pointer; }
 .rp-sec-hdr:hover { background:rgba(255,255,255,.02); }
@@ -413,20 +413,19 @@ body.light-mode .hsub { color:#4a6080; }
         <div class="pp-body" id="propsBody"></div>
       </div>
 
-    </div>
-
-    <!-- PANEL REPORTE (aparece al hacer clic en Reporte) -->
-    <div id="reportePanel" style="position:relative;">
-      <div class="rp-header" style="border-top:2px solid var(--accent);">
-        <div class="rp-title">Reporte BIM</div>
-        <button class="pp-close" id="reporteClose">✕</button>
-      </div>
-      <div class="rp-esp-row" style="display:none">
-        <span class="rp-esp-label">Especialidad:</span>
-        <select class="rp-esp-sel" id="espSel"></select>
-      </div>
-      <div class="rp-body" id="rpBody">
-        <div class="rp-msg">Carga un modelo IFC para ver el reporte.</div>
+      <!-- PANEL REPORTE (dentro de rightPanel para scroll unificado) -->
+      <div id="reportePanel">
+        <div class="rp-header" style="border-top:2px solid var(--accent);">
+          <div class="rp-title">Reporte BIM</div>
+          <button class="pp-close" id="reporteClose">✕</button>
+        </div>
+        <div class="rp-esp-row" style="display:none">
+          <span class="rp-esp-label">Especialidad:</span>
+          <select class="rp-esp-sel" id="espSel"></select>
+        </div>
+        <div class="rp-body" id="rpBody">
+          <div class="rp-msg">Carga un modelo IFC para ver el reporte.</div>
+        </div>
       </div>
     </div>
   </div>

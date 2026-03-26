@@ -498,9 +498,20 @@ document.getElementById("btnPlan").addEventListener("click", async () => {
   }
 });
 document.getElementById("btnProps").addEventListener("click", () => {
-  const visible = document.getElementById("rightPanel").style.display !== 'none';
-  document.getElementById("rightPanel").style.display = visible ? 'none' : '';
-  document.getElementById("btnProps").classList.toggle("active", !visible);
+  const rPanel = document.getElementById("rightPanel");
+  const isCurrentlyVisible = rPanel.style.display !== 'none' && propsPanel.style.display !== 'none';
+  
+  if (isCurrentlyVisible) {
+    rPanel.style.display = 'none';
+    document.getElementById("btnProps").classList.remove("active");
+  } else {
+    // Mostrar props, asegurar que panel derecho sea visible y ocultar reporte
+    rPanel.style.display = '';
+    propsPanel.style.display = 'flex';
+    document.getElementById("btnProps").classList.add("active");
+    reportePanel.classList.remove('show');
+    document.getElementById('btnReporte').classList.remove('active');
+  }
 });
 document.getElementById("propsClose").addEventListener("click", () => {
   propsPanel.classList.remove("show");
@@ -1548,11 +1559,16 @@ Object.keys(ESP).forEach(k => {
 
 // Abrir modal al hacer clic en Reporte (solo si hay modelo cargado)
 document.getElementById('btnReporte').addEventListener('click', () => {
+  const rPanel = document.getElementById("rightPanel");
   if (reportePanel.classList.contains('show')) {
     reportePanel.classList.remove('show');
     document.getElementById('btnReporte').classList.remove('active');
     return;
   }
+  // Al activar reporte, asegurar que el panel derecho sea visible y ocultar props para foco
+  rPanel.style.display = '';
+  document.getElementById("btnProps").classList.remove("active");
+  propsPanel.style.display = 'none';
   if (!_estActual) {
     reportePanel.classList.add('show');
     document.getElementById('btnReporte').classList.add('active');
