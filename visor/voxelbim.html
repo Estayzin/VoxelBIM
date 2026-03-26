@@ -166,7 +166,13 @@ body.light-mode .hsub { color:#4a6080; }
 .ov-text { font:400 10px var(--mono); color:var(--muted); letter-spacing:.1em; text-transform:uppercase; }
 
 /* PANEL DERECHO COMBINADO */
-#rightPanel { width:270px; flex-shrink:0; background:var(--blue); border-left:1px solid var(--border); display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden; }
+#rightPanel { width:270px; flex-shrink:0; background:var(--blue); border-left:1px solid var(--border); display:flex; flex-direction:column; overflow-y:scroll; overflow-x:hidden; position:relative; }
+
+/* Scrollbar personalizado para el panel derecho */
+#rightPanel::-webkit-scrollbar { width:6px; }
+#rightPanel::-webkit-scrollbar-track { background:var(--blue); }
+#rightPanel::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+#rightPanel::-webkit-scrollbar-thumb:hover { background:var(--muted); }
 
 /* PANEL PROPIEDADES — consistente con reporte BIM */
 #propsPanel { display:flex; flex-direction:column; border-bottom:1px solid var(--border); }
