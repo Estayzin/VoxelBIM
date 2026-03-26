@@ -110,13 +110,17 @@ let _cfgSite = 3, _cfgBuilding = 2, _cfgStorey = 5;
 // PANEL MANAGEMENT (Dual side panels)
 const rightPanels = document.getElementById('rightPanels');
 window.actualizarVisPadre = () => {
+  const rp = document.getElementById('rightPanels');
+  if (!rp) return;
   const p1 = document.getElementById('propsPanel');
   const p2 = document.getElementById('reportePanel');
-  const any = (p1.style.display && p1.style.display !== 'none') || (p2.style.display && p2.style.display !== 'none');
-  rightPanels.style.display = any ? 'flex' : 'none';
+  const any_p1 = (p1 && p1.style.display && p1.style.display !== 'none');
+  const any_p2 = (p2 && p2.style.display && p2.style.display !== 'none');
+  rp.style.display = (any_p1 || any_p2) ? 'flex' : 'none';
 };
 window.togglePanel = (id) => {
   const el = document.getElementById(id);
+  if (!el) return;
   const isVis = el.style.display && el.style.display !== 'none';
   el.style.display = isVis ? 'none' : 'flex';
   const btn = document.getElementById(id === 'propsPanel' ? 'btnProps' : 'btnReporte');
@@ -278,7 +282,7 @@ highlighter.events.select.onHighlight.add(async (modelIdMap) => {
 
     if (total > 0) {
       const pp = document.getElementById('propsPanel');
-      if (!pp.style.display || pp.style.display === 'none') {
+      if (pp && (!pp.style.display || pp.style.display === 'none')) {
         window.togglePanel('propsPanel');
       }
     }
