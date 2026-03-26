@@ -26,3 +26,4 @@ Todos los cambios en esta rama seran revisados antes de pasar a main.
 - Explorador BIM: Paneles de Propiedades y Reporte desacoplados. Ahora son independientes y aparecen uno al lado del otro (Propiedades a la izquierda, Reporte a la derecha) con scrolls individuales y sincronización de botones.
 - Explorador BIM: Reparado error en botón de reporte. Se eliminaron referencias bloqueantes a elementos antiguos (espSel) que impedían la ejecución del script.
 - Explorador BIM: Reparado panel de propiedades. Se restauró el ID faltante (propsEmpty), se implementó la apertura automática al seleccionar elementos y se añadieron "null guards" robustos para evitar errores de script.
+- Explorador BIM: Integración de **Claude AI**. Nuevo botón especializado "✦ Claude AI" y panel lateral independiente para futuras consultas inteligentes sobre el modelo.
