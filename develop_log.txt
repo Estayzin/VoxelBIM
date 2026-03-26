@@ -13,3 +13,4 @@ Todos los cambios en esta rama seran revisados antes de pasar a main.
 - Inventario: Implementado sistema de carga de modelos (Dropzone).
 - Inventario: Sustitución de lógica mock por extracción real con web-ifc.
 - Inventario: Detección automática de niveles (IfcBuildingStorey) y agrupación por piso.
+- Inventario: Corrección de Dropzone con listeners globales y stopPropagation para mayor estabilidad.
