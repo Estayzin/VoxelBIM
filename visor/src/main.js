@@ -104,9 +104,25 @@ let _clsFiltroActiva = null;
 let _espActual = 'ARQ';
 let _estActual = null;
 let _nombreArchivoActual = '';
-let _planMode = false;
 let _cfgX = 0, _cfgY = 0, _cfgZ = 0;
 let _cfgSite = 3, _cfgBuilding = 2, _cfgStorey = 5;
+
+// PANEL MANAGEMENT (Dual side panels)
+const rightPanels = document.getElementById('rightPanels');
+window.actualizarVisPadre = () => {
+  const p1 = document.getElementById('propsPanel');
+  const p2 = document.getElementById('reportePanel');
+  const any = (p1.style.display && p1.style.display !== 'none') || (p2.style.display && p2.style.display !== 'none');
+  rightPanels.style.display = any ? 'flex' : 'none';
+};
+window.togglePanel = (id) => {
+  const el = document.getElementById(id);
+  const isVis = el.style.display && el.style.display !== 'none';
+  el.style.display = isVis ? 'none' : 'flex';
+  const btn = document.getElementById(id === 'propsPanel' ? 'btnProps' : 'btnReporte');
+  if (btn) isVis ? btn.classList.remove('active') : btn.classList.add('active');
+  window.actualizarVisPadre();
+};
 
 const setProgress = (v) => {
   const pct = Math.round(v * 100);
@@ -500,24 +516,7 @@ document.getElementById("btnPlan").addEventListener("click", async () => {
   }
 });
 document.getElementById("btnProps").addEventListener("click", () => {
-  const rPanel = document.getElementById("rightPanel");
-  const isCurrentlyVisible = rPanel.style.display !== 'none' && propsPanel.style.display !== 'none';
-  
-  if (isCurrentlyVisible) {
-    rPanel.style.display = 'none';
-    document.getElementById("btnProps").classList.remove("active");
-  } else {
-    // Mostrar props, asegurar que panel derecho sea visible y ocultar reporte
-    rPanel.style.display = '';
-    propsPanel.style.display = 'flex';
-    document.getElementById("btnProps").classList.add("active");
-    reportePanel.classList.remove('show');
-    document.getElementById('btnReporte').classList.remove('active');
-  }
-});
-document.getElementById("propsClose").addEventListener("click", () => {
-  propsPanel.classList.remove("show");
-  document.getElementById("btnProps").classList.remove("active");
+  window.togglePanel('propsPanel');
 });
 document.getElementById("btnClip").addEventListener("click", () => {});
 
@@ -1651,19 +1650,13 @@ Object.keys(ESP).forEach(k => {
 
 // Abrir modal al hacer clic en Reporte (solo si hay modelo cargado)
 document.getElementById('btnReporte').addEventListener('click', () => {
-  const rPanel = document.getElementById("rightPanel");
-  if (reportePanel.classList.contains('show')) {
-    reportePanel.classList.remove('show');
-    document.getElementById('btnReporte').classList.remove('active');
+  const rp = document.getElementById('reportePanel');
+  if (rp.style.display && rp.style.display !== 'none') {
+    window.togglePanel('reportePanel');
     return;
   }
-  // Al activar reporte, asegurar que el panel derecho sea visible y ocultar props para foco
-  rPanel.style.display = '';
-  document.getElementById("btnProps").classList.remove("active");
-  propsPanel.style.display = 'none';
   if (!_estActual) {
-    reportePanel.classList.add('show');
-    document.getElementById('btnReporte').classList.add('active');
+    window.togglePanel('reportePanel');
     return;
   }
   // Precargar valores detectados
@@ -1696,13 +1689,14 @@ document.getElementById('mcfgOk').addEventListener('click', () => {
   _clsFiltroActiva = null;
   modalCfg.style.display = 'none';
   renderReporte(_estActual);
-  reportePanel.classList.add('show');
-  document.getElementById('btnReporte').classList.add('active');
+  const rp = document.getElementById('reportePanel');
+  if (!rp.style.display || rp.style.display === 'none') {
+    window.togglePanel('reportePanel');
+  }
 });
 
 document.getElementById('reporteClose').addEventListener('click', () => {
-  reportePanel.classList.remove('show');
-  document.getElementById('btnReporte').classList.remove('active');
+  window.togglePanel('reportePanel');
 });
 
 // ══════════════════════════════════════════════════════════════════
