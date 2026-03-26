@@ -8,3 +8,5 @@ Todos los cambios en esta rama seran revisados antes de pasar a main.
 - Refactor de scroll en #rightPanel: Ahora es un "scroll total" unificado, eliminando los scrolls internos de las propiedades.
 - Footer: Añadido footer en voxelbim.html consistente con autodesk.html.
 - OAuth Fix: APS_CALLBACK ahora es dinámico para soportar entornos de Preview (Cloudflare) y Local sin redireccionar al main.
+- Nuevo Módulo: Creada base de app/inventario.html con diseño de tablas de cuantificación.
+- Portal: Activada tarjeta de "Inventario y Tablas" en la grilla Pro.
