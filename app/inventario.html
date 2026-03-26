@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VoxelBIM — Inventario BIM</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- WEB-IFC API -->
+<script src="https://unpkg.com/web-ifc@0.0.66/web-ifc-api.js"></script>
 <style>
 :root {
   --navy:#060d18; --blue:#0a1628; --accent:#00d4ff; --green:#00c853;
@@ -197,6 +199,21 @@ if (sessionStorage.getItem('ifc_auth') !== '1' && window.location.protocol !== '
 }
 
 // ============================================================
+// REAL IFC ENGINE: Web-IFC
+// ============================================================
+const ifcApi = new WebIFC.IfcAPI();
+let currentModel = -1;
+
+// Inicializar motor
+async function initEngine() {
+  await ifcApi.Init();
+  // Usamos el WASM desde un CDN estable
+  ifcApi.SetWasmPath("https://unpkg.com/web-ifc@0.0.66/");
+  console.log('[Inventario] Web-IFC listo');
+}
+initEngine();
+
+// ============================================================
 // UI LOGIC: Dropzone & Files
 // ============================================================
 const dropzone = document.getElementById('dropzone');
@@ -220,10 +237,10 @@ fileInput.onchange = (e) => {
   if (file) handleFile(file);
 };
 
-function handleFile(file) {
-  console.log('[Inventario] Cargando:', file.name);
+async function handleFile(file) {
+  console.log('[Inventario] Analizando:', file.name);
   
-  // Mostrar UI de carga
+  // UI Loading
   document.getElementById('modelInfo').classList.add('show');
   document.getElementById('modelName').textContent = file.name;
   document.getElementById('modelMeta').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
@@ -233,60 +250,120 @@ function handleFile(file) {
   const progressText = document.getElementById('progressText');
   
   progressWrap.classList.add('show');
-  progressBar.style.width = '0%';
-  progressText.textContent = 'Procesando IFC... 0%';
+  progressBar.style.width = '10%';
+  progressText.textContent = 'Leyendo archivo... 10%';
 
-  // Simular procesamiento (Próximo paso: Integración real con web-ifc)
-  let p = 0;
-  const iv = setInterval(() => {
-    p += 10;
-    progressBar.style.width = p + '%';
-    progressText.textContent = 'Extrayendo cantidades... ' + p + '%';
-    if (p >= 100) {
-      clearInterval(iv);
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const data = new Uint8Array(e.target.result);
+    
+    progressBar.style.width = '30%';
+    progressText.textContent = 'Abriendo modelo... 30%';
+
+    try {
+      if (currentModel !== -1) ifcApi.CloseModel(currentModel);
+      currentModel = ifcApi.OpenModel(data);
+      
+      progressBar.style.width = '60%';
+      progressText.textContent = 'Extrayendo niveles (IfcBuildingStorey)... 60%';
+
+      await extraerDatosReales();
+
+      progressBar.style.width = '100%';
       progressText.textContent = '¡Completado!';
       setTimeout(() => progressWrap.classList.remove('show'), 2000);
-      generarInventarioMock();
+    } catch (err) {
+      console.error('[Inventario] Error:', err);
+      progressText.textContent = 'Error al procesar el IFC';
+      progressBar.style.background = 'var(--red)';
     }
-  }, 150);
+  };
+  reader.readAsArrayBuffer(file);
 }
 
-function generarInventarioMock() {
-  const body = document.getElementById('inventoryBody');
+async function extraerDatosReales() {
   const statsCount = document.getElementById('totalCount');
   const statsArea = document.getElementById('totalArea');
+  const selNivel = document.getElementById('selNivel');
+  const body = document.getElementById('inventoryBody');
+
+  // 1. Obtener Niveles (IfcBuildingStorey)
+  const storeys = ifcApi.GetLineIDsWithType(currentModel, WebIFC.IFCBUILDINGSTOREY);
+  selNivel.innerHTML = '<option value="all">Todos los niveles</option>';
   
-  body.innerHTML = '';
+  const levelNames = {};
+  for (let i = 0; i < storeys.size(); i++) {
+    const id = storeys.get(i);
+    const props = ifcApi.GetLine(currentModel, id);
+    const name = props.Name ? props.Name.value : 'Nivel Sin Nombre';
+    levelNames[id] = name;
+    
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = name;
+    selNivel.appendChild(opt);
+  }
+
+  // 2. Mapear Elementos a Niveles (Simplificado para el inventario inicial)
+  // Buscamos todas las relaciones de contenido
+  const rels = ifcApi.GetLineIDsWithType(currentModel, WebIFC.IFCRELCONTAINEDINSPATIALSTRUCTURE);
+  const elementToLevel = {};
   
-  // Datos de ejemplo para demostrar el diseño
-  const mockData = [
-    { cat: 'IfcWallStandardCase', nivel: 'Nivel 1', count: 12, area: 145.20, vol: 28.40, color: 'var(--accent)' },
-    { cat: 'IfcSlab', nivel: 'Nivel 1', count: 4, area: 210.50, vol: 42.10, color: 'var(--accent2)' },
-    { cat: 'IfcColumn', nivel: 'Nivel 1', count: 8, area: 12.40, vol: 3.20, color: 'var(--warn)' },
-    { cat: 'IfcWindow', nivel: 'Nivel 1', count: 15, area: 45.00, vol: 0.00, color: '#fff' }
+  for (let i = 0; i < rels.size(); i++) {
+    const id = rels.get(i);
+    const rel = ifcApi.GetLine(currentModel, id);
+    const levelId = rel.RelatingStructure.value;
+    if (levelNames[levelId]) {
+      rel.RelatedElements.forEach(elRef => {
+        elementToLevel[elRef.value] = levelNames[levelId];
+      });
+    }
+  }
+
+  // 3. Obtener todas las entidades base para el inventario (Wall, Slab, Column, etc)
+  const categories = [
+    { type: WebIFC.IFCWALLSTANDARDCASE, label: 'Muros (Standard)' },
+    { type: WebIFC.IFCWALL, label: 'Muros' },
+    { type: WebIFC.IFCSLAB, label: 'Suelos / Losas' },
+    { type: WebIFC.IFCCOLUMN, label: 'Columnas / Pilares' },
+    { type: WebIFC.IFCBEAM, label: 'Vigas' },
+    { type: WebIFC.IFCWINDOW, label: 'Ventanas' },
+    { type: WebIFC.IFCDOOR, label: 'Puertas' }
   ];
 
+  body.innerHTML = '';
   let totalElements = 0;
-  let totalArea = 0;
 
-  mockData.forEach(d => {
-    totalElements += d.count;
-    totalArea += d.area;
-    
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td style="color:${d.color}">${d.cat}</td>
-      <td>${d.nivel}</td>
-      <td class="td-num">${d.count}</td>
-      <td class="td-num">-</td>
-      <td class="td-num">${d.area.toFixed(2)}</td>
-      <td class="td-num">${d.vol.toFixed(2)}</td>
-    `;
-    body.appendChild(tr);
+  categories.forEach(cat => {
+    const ids = ifcApi.GetLineIDsWithType(currentModel, cat.type);
+    if (ids.size() > 0) {
+      totalElements += ids.size();
+      
+      // Agrupamos por nivel para la tabla
+      const countsByLevel = {};
+      for (let i = 0; i < ids.size(); i++) {
+        const id = ids.get(i);
+        const lvl = elementToLevel[id] || 'Sin Nivel';
+        countsByLevel[lvl] = (countsByLevel[lvl] || 0) + 1;
+      }
+
+      for (const [lvl, count] of Object.entries(countsByLevel)) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-weight:600;color:var(--accent);">${cat.label}</td>
+          <td>${lvl}</td>
+          <td class="td-num">${count}</td>
+          <td class="td-num">-</td>
+          <td class="td-num">-</td>
+          <td class="td-num">-</td>
+        `;
+        body.appendChild(tr);
+      }
+    }
   });
 
   statsCount.textContent = totalElements;
-  statsArea.textContent = totalArea.toFixed(2) + ' m²';
+  statsArea.textContent = 'En proceso...';
 }
 </script>
 </body>
