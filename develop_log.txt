@@ -1,0 +1,10 @@
+# Log de Cambios - Branch develop
+Todos los cambios en esta rama seran revisados antes de pasar a main.
+
+---
+[v1.0-stable] - 2026-03-26
+- Ajuste final en index.html: Limpieza de etiquetas secundarias al activar cards de demo.
+- Sincronizacion de main y develop para base estable.
+- Refactor de scroll en #rightPanel: Ahora es un "scroll total" unificado, eliminando los scrolls internos de las propiedades.
+- Footer: Añadido footer en voxelbim.html consistente con autodesk.html.
+- OAuth Fix: APS_CALLBACK ahora es dinámico para soportar entornos de Preview (Cloudflare) y Local sin redireccionar al main.
