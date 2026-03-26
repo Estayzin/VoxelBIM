@@ -114,16 +114,24 @@ window.actualizarVisPadre = () => {
   if (!rp) return;
   const p1 = document.getElementById('propsPanel');
   const p2 = document.getElementById('reportePanel');
+  const p3 = document.getElementById('claudePanel');
   const any_p1 = (p1 && p1.style.display && p1.style.display !== 'none');
   const any_p2 = (p2 && p2.style.display && p2.style.display !== 'none');
-  rp.style.display = (any_p1 || any_p2) ? 'flex' : 'none';
+  const any_p3 = (p3 && p3.style.display && p3.style.display !== 'none');
+  rp.style.display = (any_p1 || any_p2 || any_p3) ? 'flex' : 'none';
 };
 window.togglePanel = (id) => {
   const el = document.getElementById(id);
   if (!el) return;
   const isVis = el.style.display && el.style.display !== 'none';
   el.style.display = isVis ? 'none' : 'flex';
-  const btn = document.getElementById(id === 'propsPanel' ? 'btnProps' : 'btnReporte');
+  
+  let btnId = '';
+  if (id === 'propsPanel') btnId = 'btnProps';
+  else if (id === 'reportePanel') btnId = 'btnReporte';
+  else if (id === 'claudePanel') btnId = 'btnClaude';
+  
+  const btn = document.getElementById(btnId);
   if (btn) isVis ? btn.classList.remove('active') : btn.classList.add('active');
   window.actualizarVisPadre();
 };
@@ -1713,6 +1721,13 @@ document.getElementById('mcfgOk').addEventListener('click', () => {
 
 document.getElementById('reporteClose').addEventListener('click', () => {
   window.togglePanel('reportePanel');
+});
+
+document.getElementById('btnClaude').addEventListener('click', () => {
+  window.togglePanel('claudePanel');
+});
+document.getElementById('claudeClose').addEventListener('click', () => {
+  window.togglePanel('claudePanel');
 });
 
 // ══════════════════════════════════════════════════════════════════
