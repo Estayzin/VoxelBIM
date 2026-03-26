@@ -93,7 +93,7 @@ footer { text-align:center; padding:6px; font:400 9px var(--mono); color:var(--m
     <div class="htitle">Inventario BIM</div>
     <div class="hsub">C&aacute;lculo de cantidades &middot; Cuadros de superficie</div>
   </div>
-  <a href="/index.html" class="hback">&larr; Volver al Portal</a>
+  <a href="/index.html" class="hback">&larr; Volver</a>
 </header>
 
 <div class="workspace">
@@ -109,8 +109,8 @@ footer { text-align:center; padding:6px; font:400 9px var(--mono); color:var(--m
           <div class="dz-icon">📥</div>
           <div class="dz-label">Arrastra un IFC aquí</div>
           <div class="dz-sub">o haz clic para buscar</div>
-          <input type="file" id="fileInput" accept=".ifc" style="display:none;">
         </div>
+        <input type="file" id="fileInput" accept=".ifc" style="display:none;">
         
         <!-- PROGRESO -->
         <div class="progress-wrap" id="progressWrap">
@@ -223,7 +223,10 @@ const fileInput = document.getElementById('fileInput');
 window.addEventListener("dragover", (e) => e.preventDefault(), false);
 window.addEventListener("drop", (e) => e.preventDefault(), false);
 
-dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('click', () => {
+  console.log('[Inventario] Dropzone click');
+  fileInput.click();
+});
 
 dropzone.addEventListener('dragover', (e) => { 
   e.preventDefault(); 
