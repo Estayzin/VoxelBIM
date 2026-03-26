@@ -17,3 +17,4 @@ Todos los cambios en esta rama seran revisados antes de pasar a main.
 - Inventario: Solución al fallo de clic en Dropzone moviendo el input fuera del contenedor para evitar bucles de eventos.
 - Explorador BIM: Corrección de scroll en Reporte. El panel ahora está integrado en el scroll unificado del panel derecho.
 - Explorador BIM: Lógica de exclusión mutua entre Propiedades y Reporte para una interfaz más limpia.
+- Explorador BIM: Scrollbar del panel derecho siempre visible y estilizado con los colores del tema.
