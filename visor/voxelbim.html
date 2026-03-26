@@ -23,12 +23,17 @@ html,body { height:100%; overflow:hidden; }
 body { font-family:var(--sans); background:var(--bg); color:var(--text); display:flex; flex-direction:column; height:100vh; font-size:13px; }
 
 /* HEADER */
-header { background:var(--navy); padding:10px 16px; min-height:52px; display:flex; align-items:center; gap:10px; border-bottom:2px solid var(--accent); flex-shrink:0; box-shadow:0 2px 20px rgba(0,212,255,.08); flex-wrap:wrap; row-gap:6px; }
-.hicon { width:28px; height:28px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
-.htitle { font:600 11px var(--mono); color:var(--text); letter-spacing:.08em; text-transform:uppercase; }
-.hsub { font:400 9px var(--mono); color:var(--muted); margin-top:1px; }
+header { background:var(--navy); padding:10px 16px; min-height:52px; display:flex; align-items:center; gap:12px; border-bottom:2px solid var(--accent); flex-shrink:0; box-shadow:0 2px 20px rgba(0,212,255,.08); flex-wrap:wrap; row-gap:6px; }
+.hicon { background:none; overflow:visible; width:34px; height:34px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.htitle { font:700 13px var(--mono); color:var(--text); letter-spacing:.05em; text-transform:uppercase; }
+.hsub { font:400 9px var(--mono); color:var(--muted); margin-top:2px; }
 .hback { padding:4px 10px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:4px; font:600 9px var(--mono); text-transform:uppercase; letter-spacing:.1em; text-decoration:none; transition:all .15s; cursor:pointer; white-space:nowrap; }
 .hback:hover { border-color:var(--accent); color:var(--accent); }
+
+/* Status Dot */
+.conn-dot { width:7px; height:7px; border-radius:50%; background:var(--muted); flex-shrink:0; margin-left:15px; transition:all .3s; }
+.conn-dot.active { background:var(--green); box-shadow:0 0 10px var(--green); }
+.conn-text { font:400 9px var(--mono); color:var(--muted); margin-left:8px; }
 
 /* TOOLBAR SUPERIOR */
 .header-toolbar { display:flex; align-items:center; gap:4px; margin-left:12px; padding-left:12px; border-left:1px solid var(--border); }
@@ -300,11 +305,23 @@ body.light-mode .hsub { color:#4a6080; }
 </head>
 <body>
   <header>
-    <div class="hicon">⬡</div>
+    <div class="hicon">
+      <svg width="28" height="28" viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="45,8 80,27 45,46 10,27" fill="rgba(0,212,255,0.18)" stroke="rgba(0,212,255,0.6)" stroke-width="2"/>
+        <polygon points="10,27 45,46 45,82 10,63" fill="rgba(0,212,255,0.07)" stroke="rgba(0,212,255,0.35)" stroke-width="2"/>
+        <polygon points="80,27 45,46 45,82 80,63" fill="rgba(0,212,255,0.13)" stroke="rgba(0,212,255,0.45)" stroke-width="2"/>
+        <line x1="45" y1="46" x2="45" y2="82" stroke="rgba(0,212,255,0.25)" stroke-width="1.5"/>
+        <line x1="10" y1="27" x2="45" y2="8" stroke="rgba(0,212,255,0.9)" stroke-width="2.5"/>
+        <line x1="45" y1="8" x2="80" y2="27" stroke="rgba(0,212,255,0.65)" stroke-width="2"/>
+      </svg>
+    </div>
     <div>
       <div class="htitle">VoxelBIM</div>
-      <div class="hsub">Carlos Estay Ruggieri · v1.0 | 2026</div>
+      <div class="hsub">Carlos Estay Ruggieri &middot; Visor IFC &middot; <span style="color:var(--accent2);font-weight:700;">Claude AI</span></div>
     </div>
+
+    <div class="conn-dot" id="connDot"></div>
+    <div class="conn-text" id="connStatus">Esperando IFC</div>
 
     <!-- Grupo 1: Navegación 3D -->
     <div class="header-toolbar">

@@ -160,6 +160,13 @@ const loadIfc = async (file) => {
   try {
     await ifcLoader.load(new Uint8Array(buffer), false, file.name, { processData: { progressCallback: setProgress } });
     setProgress(1);
+    
+    // Actualizar indicador de estado Premium
+    const cDot = document.getElementById('connDot');
+    const cStatus = document.getElementById('connStatus');
+    if (cDot) cDot.classList.add('active');
+    if (cStatus) cStatus.textContent = `Modelo: ${file.name}`;
+
     await renderNavegador(est);
     if (world.camera.fitToItems) await world.camera.fitToItems();
   } catch(err) {
