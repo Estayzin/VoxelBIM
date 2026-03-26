@@ -1293,7 +1293,7 @@ function renderReporte(est) {
         <td class="td-ok">${r.ok ? '<span class="ic-ok">✓</span>' : '<span class="ic-err">✗</span>'}</td>
       </tr>`;
     }).join('');
-    html += rpSec(`3.3.b Denominación de los niveles del edificio`, `${nOk}/${nivs.length} OK`, ok ? 'rp-ok' : nOk > 0 ? 'rp-warn' : 'rp-err', `<table class="rp-table">${filas}</table>`, !ok);
+    html += rpSec(`3.3.b Denominación de los niveles del edificio`, `${nOk}/${nivs.length} OK`, ok ? 'rp-ok' : nOk > 0 ? 'rp-warn' : 'rp-err', `<div class="rp-msg">Requerimiento: ≥${_cfgStorey} car.</div><table class="rp-table">${filas}</table>`, !ok);
   }
   const espKey=Object.keys(ESP).find(k=>ESP[k].cod===_espActual)||'Arquitectura'; const espEnts=ESP[espKey].ents;
   let filasP='',filasA='',presentes=0;
