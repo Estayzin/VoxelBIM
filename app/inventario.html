@@ -219,23 +219,46 @@ initEngine();
 const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
 
-dropzone.onclick = () => fileInput.click();
+// Prevenir comportamiento por defecto de la ventana para evitar abrir el archivo fuera de la zona
+window.addEventListener("dragover", (e) => e.preventDefault(), false);
+window.addEventListener("drop", (e) => e.preventDefault(), false);
 
-dropzone.ondragover = (e) => { e.preventDefault(); dropzone.classList.add('over'); };
-dropzone.ondragleave = () => dropzone.classList.remove('over');
-dropzone.ondrop = (e) => {
+dropzone.addEventListener('click', () => fileInput.click());
+
+dropzone.addEventListener('dragover', (e) => { 
+  e.preventDefault(); 
+  e.stopPropagation();
+  dropzone.classList.add('over'); 
+});
+
+dropzone.addEventListener('dragenter', (e) => { 
+  e.preventDefault(); 
+  e.stopPropagation();
+  dropzone.classList.add('over'); 
+});
+
+dropzone.addEventListener('dragleave', (e) => { 
   e.preventDefault();
+  e.stopPropagation();
+  dropzone.classList.remove('over'); 
+});
+
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
   dropzone.classList.remove('over');
   const file = e.dataTransfer.files[0];
   if (file && file.name.toLowerCase().endsWith('.ifc')) {
     handleFile(file);
+  } else {
+    alert("Por favor, sube un archivo con extensión .ifc");
   }
-};
+});
 
-fileInput.onchange = (e) => {
+fileInput.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (file) handleFile(file);
-};
+});
 
 async function handleFile(file) {
   console.log('[Inventario] Analizando:', file.name);
