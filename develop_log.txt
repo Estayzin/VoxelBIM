@@ -22,3 +22,4 @@ Todos los cambios en esta rama seran revisados antes de pasar a main.
 - Explorador BIM: Filtrado dinámico de la sección de tipos (3.5) basado en los niveles seleccionados.
 - Explorador BIM: Sección 3.4 ahora muestra un checkmark (✓) en elementos sin clasificar si la cantidad es 0.
 - Explorador BIM: Validación de nombres de niveles (3.3.b) ahora requiere COINCIDENCIA EXACTA del largo configurado.
+- Explorador BIM: Todas las secciones del reporte aparecen desplegadas por defecto para mayor rapidez.

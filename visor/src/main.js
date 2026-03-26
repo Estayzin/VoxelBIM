@@ -1278,9 +1278,9 @@ function renderReporte(est) {
 
   // 1. Origen
   const orig = verificarOrigen(est);
-  if (orig.length) { const ok=orig.every(r=>r.ok); const filas=orig.map(r=>{const c=r.x!==null?`(${[r.x,r.y,r.z].map(v=>(+v).toFixed(3)).join(', ')})`:'N/A';return`<tr><td class="td-name">${r.tipo.charAt(0)+r.tipo.slice(1).toLowerCase()}<div class="td-cls">${esc(r.nombre)}</div></td><td style="font:400 9px var(--mono);color:var(--muted)">${c}</td><td class="td-ok">${r.ok?'<span class="ic-ok">✓</span>':'<span class="ic-err">✗</span>'}</td></tr>`;}).join(''); html+=rpSec('3.2 Posición Local',ok?'OK':'Error',ok?'rp-ok':'rp-err',`<table class="rp-table">${filas}</table>`,!ok); }
+  if (orig.length) { const ok=orig.every(r=>r.ok); const filas=orig.map(r=>{const c=r.x!==null?`(${[r.x,r.y,r.z].map(v=>(+v).toFixed(3)).join(', ')})`:'N/A';return`<tr><td class="td-name">${r.tipo.charAt(0)+r.tipo.slice(1).toLowerCase()}<div class="td-cls">${esc(r.nombre)}</div></td><td style="font:400 9px var(--mono);color:var(--muted)">${c}</td><td class="td-ok">${r.ok?'<span class="ic-ok">✓</span>':'<span class="ic-err">✗</span>'}</td></tr>`;}).join(''); html+=rpSec('3.2 Posición Local',ok?'OK':'Error',ok?'rp-ok':'rp-err',`<table class="rp-table">${filas}</table>`,true); }
   const noms = verificarNombres(est);
-  if (noms.length) { const ok=noms.every(r=>r.ok); const filas=noms.map(r=>`<tr><td class="td-name">${r.tipo.charAt(0)+r.tipo.slice(1).toLowerCase()}</td><td style="font:400 9px var(--mono)">"${esc(r.nombre)}" (${r.largo} car.)</td><td class="td-ok">${r.ok?'<span class="ic-ok">✓</span>':'<span class="ic-err">✗</span>'}</td></tr>`).join(''); html+=rpSec('3.3.a Nombre del sitio y del edificio',ok?'OK':'Error',ok?'rp-ok':'rp-err',`<div class="rp-msg">Sitio: ≥3 car. · Edificio: ≥2 car.</div><table class="rp-table">${filas}</table>`,!ok); }
+  if (noms.length) { const ok=noms.every(r=>r.ok); const filas=noms.map(r=>`<tr><td class="td-name">${r.tipo.charAt(0)+r.tipo.slice(1).toLowerCase()}</td><td style="font:400 9px var(--mono)">"${esc(r.nombre)}" (${r.largo} car.)</td><td class="td-ok">${r.ok?'<span class="ic-ok">✓</span>':'<span class="ic-err">✗</span>'}</td></tr>`).join(''); html+=rpSec('3.3.a Nombre del sitio y del edificio',ok?'OK':'Error',ok?'rp-ok':'rp-err',`<div class="rp-msg">Sitio: ≥3 car. · Edificio: ≥2 car.</div><table class="rp-table">${filas}</table>`,true); }
   const nivs = verificarNiveles(est);
   if (nivs.length) {
     const ok = nivs.every(r => r.ok);
@@ -1293,7 +1293,7 @@ function renderReporte(est) {
         <td class="td-ok">${r.ok ? '<span class="ic-ok">✓</span>' : '<span class="ic-err">✗</span>'}</td>
       </tr>`;
     }).join('');
-    html += rpSec(`3.3.b Denominación de los niveles del edificio`, `${nOk}/${nivs.length} OK`, ok ? 'rp-ok' : nOk > 0 ? 'rp-warn' : 'rp-err', `<div class="rp-msg">Requerimiento: ${_cfgStorey} car.</div><table class="rp-table">${filas}</table>`, !ok);
+    html += rpSec(`3.3.b Denominación de los niveles del edificio`, `${nOk}/${nivs.length} OK`, ok ? 'rp-ok' : nOk > 0 ? 'rp-warn' : 'rp-err', `<div class="rp-msg">Requerimiento: ${_cfgStorey} car.</div><table class="rp-table">${filas}</table>`, true);
   }
   const espKey=Object.keys(ESP).find(k=>ESP[k].cod===_espActual)||'Arquitectura'; const espEnts=ESP[espKey].ents;
   let filasP='',filasA='',presentes=0;
@@ -1418,7 +1418,7 @@ function renderSecTipos(est, filtrarCls, filtrarIds = null) {
       <span class="rp-sec-title">${tituloSec}${tituloFiltro}</span>
       <span class="rp-badge rp-info">${totalTipos} tipos</span>
     </div>
-    <div class="rp-content" style="display:${filtrarCls?'block':'none'}">
+    <div class="rp-content" style="display:block">
       <table class="rp-table">
         <tr style="background:rgba(0,0,0,.2)">
           <td style="font:700 8px var(--mono);color:var(--muted);padding:3px 10px">ESTRUCTURA / DENOMINACIÓN</td>
