@@ -39,7 +39,25 @@ header { background:var(--navy); padding:10px 16px; min-height:52px; display:fle
 .filter-sel { width:100%; background:var(--navy); border:1px solid var(--border); border-radius:4px; padding:8px 10px; color:var(--text); font:400 10px var(--mono); outline:none; cursor:pointer; }
 .filter-sel:focus { border-color:var(--accent); }
 
-/* MAIN CONTENT (TABLA) */
+/* Dropzone */
+.dropzone { border:1px dashed var(--border); border-radius:6px; padding:12px 10px; text-align:center; cursor:pointer; transition:all .2s; background:rgba(0,212,255,.02); margin-bottom:10px; }
+.dropzone:hover,.dropzone.over { border-color:var(--accent); background:rgba(0,212,255,.06); }
+.dz-icon { font-size:20px; opacity:.5; margin-bottom:3px; }
+.dz-label { font:600 9px var(--mono); color:var(--text); text-transform:uppercase; letter-spacing:.08em; }
+.dz-sub { font:400 9px var(--mono); color:var(--muted); margin-top:2px; }
+
+/* Progreso */
+.progress-wrap { display:none; flex-direction:column; gap:5px; margin-bottom:12px; }
+.progress-wrap.show { display:flex; }
+.progress-label { font:400 9px var(--mono); color:var(--accent); letter-spacing:.05em; }
+.progress-bar-bg { height:3px; background:rgba(255,255,255,.08); border-radius:2px; }
+.progress-bar-fill { height:100%; background:linear-gradient(90deg,var(--accent),#00bcd4); width:0%; transition:width .3s ease; border-radius:2px; }
+
+/* INFO MODELO */
+.model-info { display:none; background:var(--card); border-radius:5px; border-left:3px solid var(--accent); padding:6px 10px; margin-bottom:12px; }
+.model-info.show { display:block; }
+.mi-name { font:600 9px var(--mono); color:var(--accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mi-meta { font:400 8px var(--mono); color:var(--muted); margin-top:2px; }
 .main { flex:1; display:flex; flex-direction:column; background:var(--bg); overflow:hidden; position:relative; }
 .main-header { padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:rgba(6,13,24,.4); }
 .main-title { font:700 11px var(--mono); color:var(--text); text-transform:uppercase; letter-spacing:.1em; }
@@ -84,11 +102,27 @@ footer { text-align:center; padding:6px; font:400 9px var(--mono); color:var(--m
     </div>
     <div class="sb-body">
       <div class="filter-sec">
-        <label class="filter-label">Modelo Activo</label>
-        <select class="filter-sel" id="selModelo">
-          <option>Cargar un modelo para ver datos...</option>
-        </select>
+        <label class="filter-label">Cargar Proyecto</label>
+        <div class="dropzone" id="dropzone">
+          <div class="dz-icon">📥</div>
+          <div class="dz-label">Arrastra un IFC aquí</div>
+          <div class="dz-sub">o haz clic para buscar</div>
+          <input type="file" id="fileInput" accept=".ifc" style="display:none;">
+        </div>
+        
+        <!-- PROGRESO -->
+        <div class="progress-wrap" id="progressWrap">
+          <div class="progress-label" id="progressText">Procesando IFC... 0%</div>
+          <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
+        </div>
+
+        <!-- INFO MODELO -->
+        <div class="model-info" id="modelInfo">
+          <div class="mi-name" id="modelName">Sin modelo</div>
+          <div class="mi-meta" id="modelMeta">-</div>
+        </div>
       </div>
+
       <div class="filter-sec">
         <label class="filter-label">Nivel</label>
         <select class="filter-sel" id="selNivel">
@@ -160,6 +194,99 @@ footer { text-align:center; padding:6px; font:400 9px var(--mono); color:var(--m
 // Guard: redireccionar al portal si no hay sesión activa
 if (sessionStorage.getItem('ifc_auth') !== '1' && window.location.protocol !== 'file:') {
   window.location.href = '/';
+}
+
+// ============================================================
+// UI LOGIC: Dropzone & Files
+// ============================================================
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+
+dropzone.onclick = () => fileInput.click();
+
+dropzone.ondragover = (e) => { e.preventDefault(); dropzone.classList.add('over'); };
+dropzone.ondragleave = () => dropzone.classList.remove('over');
+dropzone.ondrop = (e) => {
+  e.preventDefault();
+  dropzone.classList.remove('over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.name.toLowerCase().endsWith('.ifc')) {
+    handleFile(file);
+  }
+};
+
+fileInput.onchange = (e) => {
+  const file = e.target.files[0];
+  if (file) handleFile(file);
+};
+
+function handleFile(file) {
+  console.log('[Inventario] Cargando:', file.name);
+  
+  // Mostrar UI de carga
+  document.getElementById('modelInfo').classList.add('show');
+  document.getElementById('modelName').textContent = file.name;
+  document.getElementById('modelMeta').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+  
+  const progressWrap = document.getElementById('progressWrap');
+  const progressBar = document.getElementById('progressBar');
+  const progressText = document.getElementById('progressText');
+  
+  progressWrap.classList.add('show');
+  progressBar.style.width = '0%';
+  progressText.textContent = 'Procesando IFC... 0%';
+
+  // Simular procesamiento (Próximo paso: Integración real con web-ifc)
+  let p = 0;
+  const iv = setInterval(() => {
+    p += 10;
+    progressBar.style.width = p + '%';
+    progressText.textContent = 'Extrayendo cantidades... ' + p + '%';
+    if (p >= 100) {
+      clearInterval(iv);
+      progressText.textContent = '¡Completado!';
+      setTimeout(() => progressWrap.classList.remove('show'), 2000);
+      generarInventarioMock();
+    }
+  }, 150);
+}
+
+function generarInventarioMock() {
+  const body = document.getElementById('inventoryBody');
+  const statsCount = document.getElementById('totalCount');
+  const statsArea = document.getElementById('totalArea');
+  
+  body.innerHTML = '';
+  
+  // Datos de ejemplo para demostrar el diseño
+  const mockData = [
+    { cat: 'IfcWallStandardCase', nivel: 'Nivel 1', count: 12, area: 145.20, vol: 28.40, color: 'var(--accent)' },
+    { cat: 'IfcSlab', nivel: 'Nivel 1', count: 4, area: 210.50, vol: 42.10, color: 'var(--accent2)' },
+    { cat: 'IfcColumn', nivel: 'Nivel 1', count: 8, area: 12.40, vol: 3.20, color: 'var(--warn)' },
+    { cat: 'IfcWindow', nivel: 'Nivel 1', count: 15, area: 45.00, vol: 0.00, color: '#fff' }
+  ];
+
+  let totalElements = 0;
+  let totalArea = 0;
+
+  mockData.forEach(d => {
+    totalElements += d.count;
+    totalArea += d.area;
+    
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="color:${d.color}">${d.cat}</td>
+      <td>${d.nivel}</td>
+      <td class="td-num">${d.count}</td>
+      <td class="td-num">-</td>
+      <td class="td-num">${d.area.toFixed(2)}</td>
+      <td class="td-num">${d.vol.toFixed(2)}</td>
+    `;
+    body.appendChild(tr);
+  });
+
+  statsCount.textContent = totalElements;
+  statsArea.textContent = totalArea.toFixed(2) + ' m²';
 }
 </script>
 </body>
