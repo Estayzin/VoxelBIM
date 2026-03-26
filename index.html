@@ -311,10 +311,11 @@ const HASHES = {
 };
 
 function getVisorUrl() {
-  // En localhost el servidor sirve desde la raíz del repo → visor en /visor/dist/
-  // En Cloudflare Pages el build output es visor/dist/ → visor en la raíz /
+  // En localhost (con server.js en el puerto 3000) sirve desde la raíz del repo 
+  // En Cloudflare Pages (o wrangler) el build output es visor/dist/ → raíz /
   var h = window.location.hostname;
-  return (h === 'localhost' || h === '127.0.0.1') ? '/visor/dist/voxelbim.html' : '/voxelbim.html';
+  var p = window.location.port;
+  return ((h === 'localhost' || h === '127.0.0.1') && p === '3000') ? '/visor/dist/voxelbim.html' : '/voxelbim.html';
 }
 
 function abrirModulo(url) {

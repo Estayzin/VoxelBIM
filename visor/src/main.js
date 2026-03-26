@@ -42,8 +42,10 @@ grid.config.visible = false;
 
 // Cargar worker: usar URL relativa que funcione en desarrollo y Cloudflare Pages
 const getWorkerUrl = () => {
-  // En desarrollo local (vite dev)
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+  // En desarrollo local (vite dev o server.js)
+  const h = window.location.hostname;
+  const p = window.location.port;
+  if ((h === 'localhost' || h === '127.0.0.1') && p === '3000') {
     return '/visor/dist/worker.mjs';
   }
   

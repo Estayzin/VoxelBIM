@@ -80,4 +80,16 @@ if (fs.existsSync(appSrc)) {
   console.log('[patch] app/ copiado a dist/app/');
 }
 
+// 5. Copiar _headers y _redirects a dist/ para Cloudflare Pages
+const headersSrc = path.join(rootDir, '_headers');
+if (fs.existsSync(headersSrc)) {
+  fs.copyFileSync(headersSrc, path.join(distDir, '_headers'));
+  console.log('[patch] _headers copiado a dist/');
+}
+const redirectsSrc = path.join(rootDir, '_redirects');
+if (fs.existsSync(redirectsSrc)) {
+  fs.copyFileSync(redirectsSrc, path.join(distDir, '_redirects'));
+  console.log('[patch] _redirects copiado a dist/');
+}
+
 console.log('[patch] Post-build completo ✓');
