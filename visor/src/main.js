@@ -1384,7 +1384,7 @@ function renderSecTipos(est, filtrarCls, filtrarIds = null) {
     <div class="rp-sec-hdr" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
       <span class="rp-sec-title">${tituloSec}${tituloFiltro}</span><span class="rp-badge rp-info">Sin datos</span>
     </div>
-    <div class="rp-content" style="display:none"><div class="rp-msg">No se encontraron tipos.</div></div>
+    <div class="rp-content" style="display:block"><div class="rp-msg">No se encontraron tipos.</div></div>
   </div>`;
 
   // Construir índice de lookup: idx → {cls, fam, tip, nombre completo}
