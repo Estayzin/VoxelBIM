@@ -2,6 +2,12 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<script>
+  // Guard: redireccionar al portal si no hay sesión activa
+  if (sessionStorage.getItem('ifc_auth') !== '1' && window.location.protocol !== 'file:') {
+    window.location.href = '/';
+  }
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VoxelBIM — Visor IFC</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
