@@ -166,16 +166,16 @@ body.light-mode .hsub { color:#4a6080; }
 .ov-text { font:400 10px var(--mono); color:var(--muted); letter-spacing:.1em; text-transform:uppercase; }
 
 /* PANEL DERECHO COMBINADO */
-#rightPanel { width:270px; flex-shrink:0; background:var(--blue); border-left:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+#rightPanel { width:270px; flex-shrink:0; background:var(--blue); border-left:1px solid var(--border); display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden; }
 
 /* PANEL PROPIEDADES — consistente con reporte BIM */
-#propsPanel { display:flex; flex-direction:column; overflow:hidden; flex:1; border-bottom:1px solid var(--border); min-height:0; }
+#propsPanel { display:flex; flex-direction:column; border-bottom:1px solid var(--border); }
 .pp-header { padding:9px 12px 8px; border-bottom:1px solid var(--border); flex-shrink:0; display:flex; align-items:center; gap:8px; }
 .pp-title { font:700 9px var(--mono); color:var(--accent); text-transform:uppercase; letter-spacing:.12em; flex:1; }
 .pp-close { background:none; border:none; color:var(--muted); cursor:pointer; font-size:13px; padding:2px 5px; border-radius:3px; line-height:1; }
 .pp-close:hover { color:var(--text); background:rgba(255,255,255,.05); }
 .pp-empty { padding:20px 12px; font:400 9px var(--mono); color:var(--muted); text-align:center; line-height:1.7; text-transform:uppercase; letter-spacing:.08em; opacity:.6; }
-.pp-body { flex:1; overflow-y:auto; padding:8px; }
+.pp-body { padding:8px; }
 
 /* PROPS CUSTOM */
 .props-elem-hdr { padding:10px 12px; border-bottom:1px solid var(--border); background:rgba(0,212,255,.04); flex-shrink:0; }
