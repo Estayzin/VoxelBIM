@@ -518,6 +518,9 @@ document.getElementById("btnPlan").addEventListener("click", async () => {
 document.getElementById("btnProps").addEventListener("click", () => {
   window.togglePanel('propsPanel');
 });
+document.getElementById("propsClose").addEventListener("click", () => {
+  window.togglePanel('propsPanel');
+});
 document.getElementById("btnClip").addEventListener("click", () => {});
 
 // ══ HERRAMIENTA DE MEDICIÓN (implementación propia) ══
