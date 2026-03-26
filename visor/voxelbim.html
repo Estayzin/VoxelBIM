@@ -31,9 +31,9 @@ header { background:var(--navy); padding:10px 16px; min-height:52px; display:fle
 .hback:hover { border-color:var(--accent); color:var(--accent); }
 
 /* Status Dot */
-.conn-dot { width:7px; height:7px; border-radius:50%; background:var(--muted); flex-shrink:0; margin-left:15px; transition:all .3s; }
+.conn-dot { width:7px; height:7px; border-radius:50%; background:var(--muted); flex-shrink:0; transition:all .3s; display:inline-block; vertical-align:middle; }
 .conn-dot.active { background:var(--green); box-shadow:0 0 10px var(--green); }
-.conn-text { font:400 9px var(--mono); color:var(--muted); margin-left:8px; }
+.conn-text { font:400 9px var(--mono); color:var(--muted); margin-left:6px; vertical-align:middle; }
 
 /* TOOLBAR SUPERIOR */
 .header-toolbar { display:flex; align-items:center; gap:4px; margin-left:12px; padding-left:12px; border-left:1px solid var(--border); }
@@ -317,11 +317,14 @@ body.light-mode .hsub { color:#4a6080; }
     </div>
     <div>
       <div class="htitle">VoxelBIM</div>
-      <div class="hsub">Visor BIM &middot; IFC &middot; <span style="color:var(--accent2);font-weight:700;">Claude IA</span></div>
+      <div class="hsub">
+        Visor BIM &middot; IFC &middot; <span style="color:var(--accent2);font-weight:700;">Claude IA</span>
+        <span style="margin-left:12px;display:inline-flex;align-items:center;border-left:1px solid var(--border);padding-left:12px;">
+          <span class="conn-dot" id="connDot"></span>
+          <span class="conn-text" id="connStatus">Esperando IFC</span>
+        </span>
+      </div>
     </div>
-
-    <div class="conn-dot" id="connDot"></div>
-    <div class="conn-text" id="connStatus">Esperando IFC</div>
 
     <!-- Grupo 1: Navegación 3D -->
     <div class="header-toolbar">
