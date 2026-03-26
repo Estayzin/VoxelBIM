@@ -385,6 +385,7 @@ document.getElementById('ctxShowAll').addEventListener('click', async () => {
   hiddenElements.clear();
   await hider.set(true);
   isolatedCategories.clear();
+  isolatedLevels.clear();
   _clsFiltroActiva = null;
   document.querySelectorAll('.ent-row.ent-active').forEach(r => r.classList.remove('ent-active'));
   document.querySelectorAll('.tipo-row.tipo-active').forEach(r => { r.classList.remove('tipo-active'); r._tipoActivo = false; });
@@ -452,6 +453,7 @@ document.addEventListener('keydown', async (e) => {
 
 const hider = components.get(OBC.Hider);
 const isolatedCategories = new Set();
+const isolatedLevels = new Set();
 
 document.getElementById("btnFit").addEventListener("click", () => world.camera.fitToItems());
 document.getElementById("btn3D").addEventListener("click", () => {
@@ -940,6 +942,7 @@ document.getElementById("btnToggleGrid").addEventListener("click", () => {
 document.getElementById("btnResetVis").addEventListener("click", async () => {
   await hider.set(true);
   isolatedCategories.clear();
+  isolatedLevels.clear();
   _clsFiltroActiva = null;
   document.querySelectorAll('.ent-row.ent-active').forEach(r => r.classList.remove('ent-active'));
   document.querySelectorAll('.tipo-row.tipo-active').forEach(r => { r.classList.remove('tipo-active'); r._tipoActivo = false; });
@@ -1279,7 +1282,19 @@ function renderReporte(est) {
   const noms = verificarNombres(est);
   if (noms.length) { const ok=noms.every(r=>r.ok); const filas=noms.map(r=>`<tr><td class="td-name">${r.tipo.charAt(0)+r.tipo.slice(1).toLowerCase()}</td><td style="font:400 9px var(--mono)">"${esc(r.nombre)}" (${r.largo} car.)</td><td class="td-ok">${r.ok?'<span class="ic-ok">✓</span>':'<span class="ic-err">✗</span>'}</td></tr>`).join(''); html+=rpSec('3.3.a Nombre del sitio y del edificio',ok?'OK':'Error',ok?'rp-ok':'rp-err',`<div class="rp-msg">Sitio: ≥3 car. · Edificio: ≥2 car.</div><table class="rp-table">${filas}</table>`,!ok); }
   const nivs = verificarNiveles(est);
-  if (nivs.length) { const ok=nivs.every(r=>r.ok); const nOk=nivs.filter(r=>r.ok).length; const filas=nivs.map(r=>`<tr><td class="td-name">${esc(r.nombre||'(sin nombre)')}</td><td style="text-align:center;font:400 9px var(--mono);color:var(--muted)">${r.largo} car.</td><td class="td-ok">${r.ok?'<span class="ic-ok">✓</span>':'<span class="ic-err">✗</span>'}</td></tr>`).join(''); html+=rpSec(`3.3.b Denominación de los niveles del edificio`,`${nOk}/${nivs.length} OK`,ok?'rp-ok':nOk>0?'rp-warn':'rp-err',`<table class="rp-table">${filas}</table>`,!ok); }
+  if (nivs.length) {
+    const ok = nivs.every(r => r.ok);
+    const nOk = nivs.filter(r => r.ok).length;
+    const filas = nivs.map(r => {
+      const nid = r.id.startsWith('#') ? r.id.slice(1) : r.id;
+      return `<tr id="nivrow_${nid}" class="niv-row" onclick="window.onNivelClick('${nid}',event)">
+        <td class="td-name">${esc(r.nombre || '(sin nombre)')}</td>
+        <td style="text-align:center;font:400 9px var(--mono);color:var(--muted)">${r.largo} car.</td>
+        <td class="td-ok">${r.ok ? '<span class="ic-ok">✓</span>' : '<span class="ic-err">✗</span>'}</td>
+      </tr>`;
+    }).join('');
+    html += rpSec(`3.3.b Denominación de los niveles del edificio`, `${nOk}/${nivs.length} OK`, ok ? 'rp-ok' : nOk > 0 ? 'rp-warn' : 'rp-err', `<table class="rp-table">${filas}</table>`, !ok);
+  }
   const espKey=Object.keys(ESP).find(k=>ESP[k].cod===_espActual)||'Arquitectura'; const espEnts=ESP[espKey].ents;
   let filasP='',filasA='',presentes=0;
   espEnts.forEach(([cls,nom])=>{
@@ -1333,13 +1348,35 @@ function extraerTiposDelIFC(est) {
   return por;
 }
 
-function renderSecTipos(est, filtrarCls) {
-  _tiposCache = _tiposCache || extraerTiposDelIFC(est);
+function renderSecTipos(est, filtrarCls, filtrarIds = null) {
+  let tiposParaRender = _tiposCache || extraerTiposDelIFC(est);
+  
+  // Si filtramos por IDs (niveles), debemos recalcular temporalmente el conteo de tipos
+  if (filtrarIds && filtrarIds.size > 0) {
+    const por = {};
+    for (const id of filtrarIds) {
+      const inst = est.instancias[id];
+      if (!inst) continue;
+      const attrs = splitAttrs(extraerRaw(est.texto, inst.pos));
+      const nombre = strVal(attrs[2]) || strVal(attrs[1]) || '';
+      if (!nombre || !nombre.includes(':')) continue;
+      const partes = nombre.split(':');
+      const fam = partes[0], tip = partes.length >= 3 ? partes.slice(1, -1).join(':') : partes[1];
+      if (!por[inst.cls]) por[inst.cls] = new Map();
+      if (!por[inst.cls].has(fam)) por[inst.cls].set(fam, new Map());
+      const prev = por[inst.cls].get(fam).get(tip) || 0;
+      por[inst.cls].get(fam).set(tip, prev + 1);
+    }
+    tiposParaRender = por;
+  }
+
   const espKey = Object.keys(ESP).find(k=>ESP[k].cod===_espActual)||'Arquitectura';
   const espEnts = ESP[espKey].ents.map(([cls])=>cls);
-  let relevantes = Object.entries(_tiposCache).filter(([cls])=>espEnts.includes(cls));
+  let relevantes = Object.entries(tiposParaRender).filter(([cls])=>espEnts.includes(cls));
   if (filtrarCls) relevantes = relevantes.filter(([cls])=>cls===filtrarCls);
-  const tituloFiltro = filtrarCls ? ` — ${IFC_ICO[filtrarCls]||''} ${filtrarCls.charAt(0)+filtrarCls.slice(1).toLowerCase()}` : '';
+  
+  const tituloFiltro = filtrarCls ? ` — ${IFC_ICO[filtrarCls]||''} ${filtrarCls.charAt(0)+filtrarCls.slice(1).toLowerCase()}` : 
+                      (filtrarIds ? ' — Filtrado por Nivel' : '');
   const tituloSec = '3.5 Estructura y denominación';
 
   if (!relevantes.length) return `<div class="rp-sec" id="sec5wrap">
@@ -1391,13 +1428,13 @@ function renderSecTipos(est, filtrarCls) {
     </div>
   </div>`;
 }
-function actualizarSec5(filtrarCls) {
+function actualizarSec5(filtrarCls, filtrarIds = null) {
   _clsFiltroActiva = filtrarCls;
   if (!_estActual) return;
   const sec5 = document.getElementById('sec5wrap');
   if (!sec5) return;
   const tmp = document.createElement('div');
-  tmp.innerHTML = renderSecTipos(_estActual, filtrarCls);
+  tmp.innerHTML = renderSecTipos(_estActual, filtrarCls, filtrarIds);
   sec5.replaceWith(tmp.firstElementChild);
 }
 window.resetFiltroTipos = () => actualizarSec5(null);
@@ -1512,6 +1549,60 @@ window.destacarTipo = async (idx, rowEl, e) => {
   if (Object.keys(matchingIds).length) {
     try { await highlighter.highlightByID('select', matchingIds, true, true); } catch(e) {}
   }
+};
+
+window.onNivelClick = async (id, e) => {
+  if (!_estActual) return;
+  const ctrlPressed = e?.ctrlKey || e?.metaKey || false;
+  const rowEl = document.getElementById('nivrow_' + id);
+
+  if (!ctrlPressed) {
+    // Sin Ctrl: deseleccionar todo y aislar solo este nivel
+    isolatedLevels.clear();
+    isolatedCategories.clear();
+    document.querySelectorAll('.niv-row.niv-active').forEach(r => r.classList.remove('niv-active'));
+    document.querySelectorAll('.ent-row.ent-active').forEach(r => r.classList.remove('ent-active'));
+    await hider.set(true);
+    isolatedLevels.add(id);
+    if (rowEl) rowEl.classList.add('niv-active');
+  } else {
+    // Con Ctrl: toggle de este nivel
+    if (isolatedLevels.has(id)) {
+      isolatedLevels.delete(id);
+      if (rowEl) rowEl.classList.remove('niv-active');
+    } else {
+      isolatedLevels.add(id);
+      if (rowEl) rowEl.classList.add('niv-active');
+    }
+  }
+
+  if (isolatedLevels.size === 0 && isolatedCategories.size === 0) {
+    await hider.set(true);
+    actualizarSec5(null);
+    renderProps(null, null);
+    return;
+  }
+
+  // Combinar elementos de todos los niveles seleccionados (y categorías si permitiéramos)
+  const map = {};
+  const allElemIds = [];
+  isolatedLevels.forEach(lid => {
+    const ids = _estActual.elemsPorNivel[lid] || [];
+    allElemIds.push(...ids.map(Number));
+  });
+
+  if (allElemIds.length) {
+    for (const [, model] of fragments.list) {
+      map[model.modelId] = new Set(allElemIds);
+    }
+    await hider.isolate(map);
+    try { await highlighter.highlightByID('select', map, true, true); } catch(e) {}
+  } else if (isolatedLevels.size > 0) {
+    await hider.isolate({});
+  }
+  
+  // Actualizar sección 5 filtrando por los elementos de los niveles seleccionados
+  actualizarSec5(null, allElemIds.length ? new Set(allElemIds) : null);
 };
 
 const espSel = document.getElementById('espSel');
