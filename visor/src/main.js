@@ -1300,7 +1300,8 @@ function renderReporte(est) {
   espEnts.forEach(([cls,nom])=>{
     const qty=conteo[cls]||0; if(qty>0)presentes++;
     const ico=IFC_ICO[cls]||''; const isProxy=cls==='IFCBUILDINGELEMENTPROXY';
-    const fila=`<tr id="entrow_${cls}" class="ent-row${isProxy?' td-proxy':''}" onclick="window.onEntidadClick('${cls}',event)"><td class="td-name">${ico} ${nom}<div class="td-cls">${cls.charAt(0)+cls.slice(1).toLowerCase()}</div></td><td class="td-ok">${qty>0?(isProxy?'<span style="color:var(--warn)">⚠</span>':'<span class="ic-ok">✓</span>'):'<span class="ic-err">✗</span>'}</td><td class="td-qty${qty===0?' zero':''}" ${isProxy&&qty>0?'style="color:var(--warn)"':''}>${qty}</td></tr>`;
+    const statusIcon = isProxy ? (qty === 0 ? '<span class="ic-ok">✓</span>' : '<span style="color:var(--warn)">⚠</span>') : (qty > 0 ? '<span class="ic-ok">✓</span>' : '<span class="ic-err">✗</span>');
+    const fila=`<tr id="entrow_${cls}" class="ent-row${isProxy?' td-proxy':''}" onclick="window.onEntidadClick('${cls}',event)"><td class="td-name">${ico} ${nom}<div class="td-cls">${cls.charAt(0)+cls.slice(1).toLowerCase()}</div></td><td class="td-ok">${statusIcon}</td><td class="td-qty${qty===0?' zero':''}" ${isProxy&&qty>0?'style="color:var(--warn)"':''}>${qty}</td></tr>`;
     if(qty>0)filasP+=fila; else filasA+=fila;
   });
   let filas='';
