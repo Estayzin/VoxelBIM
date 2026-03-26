@@ -217,7 +217,11 @@ function getNivelDeElemento(localId) {
 }
 
 function renderProps(data, localId, bb = null) {
-  if (!data) { propsEmpty.style.display = 'block'; propsBody.style.display = 'none'; return; }
+  if (!data) { 
+    if (propsEmpty) propsEmpty.style.display = 'block'; 
+    if (propsBody) propsBody.style.display = 'none'; 
+    return; 
+  }
   const cls  = data._category?.value ?? 'Desconocido';
   const ico  = IFC_ICO[cls] || '▪';
   const clsL = cls.charAt(0) + cls.slice(1).toLowerCase();
@@ -271,6 +275,13 @@ highlighter.events.select.onHighlight.add(async (modelIdMap) => {
     // Contar total de elementos seleccionados
     let total = 0;
     for (const ids of Object.values(modelIdMap)) total += ids.size;
+
+    if (total > 0) {
+      const pp = document.getElementById('propsPanel');
+      if (!pp.style.display || pp.style.display === 'none') {
+        window.togglePanel('propsPanel');
+      }
+    }
 
     if (total === 1) {
       // Un solo elemento → mostrar sus propiedades
@@ -1641,12 +1652,14 @@ const modalCfg = document.getElementById('modalCfg');
 
 // Poblar select de especialidades en el modal
 const mcfgEsp = document.getElementById('mcfgEsp');
-Object.keys(ESP).forEach(k => {
-  const opt = document.createElement('option');
-  opt.value = ESP[k].cod;
-  opt.textContent = `${k} (${ESP[k].cod})`;
-  mcfgEsp.append(opt);
-});
+if (mcfgEsp) {
+  Object.keys(ESP).forEach(k => {
+    const opt = document.createElement('option');
+    opt.value = ESP[k].cod;
+    opt.textContent = `${k} (${ESP[k].cod})`;
+    mcfgEsp.append(opt);
+  });
+}
 
 // Abrir modal al hacer clic en Reporte (solo si hay modelo cargado)
 document.getElementById('btnReporte').addEventListener('click', () => {
