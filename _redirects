@@ -1,4 +1,4 @@
 # Redirects para Cloudflare Pages — VoxelBIM
 
-# Atajo sin .html (Rewrite 200)
-/voxelbim /voxelbim.html 200
+# Atajo desactivado temporalmente para pruebas
+# /voxelbim /voxelbim.html 200
