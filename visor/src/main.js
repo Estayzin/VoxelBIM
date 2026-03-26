@@ -40,21 +40,20 @@ grid.config.primarySize = 1;
 grid.config.secondarySize = 10;
 grid.config.visible = false;
 
-// Cargar worker: usar URL relativa que funcione en desarrollo y Cloudflare Pages
-const getWorkerUrl = () => {
-  // En desarrollo local (vite dev o server.js)
+// Helper para rutas de activos (Worker y WASM) según el entorno
+const getBaseUrl = () => {
   const h = window.location.hostname;
   const p = window.location.port;
+  // Local con server.js
   if ((h === 'localhost' || h === '127.0.0.1') && p === '3000') {
-    return '/visor/dist/worker.mjs';
+    return '/visor/dist';
   }
-  
-  // En Cloudflare Pages: el worker está servido desde la raíz
-  // Siempre usar ruta absoluta desde la raíz del dominio
-  return '/worker.mjs';
+  // Cloudflare Pages (raíz)
+  return '';
 };
 
-const workerUrl = getWorkerUrl();
+const _base = getBaseUrl();
+const workerUrl = _base + '/worker.mjs';
 console.log('[VoxelBIM] Initializing worker from:', workerUrl);
 
 const fragments = components.get(OBC.FragmentsManager);
@@ -63,14 +62,6 @@ try {
   console.log('[VoxelBIM] Worker initialized successfully');
 } catch (e) {
   console.error('[VoxelBIM] Failed to initialize worker:', e);
-  // Fallback: intentar con ruta absoluta
-  try {
-    console.log('[VoxelBIM] Attempting fallback worker URL');
-    fragments.init('/worker.mjs', { classicWorker: false });
-  } catch (e2) {
-    console.error('[VoxelBIM] Fallback also failed:', e2);
-    throw new Error('Could not initialize Web Worker. Check that worker.mjs is accessible at: ' + workerUrl);
-  }
 }
 
 world.camera.controls.addEventListener("update", () => fragments.core.update());
