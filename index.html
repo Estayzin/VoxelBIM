@@ -382,15 +382,20 @@ function mostrarPortal(plan) {
 function activarCard(el, url, label) {
   el.classList.remove('disabled', 'locked');
   el.onclick = function() { abrirModulo(url); return false; };
-  var tag = el.querySelector('.mc-tags span:first-child');
-  if (tag) { tag.textContent = label; tag.className = 'mc-tag tag-live'; }
+  var tags = el.querySelector('.mc-tags');
+  if (tags) {
+    // Limpiamos tags previos si hay varios
+    tags.innerHTML = '<span class="mc-tag tag-live">' + label + '</span>';
+  }
 }
 
 function bloquearCard(el, label) {
   el.classList.add('disabled', 'locked');
   el.onclick = function() { return false; };
-  var tag = el.querySelector('.mc-tags span:first-child');
-  if (tag) { tag.textContent = label; tag.className = 'mc-tag tag-lock'; }
+  var tags = el.querySelector('.mc-tags');
+  if (tags) {
+    tags.innerHTML = '<span class="mc-tag tag-lock">' + label + '</span>';
+  }
 }
 
 function cerrarSesion() {
