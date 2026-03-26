@@ -1,7 +1,9 @@
 name = "voxelbim"
 compatibility_date = "2024-01-01"
 
-# El deploy a Cloudflare Pages se hace via GitHub integration.
-# Build command:  cd visor && npm install && npm run build
-# Build output:   visor/dist
-# (configurado en el dashboard de Cloudflare Pages)
+[assets]
+directory = "./visor/dist"
+
+# El deploy a Cloudflare Pages se hace via GitHub integration o Wrangler CLI.
+# Build command sugerido:  cd visor && npm install && npm run build
+# Build output:           visor/dist
