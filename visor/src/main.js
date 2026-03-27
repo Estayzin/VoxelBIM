@@ -144,6 +144,12 @@ const setProgress = (v) => {
 };
 
 const loadIfc = async (file) => {
+  // Ocultar dropzone central y botón al cargar
+  const dzc = document.getElementById('dropzoneCentral');
+  if (dzc) dzc.classList.add('hidden');
+  const btnCargar = document.getElementById('btnCargarIfc');
+  if (btnCargar) { btnCargar.className = 'btn-cargar-ifc cargado'; btnCargar.innerHTML = '&#10003; Modelo cargado'; btnCargar.onclick = null; }
+
   overlay.classList.add("hidden");
   progressWrap.classList.add("show");
   modelName.textContent = file.name;
@@ -165,7 +171,7 @@ const loadIfc = async (file) => {
     const cDot = document.getElementById('connDot');
     const cStatus = document.getElementById('connStatus');
     if (cDot) cDot.classList.add('active');
-    if (cStatus) cStatus.textContent = `Modelo: ${file.name}`;
+    if (cStatus) { cStatus.textContent = 'En línea'; cStatus.style.color = 'var(--green)'; }
 
     await renderNavegador(est);
     if (world.camera.fitToItems) await world.camera.fitToItems();
@@ -176,16 +182,29 @@ const loadIfc = async (file) => {
   }
 };
 
-const dropzone = document.getElementById("dropzone");
 const fileInput = document.getElementById("fileInput");
-dropzone.addEventListener("click", () => fileInput.click());
 fileInput.addEventListener("change", () => { if (fileInput.files[0]) loadIfc(fileInput.files[0]); });
-dropzone.addEventListener("dragover", (e) => { e.preventDefault(); dropzone.classList.add("over"); });
-dropzone.addEventListener("dragleave", () => dropzone.classList.remove("over"));
-dropzone.addEventListener("drop", (e) => {
-  e.preventDefault(); dropzone.classList.remove("over");
-  if (e.dataTransfer.files[0]) loadIfc(e.dataTransfer.files[0]);
-});
+
+// Dropzone central — drag & drop sobre el visor
+const dzc = document.getElementById("dropzoneCentral");
+if (dzc) {
+  dzc.addEventListener("dragover",  (e) => { e.preventDefault(); dzc.classList.add("over"); });
+  dzc.addEventListener("dragleave", ()  => dzc.classList.remove("over"));
+  dzc.addEventListener("drop", (e) => {
+    e.preventDefault(); dzc.classList.remove("over");
+    if (e.dataTransfer.files[0]) loadIfc(e.dataTransfer.files[0]);
+  });
+}
+
+// Drag & drop sobre el viewer-wrap completo (cuando el dzc ya está oculto, modelos adicionales)
+const viewerWrap = document.querySelector(".viewer-wrap");
+if (viewerWrap) {
+  viewerWrap.addEventListener("dragover",  (e) => { e.preventDefault(); });
+  viewerWrap.addEventListener("drop", (e) => {
+    e.preventDefault();
+    if (e.dataTransfer.files[0]) loadIfc(e.dataTransfer.files[0]);
+  });
+}
 
 const casters = components.get(OBC.Raycasters);
 const caster = casters.get(world);
@@ -1158,7 +1177,16 @@ async function renderNavegador(est) {
   }
 
   navBody.innerHTML = html || '<div class="nav-empty">Carga un modelo IFC<br>para navegar su estructura</div>';
+
+  // Abrir el panel automáticamente al cargar un modelo
+  const navPanel = document.getElementById('navPanel');
+  const btnArbol = document.getElementById('btnArbol');
+  if (navPanel && !navPanel.classList.contains('open')) {
+    navPanel.classList.add('open');
+    if (btnArbol) btnArbol.classList.add('active');
+  }
 }
+window.renderNavegador = renderNavegador;
 
 window.navSeleccionar = async (tipo, id, e) => {
   const ctrlPressed = e?.ctrlKey || e?.metaKey || false;
@@ -1730,12 +1758,22 @@ document.getElementById('reporteClose').addEventListener('click', () => {
   window.togglePanel('reportePanel');
 });
 
-document.getElementById('btnClaude').addEventListener('click', () => {
+document.getElementById('btnClaude')?.addEventListener('click', () => {
   window.togglePanel('claudePanel');
 });
-document.getElementById('claudeClose').addEventListener('click', () => {
+document.getElementById('claudeClose')?.addEventListener('click', () => {
   window.togglePanel('claudePanel');
 });
+
+// ══ ÁRBOL DEL PROYECTO — panel deslizante lateral ══
+window.toggleNav = () => {
+  const panel = document.getElementById('navPanel');
+  const btn   = document.getElementById('btnArbol');
+  const abriendo = !panel.classList.contains('open');
+  panel.classList.toggle('open');
+  if (btn) btn.classList.toggle('active', abriendo);
+  if (abriendo && _estActual) window.renderNavegador(_estActual);
+};
 
 // ══════════════════════════════════════════════════════════════════
 // 📋 LOG DE MEJORAS FUTURAS
