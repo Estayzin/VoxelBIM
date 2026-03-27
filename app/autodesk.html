@@ -17,7 +17,7 @@
 <meta name="author" content="Carlos Estay Ruggieri">
 <meta name="description" content="Módulo Autodesk APS — Integración con BIM 360, ACC y Claude AI.">
 <meta name="copyright" content="Carlos Estay Ruggieri, 2026">
-<title>Autodesk APS + Claude AI — Plataforma BIM</title>
+<title>Voxel360 — Plataforma BIM</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link rel="stylesheet" href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.min.css">
@@ -33,28 +33,58 @@
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
 html,body { height:100%; overflow:hidden; }
 body { font-family:var(--sans); background:var(--bg); color:var(--text); display:flex; flex-direction:column; height:100vh; }
+/* Separador derecho del header */
+.hright { display:flex; align-items:center; gap:6px; margin-left:auto; }
 </style>
 <style>
 /* ── HEADER ── */
-header { background:var(--navy); padding:11px 24px; display:flex; align-items:center; gap:14px; border-bottom:2px solid var(--aps); flex-shrink:0; }
+header { background:var(--navy); padding:16px 24px; min-height:72px; display:flex; align-items:center; gap:14px; border-bottom:2px solid var(--aps); flex-shrink:0; }
 .hback { padding:5px 12px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:4px; font:600 9px var(--mono); cursor:pointer; text-transform:uppercase; letter-spacing:.1em; text-decoration:none; transition:all .15s; }
 .hback:hover { border-color:var(--aps); color:var(--aps); }
 /* Botones de navegación del header */
-.hnav-group { display:flex; align-items:center; gap:4px; margin-left:18px; padding-left:18px; border-left:1px solid var(--border); }
+.hnav-group { display:flex; align-items:center; gap:4px; margin-left:14px; padding-left:14px; border-left:1px solid var(--border); }
 .hnav-btn { padding:5px 13px; background:transparent; color:var(--muted); border:1px solid transparent; border-radius:5px; font:600 9px var(--mono); cursor:pointer; text-transform:uppercase; letter-spacing:.08em; transition:all .15s; white-space:nowrap; }
 .hnav-btn:hover { background:rgba(0,144,255,.08); color:var(--text); border-color:var(--border); }
 .hnav-btn.active { background:rgba(0,144,255,.12); color:var(--aps); border-color:rgba(0,144,255,.3); }
-/* Separador derecho del header */
-.hright { display:flex; align-items:center; gap:10px; margin-left:auto; }
-/* Sidebar tabs en el header — override estilos de barra */
-.sidebar-tab.hnav-btn { flex:none; padding:5px 13px; border-bottom:none; border-radius:5px; border:1px solid transparent; }
-.sidebar-tab.hnav-btn.active { border-bottom:none; }
-.sidebar-tab.hnav-btn[data-tab="chat"].active    { background:rgba(199,125,255,.12); color:var(--claude); border-color:rgba(199,125,255,.3); }
-.sidebar-tab.hnav-btn[data-tab="props"].active   { background:rgba(0,200,83,.1); color:var(--green); border-color:rgba(0,200,83,.25); }
-.sidebar-tab.hnav-btn[data-tab="charts"].active  { background:rgba(124,77,255,.12); color:#b39ddb; border-color:rgba(124,77,255,.3); }
+/* Toolbar grupos — mismo patrón que voxelbim */
+.header-toolbar { display:flex; align-items:center; gap:4px; }
+.header-toolbar-sep { width:1px; height:20px; background:var(--border); margin:0 6px; flex-shrink:0; }
+.hbar-btn { padding:5px 13px; background:transparent; color:var(--muted); border:1px solid transparent; border-radius:5px; font:600 9px var(--mono); cursor:pointer; transition:all .15s ease; text-transform:uppercase; letter-spacing:.08em; display:flex; align-items:center; gap:6px; white-space:nowrap; }
+.hbar-btn:hover { border-color:var(--border); color:var(--text); background:rgba(255,255,255,.04); }
+.hbar-btn.active { border-color:var(--aps); color:var(--aps); background:rgba(0,144,255,.1); }
+.hbar-btn.disabled { opacity:.3; cursor:not-allowed; }
+.hbar-btn.disabled:hover { border-color:transparent; background:transparent; color:var(--muted); }
+.hb-icon { font-size:14px; opacity:.8; }
+.hbar-tag { font:700 7px var(--mono); padding:1px 4px; border-radius:2px; background:rgba(255,107,53,.1); color:var(--warn); letter-spacing:.08em; margin-left:3px; }
+/* Sidebar tabs — estados activos específicos */
+.hbar-btn.sidebar-tab[data-tab="props"].active   { border-color:var(--green); color:var(--green); background:rgba(0,200,83,.08); }
+.hbar-btn.sidebar-tab[data-tab="charts"].active  { border-color:rgba(124,77,255,.5); color:#b39ddb; background:rgba(124,77,255,.08); }
 @keyframes voxel-float { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-3px)} }
 @keyframes voxel-glow  { 0%,100%{filter:drop-shadow(0 0 4px rgba(0,144,255,.4))} 50%{filter:drop-shadow(0 0 10px rgba(0,144,255,.9))} }
 @keyframes voxel-edge  { 0%,100%{opacity:.5} 50%{opacity:1} }
+/* ══ BIT ANIMATIONS — todas las variantes ══ */
+@keyframes bit-spin    { 0%{transform:rotate(0deg) scaleX(1)} 25%{transform:rotate(90deg) scaleX(.45)} 50%{transform:rotate(180deg) scaleX(1)} 75%{transform:rotate(270deg) scaleX(.45)} 100%{transform:rotate(360deg) scaleX(1)} }
+@keyframes bit-float   { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-6px)} }
+@keyframes bit-warp    { 0%,100%{transform:scale(1,1)} 25%{transform:scale(1.25,.72)} 50%{transform:scale(.72,1.25)} 75%{transform:scale(1.1,.88)} }
+@keyframes bit-tremble { 0%,100%{transform:translate(0,0) rotate(0deg)} 20%{transform:translate(-2px,1px) rotate(-4deg)} 40%{transform:translate(2px,-1px) rotate(4deg)} 60%{transform:translate(-1px,2px) rotate(-3deg)} 80%{transform:translate(1px,-2px) rotate(3deg)} }
+@keyframes bit-rainbow { 0%{filter:hue-rotate(0deg)} 100%{filter:hue-rotate(360deg)} }
+@keyframes bit-no      { 0%,100%{transform:scale(1) rotate(0deg)} 50%{transform:scale(1.18) rotate(180deg)} }
+@keyframes bit-pulse   { 0%,100%{opacity:.95} 50%{opacity:.15} }
+@keyframes bit-edge-a  { 0%,100%{opacity:1;stroke-width:2.4} 45%{opacity:.1;stroke-width:.4} 65%{opacity:.9;stroke-width:2.0} }
+@keyframes bit-edge-b  { 0%,100%{opacity:1;stroke-width:1.6} 45%{opacity:.1;stroke-width:.4} 65%{opacity:.8;stroke-width:1.4} }
+@keyframes bit-glow-f  { 0%,100%{opacity:.22} 50%{opacity:.55} }
+@keyframes bit-vtx-m   { 0%,100%{opacity:.5} 50%{opacity:.08} }
+@keyframes bit-vtx-b   { 0%,100%{opacity:.65} 50%{opacity:.15} }
+.bit-wrap    { transform-origin:45px 52px; cursor:pointer; }
+.bit-top     { animation: bit-pulse  2s ease-in-out infinite; }
+.bit-ea      { animation: bit-edge-a 2s ease-in-out infinite; }
+.bit-eb      { animation: bit-edge-b 2s ease-in-out infinite .15s; }
+.bit-face    { animation: bit-glow-f 2s ease-in-out infinite; }
+.bit-vtx-mid { animation: bit-vtx-m  2s ease-in-out infinite; }
+.bit-vtx-bot { animation: bit-vtx-b  2s ease-in-out infinite .3s; }
+.bit-wrap.bit-no-state polygon { stroke:#ff3d57 !important; transition:stroke .3s, fill .3s; }
+.bit-wrap.bit-no-state line    { stroke:#ff3d57 !important; transition:stroke .3s; }
+.bit-wrap.bit-no-state circle  { fill:#ff3d57 !important;   transition:fill .3s; }
 .voxel-wrap { animation: voxel-float 3.5s ease-in-out infinite, voxel-glow 3.5s ease-in-out infinite; }
 .voxel-edge-top { animation: voxel-edge 3.5s ease-in-out infinite; }
 /* ── LAYOUT ── */
@@ -139,8 +169,8 @@ header { background:var(--navy); padding:11px 24px; display:flex; align-items:ce
 .load-text { font:400 10px var(--mono); color:var(--muted); letter-spacing:.1em; text-transform:uppercase; }
 @keyframes spin { to { transform:rotate(360deg); } }
 @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
-.conn-dot { width:7px; height:7px; border-radius:50%; background:var(--muted); flex-shrink:0; }
-.conn-dot.connected { background:var(--green); animation:pulse 2s infinite; }
+.conn-dot { width:7px; height:7px; border-radius:50%; background:var(--muted); flex-shrink:0; transition:background .3s; }
+.conn-dot.connected, .conn-dot.active { background:var(--green); animation:pulse 2s infinite; }
 .tree::-webkit-scrollbar, .nav-list::-webkit-scrollbar { width:4px; }
 .tree::-webkit-scrollbar-track, .nav-list::-webkit-scrollbar-track { background:transparent; }
 .tree::-webkit-scrollbar-thumb, .nav-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
@@ -376,6 +406,12 @@ header { background:var(--navy); padding:11px 24px; display:flex; align-items:ce
 [title="Explorador de modelos"],
 [title="Explode"],
 [title="Explotar"] { display:none !important; }
+/* ── PANTALLA BIENVENIDA ── */
+#viewerWelcome { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:10; pointer-events:none; }
+#viewerWelcome.hidden { display:none; }
+.vw-box { border:1px dashed rgba(0,144,255,.25); border-radius:16px; padding:48px 56px; display:flex; flex-direction:column; align-items:center; gap:14px; background:rgba(6,13,24,.55); pointer-events:none; }
+.vw-title { font:700 16px var(--mono); color:#e0f0ff; letter-spacing:.08em; text-transform:uppercase; }
+.vw-sub   { font:400 10px var(--mono); color:var(--muted); letter-spacing:.12em; text-transform:uppercase; }
 /* ── NOTIFICACIÓN TOAST ── */
 .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(60px); background:rgba(13,21,38,.96); border:1px solid rgba(199,125,255,.3); border-radius:8px; padding:10px 18px; font:500 10px var(--mono); color:#e0c8ff; letter-spacing:.06em; z-index:9999; transition:transform .25s ease, opacity .25s ease; opacity:0; pointer-events:none; white-space:nowrap; }
 .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
@@ -394,37 +430,64 @@ if (!_hasCode && !_hasToken && !_hasAuth && window.location.protocol !== 'file:'
 
 <!-- HEADER -->
 <header>
-  <div style="background:none;overflow:visible;width:34px;height:34px;display:flex;align-items:center;justify-content:center;">
-    <svg class="voxel-wrap" width="28" height="28" viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <polygon points="45,8 80,27 45,46 10,27" fill="rgba(0,144,255,0.18)" stroke="rgba(0,144,255,0.6)" stroke-width="2"/>
-      <polygon points="10,27 45,46 45,82 10,63" fill="rgba(0,144,255,0.07)" stroke="rgba(0,144,255,0.35)" stroke-width="2"/>
-      <polygon points="80,27 45,46 45,82 80,63" fill="rgba(0,144,255,0.13)" stroke="rgba(0,144,255,0.45)" stroke-width="2"/>
-      <line x1="45" y1="46" x2="45" y2="82" stroke="rgba(0,144,255,0.25)" stroke-width="1.5"/>
-      <line class="voxel-edge-top" x1="10" y1="27" x2="45" y2="8" stroke="rgba(0,144,255,0.9)" stroke-width="2.5"/>
-      <line class="voxel-edge-top" x1="45" y1="8" x2="80" y2="27" stroke="rgba(0,144,255,0.65)" stroke-width="2"/>
+  <div style="background:none;overflow:visible;width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+    <svg width="36" height="36" viewBox="0 0 90 105" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g class="bit-wrap">
+      <polygon class="bit-face" points="45,4 75,28 15,28" fill="rgba(0,144,255,0.22)" stroke="#0090ff" stroke-width="1.4" stroke-linejoin="round"/>
+      <polygon points="75,28 45,4 82,52" fill="rgba(0,144,255,0.10)" stroke="#0090ff" stroke-width="0.9" stroke-linejoin="round"/>
+      <polygon points="15,28 45,4 8,52" fill="rgba(0,144,255,0.18)" stroke="#0090ff" stroke-width="0.9" stroke-linejoin="round"/>
+      <polygon points="15,28 75,28 82,52 45,68 8,52" fill="rgba(0,144,255,0.07)" stroke="#0090ff" stroke-width="1.0" stroke-linejoin="round"/>
+      <polygon points="75,28 82,52 62,78" fill="rgba(0,144,255,0.15)" stroke="#0090ff" stroke-width="0.9" stroke-linejoin="round"/>
+      <polygon points="15,28 8,52 28,78" fill="rgba(0,144,255,0.20)" stroke="#0090ff" stroke-width="0.9" stroke-linejoin="round"/>
+      <polygon points="8,52 28,78 45,100 45,68" fill="rgba(0,144,255,0.07)" stroke="rgba(0,144,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+      <polygon points="82,52 62,78 45,100 45,68" fill="rgba(0,144,255,0.12)" stroke="rgba(0,144,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+      <polygon points="28,78 62,78 45,100" fill="rgba(0,144,255,0.14)" stroke="#0090ff" stroke-width="1.2" stroke-linejoin="round"/>
+      <!-- Aristas brillantes animadas -->
+      <line class="bit-ea" x1="15" y1="28" x2="45" y2="4" stroke="#0090ff" stroke-width="2.4" stroke-linecap="round"/>
+      <line class="bit-eb" x1="45" y1="4" x2="75" y2="28" stroke="#0090ff" stroke-width="1.6" stroke-linecap="round"/>
+      <circle class="bit-top"     cx="45" cy="4"   r="3"   fill="#0090ff"/>
+      <circle class="bit-vtx-mid" cx="15" cy="28"  r="1.8" fill="#0090ff" opacity="0.5"/>
+      <circle class="bit-vtx-mid" cx="75" cy="28"  r="1.8" fill="#0090ff" opacity="0.5"/>
+      <circle class="bit-vtx-mid" cx="8"  cy="52"  r="1.4" fill="#0090ff" opacity="0.35"/>
+      <circle class="bit-vtx-mid" cx="82" cy="52"  r="1.4" fill="#0090ff" opacity="0.35"/>
+      <circle class="bit-vtx-bot" cx="45" cy="100" r="2.2" fill="#0090ff" opacity="0.65"/>
+      </g>
     </svg>
   </div>
   <div>
-    <div style="font:700 13px var(--mono);color:#e0f0ff;letter-spacing:.05em;text-transform:uppercase;">Autodesk Platform Services</div>
+    <div style="font:700 13px var(--mono);color:#e0f0ff;letter-spacing:.05em;text-transform:uppercase;">Voxel360</div>
     <div style="font:400 10px var(--mono);color:var(--muted);margin-top:1px;">Visor BIM &middot; ACC &middot; <span style="color:rgba(199,125,255,.6);">Claude AI</span></div>
   </div>
 
-  <!-- Botones de navegación -->
-  <nav class="hnav-group">
-    <button class="hnav-btn active" id="hbtnUbicaciones" onclick="hnavClick('ubicaciones')">&#127968; Ubicaciones</button>
-    <button class="hnav-btn" id="hbtnDocumentos"  onclick="hnavClick('documentos')">&#128193; Documentos</button>
-    <button class="hnav-btn" id="hbtnArbol"        onclick="hnavClick('arbol')">&#127795; &Aacute;rbol de Proyecto</button>
-  </nav>
+  <!-- Árbol de Proyecto — alineado al ancho del sidebar (300px) -->
+  <div style="width:300px;flex-shrink:0;display:flex;align-items:center;border-left:1px solid var(--border);padding-left:14px;">
+    <button class="hbar-btn" id="hbtnArbol" onclick="hnavClick('arbol')"><span class="hb-icon">&#127795;</span> &Aacute;rbol de Proyecto</button>
+  </div>
 
+  <!-- Botones de navegación — zona derecha del header -->
   <div class="hright">
-    <!-- Tabs del panel derecho -->
-    <nav class="hnav-group">
-      <button class="sidebar-tab hnav-btn" data-tab="props"   onclick="cambiarSidebarTab('props', this)">&#128295; Propiedades</button>
-      <button class="sidebar-tab hnav-btn" data-tab="charts"  onclick="cambiarSidebarTab('charts', this)">&#128196; Reporte</button>
-      <button class="sidebar-tab hnav-btn" data-tab="chat" onclick="cambiarSidebarTab('chat', this)">&#10022; Chat IA &middot; Claude</button>
-    </nav>
-    <div class="conn-dot" id="connDot"></div>
-    <span id="connStatus" style="font:400 9px var(--mono);color:var(--muted);">Sin conexi&oacute;n</span>
+
+    <!-- Paneles: Propiedades y Reporte -->
+    <div class="header-toolbar">
+      <button class="hbar-btn sidebar-tab" data-tab="props" onclick="cambiarSidebarTab('props', this)">
+        <span class="hb-icon">&#9776;</span> Propiedades
+      </button>
+      <button class="hbar-btn sidebar-tab" data-tab="charts" onclick="cambiarSidebarTab('charts', this)">
+        <span class="hb-icon">&#9636;</span> Reporte
+      </button>
+      <button class="hbar-btn disabled" title="Pr&oacute;ximamente">
+        <span class="hb-icon">&#10022;</span> Chat IA <span class="hbar-tag">PR&Oacute;X.</span>
+      </button>
+    </div>
+
+    <div class="header-toolbar-sep"></div>
+
+    <!-- Estado conexión -->
+    <div style="display:inline-flex;align-items:center;gap:6px;">
+      <div class="conn-dot" id="connDot"></div>
+      <span id="connStatus" style="font:400 9px var(--mono);color:var(--muted);">Sin conexi&oacute;n</span>
+    </div>
+
     <a href="/index.html" class="hback">&#8592; Volver</a>
   </div>
 </header>
@@ -436,6 +499,7 @@ if (!_hasCode && !_hasToken && !_hasAuth && window.location.protocol !== 'file:'
 
     <!-- MODO CUENTA (login, plataforma) -->
     <div class="pl-header" id="plAccountHeader">
+
       <div class="pl-title">Autodesk Account</div>
       <button class="btn-login" id="btnLogin" onclick="iniciarLogin()">
         <span>&#128279;</span> Conectar con Autodesk
@@ -451,6 +515,12 @@ if (!_hasCode && !_hasToken && !_hasAuth && window.location.protocol !== 'file:'
           <button class="btn-platform" id="btnACC"   onclick="seleccionarPlataforma('acc')">&#9729;&#65039; ACC</button>
           <button class="btn-platform" id="btnA360"  onclick="seleccionarPlataforma('a360')">&#127760; A360</button>
         </div>
+      </div>
+
+      <!-- Navegación: Ubicaciones y Documentos lado a lado -->
+      <div style="display:flex;gap:6px;margin-top:10px;">
+        <button class="btn-platform active" id="hbtnUbicaciones" onclick="hnavClick('ubicaciones')" style="flex:1;">&#127968; Ubicaciones</button>
+        <button class="btn-platform" id="hbtnDocumentos" onclick="hnavClick('documentos')" style="flex:1;">&#128193; Documentos</button>
       </div>
     </div>
 
@@ -505,7 +575,40 @@ if (!_hasCode && !_hasToken && !_hasAuth && window.location.protocol !== 'file:'
     </div>
 
     <div id="viewerContainer" style="flex:1;position:relative;display:flex;flex-direction:column;">
-      <div class="viewer-empty" id="viewerEmpty">
+
+      <!-- PANTALLA DE BIENVENIDA — visible hasta conectar y abrir modelo -->
+      <div id="viewerWelcome">
+        <div class="vw-box">
+          <svg width="56" height="64" viewBox="0 0 90 105" fill="none">
+            <g class="bit-wrap">
+              <polygon class="bit-face" points="45,4 75,28 15,28" fill="rgba(0,144,255,0.22)" stroke="#0090ff" stroke-width="1.4" stroke-linejoin="round"/>
+              <polygon points="75,28 45,4 82,52" fill="rgba(0,144,255,0.10)" stroke="#0090ff" stroke-width="0.9" stroke-linejoin="round"/>
+              <polygon points="15,28 45,4 8,52"  fill="rgba(0,144,255,0.18)" stroke="#0090ff" stroke-width="0.9" stroke-linejoin="round"/>
+              <polygon points="15,28 75,28 82,52 45,68 8,52" fill="rgba(0,144,255,0.07)" stroke="#0090ff" stroke-width="1.0" stroke-linejoin="round"/>
+              <polygon points="75,28 82,52 62,78" fill="rgba(0,144,255,0.15)" stroke="#0090ff" stroke-width="0.9" stroke-linejoin="round"/>
+              <polygon points="15,28 8,52 28,78"  fill="rgba(0,144,255,0.20)" stroke="#0090ff" stroke-width="0.9" stroke-linejoin="round"/>
+              <polygon points="8,52 28,78 45,100 45,68" fill="rgba(0,144,255,0.07)" stroke="rgba(0,144,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+              <polygon points="82,52 62,78 45,100 45,68" fill="rgba(0,144,255,0.12)" stroke="rgba(0,144,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+              <polygon points="28,78 62,78 45,100" fill="rgba(0,144,255,0.14)" stroke="#0090ff" stroke-width="1.2" stroke-linejoin="round"/>
+              <line class="bit-ea" x1="15" y1="28" x2="45" y2="4" stroke="#0090ff" stroke-width="2.4" stroke-linecap="round"/>
+              <line class="bit-eb" x1="45" y1="4" x2="75" y2="28" stroke="#0090ff" stroke-width="1.6" stroke-linecap="round"/>
+              <circle class="bit-top"     cx="45" cy="4"   r="3"   fill="#0090ff"/>
+              <circle class="bit-vtx-mid" cx="15" cy="28"  r="1.8" fill="#0090ff" opacity="0.5"/>
+              <circle class="bit-vtx-mid" cx="75" cy="28"  r="1.8" fill="#0090ff" opacity="0.5"/>
+              <circle class="bit-vtx-mid" cx="8"  cy="52"  r="1.4" fill="#0090ff" opacity="0.35"/>
+              <circle class="bit-vtx-mid" cx="82" cy="52"  r="1.4" fill="#0090ff" opacity="0.35"/>
+              <circle class="bit-vtx-bot" cx="45" cy="100" r="2.2" fill="#0090ff" opacity="0.65"/>
+            </g>
+          </svg>
+          <div class="vw-title">Voxel360</div>
+          <div style="font:400 10px var(--mono);color:var(--aps);letter-spacing:.2em;text-transform:uppercase;opacity:.7;">Visor BIM &middot; APS &middot; ACC</div>
+          <div style="width:40px;height:1px;background:var(--border);"></div>
+          <div class="vw-sub">Conecta tu cuenta y selecciona un modelo</div>
+          <div style="font:400 9px var(--mono);color:var(--muted);opacity:.45;">BIM 360 &middot; ACC &middot; A360 &middot; RVT &middot; IFC &middot; DWG</div>
+        </div>
+      </div>
+
+      <div class="viewer-empty" id="viewerEmpty" style="display:none;">
         <div class="eicon">&#127959;</div>
         <p>Selecciona un modelo</p>
         <div class="hint">Conecta tu cuenta y navega un proyecto para abrir un modelo RVT, IFC o DWG</div>
@@ -577,9 +680,10 @@ if (!_hasCode && !_hasToken && !_hasAuth && window.location.protocol !== 'file:'
 
 <div class="toast" id="toast"></div>
 
-<footer style="text-align:center;padding:6px;font:400 9px var(--mono);color:var(--muted);border-top:1px solid var(--border);letter-spacing:.08em;flex-shrink:0;">
-  &copy; 2026 VoxelBIM &mdash; Coordinación BIM &mdash; MIT License
+<footer style="text-align:center;padding:6px 24px;font:400 9px var(--mono);color:var(--muted);border-top:1px solid var(--border);letter-spacing:.08em;flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:8px;">
+  &copy; 2026 VoxelBIM &mdash; Coordinaci&oacute;n BIM &mdash; MIT License
   &nbsp;&middot;&nbsp; <span style="color:rgba(199,125,255,.4);">Claude AI v4.0</span>
+  &nbsp;&middot;&nbsp; <span style="opacity:.4;">Carlos Estay Ruggieri</span>
 </footer>
 
 <script>
@@ -1115,6 +1219,7 @@ function cargarVisor(urn, nombre) {
     mostrarError('SDK del visor no disponible. Recarga la página.'); return;
   }
   document.getElementById('viewerEmpty').style.display = 'none';
+  document.getElementById('viewerWelcome').classList.add('hidden');
   document.getElementById('forgeViewer').style.display = 'block';
   document.getElementById('viewerToolbar').style.display = 'flex';
   document.getElementById('viewerTitle').textContent = nombre;
@@ -2008,6 +2113,37 @@ document.getElementById('chatInput').addEventListener('input', function() {
   this.style.height = '38px';
   this.style.height = Math.min(this.scrollHeight, 90) + 'px';
 });
+</script>
+
+<script>
+/* ══ BIT — animación aleatoria + click rojo ══ */
+(function() {
+  const anims = [
+    'bit-spin 4s cubic-bezier(.45,0,.55,1) infinite',
+    'bit-float 3s ease-in-out infinite',
+    'bit-warp 2s ease-in-out infinite',
+    'bit-tremble .28s ease-in-out infinite',
+    'bit-rainbow 3s linear infinite',
+    'bit-spin 4s cubic-bezier(.45,0,.55,1) infinite, bit-float 3s ease-in-out infinite',
+  ];
+  document.querySelectorAll('.bit-wrap').forEach(el => {
+    const pick = anims[Math.floor(Math.random() * anims.length)];
+    el._bitAnim = pick;
+    el.style.animation = pick;
+    el.style.transformOrigin = '45px 52px';
+
+    el.addEventListener('click', function() {
+      const isNo = this.classList.contains('bit-no-state');
+      if (isNo) {
+        this.classList.remove('bit-no-state');
+        this.style.animation = this._bitAnim;
+      } else {
+        this.classList.add('bit-no-state');
+        this.style.animation = 'bit-no 1.4s ease-in-out infinite';
+      }
+    });
+  });
+})();
 </script>
 </body>
 </html>

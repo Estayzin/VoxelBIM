@@ -10,41 +10,66 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VoxelBIM — Visor IFC</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
   --navy:#060d18; --blue:#0a1628; --accent:#00d4ff; --green:#00c853;
   --bg:#0a0f1e; --card:#0d1526; --text:#c8d8f0; --muted:#4a6080;
-  --border:#1a2a40; --mono:'JetBrains Mono',monospace; --sans:'Inter',sans-serif;
+  --border:#1a2a40; --mono:'JetBrains Mono',monospace; --sans:'Syne',sans-serif;
   --accent2:#7c4dff; --warn:#ff6b35; --red:#ff3d57;
 }
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
 html,body { height:100%; overflow:hidden; }
-body { font-family:var(--sans); background:var(--bg); color:var(--text); display:flex; flex-direction:column; height:100vh; font-size:13px; }
+body { font-family:var(--sans); background:var(--bg); color:var(--text); display:flex; flex-direction:column; height:100vh; }
 
 /* HEADER */
-header { background:var(--navy); padding:10px 16px; min-height:52px; display:flex; align-items:center; gap:12px; border-bottom:2px solid var(--accent); flex-shrink:0; box-shadow:0 2px 20px rgba(0,212,255,.08); flex-wrap:wrap; row-gap:6px; }
+header { background:var(--navy); padding:16px 24px; min-height:72px; display:flex; align-items:center; gap:14px; border-bottom:2px solid var(--accent); flex-shrink:0; box-shadow:0 2px 20px rgba(0,212,255,.08); }
 .hicon { background:none; overflow:visible; width:34px; height:34px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.htitle { font:700 13px var(--mono); color:var(--text); letter-spacing:.05em; text-transform:uppercase; }
-.hsub { font:400 9px var(--mono); color:var(--muted); margin-top:2px; }
-.hback { padding:4px 10px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:4px; font:600 9px var(--mono); text-transform:uppercase; letter-spacing:.1em; text-decoration:none; transition:all .15s; cursor:pointer; white-space:nowrap; }
+.htitle { font:700 13px var(--mono); color:#e0f0ff; letter-spacing:.05em; text-transform:uppercase; }
+.hsub { font:400 10px var(--mono); color:var(--muted); margin-top:1px; }
+.hback { padding:5px 12px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:4px; font:600 9px var(--mono); text-transform:uppercase; letter-spacing:.1em; text-decoration:none; transition:all .15s; cursor:pointer; white-space:nowrap; }
 .hback:hover { border-color:var(--accent); color:var(--accent); }
 
 /* Status Dot */
-.conn-dot { width:7px; height:7px; border-radius:50%; background:var(--muted); flex-shrink:0; transition:all .3s; display:inline-block; vertical-align:middle; }
-.conn-dot.active { background:var(--green); box-shadow:0 0 10px var(--green); }
-.conn-text { font:400 9px var(--mono); color:var(--muted); margin-left:6px; vertical-align:middle; }
+.conn-dot { width:7px; height:7px; border-radius:50%; background:var(--muted); flex-shrink:0; transition:background .3s; display:inline-block; vertical-align:middle; }
+.conn-dot.active { background:var(--green); animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+
+/* ══ BIT ANIMATIONS — todas las variantes ══ */
+@keyframes bit-spin    { 0%{transform:rotate(0deg) scaleX(1)} 25%{transform:rotate(90deg) scaleX(.45)} 50%{transform:rotate(180deg) scaleX(1)} 75%{transform:rotate(270deg) scaleX(.45)} 100%{transform:rotate(360deg) scaleX(1)} }
+@keyframes bit-float   { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-6px)} }
+@keyframes bit-warp    { 0%,100%{transform:scale(1,1)} 25%{transform:scale(1.25,.72)} 50%{transform:scale(.72,1.25)} 75%{transform:scale(1.1,.88)} }
+@keyframes bit-tremble { 0%,100%{transform:translate(0,0) rotate(0deg)} 20%{transform:translate(-2px,1px) rotate(-4deg)} 40%{transform:translate(2px,-1px) rotate(4deg)} 60%{transform:translate(-1px,2px) rotate(-3deg)} 80%{transform:translate(1px,-2px) rotate(3deg)} }
+@keyframes bit-rainbow { 0%{filter:hue-rotate(0deg)} 100%{filter:hue-rotate(360deg)} }
+@keyframes bit-no      { 0%,100%{transform:scale(1) rotate(0deg)} 50%{transform:scale(1.18) rotate(180deg)} }
+@keyframes bit-pulse   { 0%,100%{opacity:.95} 50%{opacity:.15} }
+@keyframes bit-edge-a  { 0%,100%{opacity:1;stroke-width:2.4} 45%{opacity:.1;stroke-width:.4} 65%{opacity:.9;stroke-width:2.0} }
+@keyframes bit-edge-b  { 0%,100%{opacity:1;stroke-width:1.6} 45%{opacity:.1;stroke-width:.4} 65%{opacity:.8;stroke-width:1.4} }
+@keyframes bit-glow    { 0%,100%{opacity:.22} 50%{opacity:.55} }
+@keyframes bit-vtx     { 0%,100%{opacity:.5} 50%{opacity:.08} }
+@keyframes bit-vtx2    { 0%,100%{opacity:.65} 50%{opacity:.15} }
+/* Clases base */
+.bit-wrap    { transform-origin:45px 52px; cursor:pointer; }
+.bit-top     { animation: bit-pulse 2s ease-in-out infinite; }
+.bit-edge1   { animation: bit-edge-a 2s ease-in-out infinite; }
+.bit-edge2   { animation: bit-edge-b 2s ease-in-out infinite .15s; }
+.bit-face    { animation: bit-glow  2s ease-in-out infinite; }
+.bit-vtx-mid { animation: bit-vtx   2s ease-in-out infinite; }
+.bit-vtx-bot { animation: bit-vtx2  2s ease-in-out infinite .3s; }
+/* Estado NO — rojo, transición suave en stroke/fill */
+.bit-wrap.bit-no-state polygon { stroke:#ff3d57 !important; transition:stroke .3s, fill .3s; }
+.bit-wrap.bit-no-state line    { stroke:#ff3d57 !important; transition:stroke .3s; }
+.bit-wrap.bit-no-state circle  { fill:#ff3d57 !important;   transition:fill .3s; }
 
 /* TOOLBAR SUPERIOR */
-.header-toolbar { display:flex; align-items:center; gap:6px; margin-left:12px; padding-left:12px; border-left:1px solid var(--border); }
-.header-toolbar-sep { width:1px; height:20px; background:var(--border); margin:0 4px; }
-.hbar-btn { padding:6px 10px; background:transparent; color:var(--muted); border:1px solid transparent; border-radius:4px; font:600 9px var(--mono); cursor:pointer; transition:all .18s ease; text-transform:uppercase; letter-spacing:.07em; display:flex; align-items:center; gap:6px; white-space:nowrap; }
+.header-toolbar { display:flex; align-items:center; gap:4px; }
+.header-toolbar-sep { width:1px; height:20px; background:var(--border); margin:0 6px; flex-shrink:0; }
+.hbar-btn { padding:5px 13px; background:transparent; color:var(--muted); border:1px solid transparent; border-radius:5px; font:600 9px var(--mono); cursor:pointer; transition:all .15s ease; text-transform:uppercase; letter-spacing:.08em; display:flex; align-items:center; gap:6px; white-space:nowrap; }
 .hbar-btn:hover { border-color:var(--border); color:var(--text); background:rgba(255,255,255,.04); }
-.hbar-btn.active { border-color:var(--accent); color:var(--accent); background:rgba(0,212,255,.08); box-shadow:0 0 10px rgba(0,212,255,.1); }
+.hbar-btn.active { border-color:var(--accent); color:var(--accent); background:rgba(0,212,255,.1); }
 .hbar-btn.disabled { opacity:.3; cursor:not-allowed; }
 .hbar-btn.disabled:hover { border-color:transparent; background:transparent; }
-.hbar-btn .hb-icon { font-size:14px; opacity:.8; transition:opacity .2s; }
-.hbar-btn:hover .hb-icon, .hbar-btn.active .hb-icon { opacity:1; }
+.hbar-btn .hb-icon { font-size:14px; opacity:.8; }
 .hbar-tag { font:700 7px var(--mono); padding:1px 4px; border-radius:2px; background:rgba(255,107,53,.1); color:var(--warn); letter-spacing:.08em; margin-left:3px; }
 
 /* ══ MEDICIÓN — Labels y snaps ══ */
@@ -93,16 +118,29 @@ body.light-mode .hsub { color:#4a6080; }
 .main { display:flex; flex:1; overflow:hidden; }
 
 /* SIDEBAR */
-.sidebar { width:240px; flex-shrink:0; background:var(--blue); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
-.sb-header { padding:10px 12px; border-bottom:1px solid var(--border); flex-shrink:0; display:flex; flex-direction:column; gap:8px; }
-.sb-title { font:700 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.2em; }
+.sidebar { width:300px; flex-shrink:0; background:var(--blue); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+.sidebar::-webkit-scrollbar { width:4px; }
+.sidebar::-webkit-scrollbar-track { background:transparent; }
+.sidebar::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+.sb-header { padding:12px 16px; border-bottom:1px solid var(--border); flex-shrink:0; display:flex; flex-direction:column; gap:8px; }
+.sb-title { font:700 9px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.2em; margin-bottom:2px; }
 
-/* Dropzone */
-.dropzone { border:1px dashed var(--border); border-radius:6px; padding:12px 10px; text-align:center; cursor:pointer; transition:all .2s; background:rgba(0,212,255,.02); }
-.dropzone:hover,.dropzone.over { border-color:var(--accent); background:rgba(0,212,255,.06); }
-.dz-icon { font-size:20px; opacity:.5; margin-bottom:3px; }
-.dz-label { font:600 9px var(--mono); color:var(--text); text-transform:uppercase; letter-spacing:.08em; }
-.dz-sub { font:400 9px var(--mono); color:var(--muted); margin-top:2px; }
+/* Dropzone viejo — mantenido por compatibilidad pero no visible */
+.dropzone { display:none; }
+
+/* Botón cargar IFC — sidebar */
+.btn-cargar-ifc { width:100%; padding:10px; background:var(--accent); color:#000; border:none; border-radius:6px; font:700 11px var(--mono); cursor:pointer; letter-spacing:.08em; text-transform:uppercase; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:8px; }
+.btn-cargar-ifc:hover { background:#00bcd4; box-shadow:0 0 20px rgba(0,212,255,.3); }
+.btn-cargar-ifc.cargado { background:rgba(0,200,83,.15); color:var(--green); border:1px solid rgba(0,200,83,.3); cursor:default; }
+
+/* Dropzone central — sobre el visor, estilo voxel360 */
+#dropzoneCentral { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:25; cursor:pointer; transition:background .2s; pointer-events:auto; }
+#dropzoneCentral.over { background:rgba(0,212,255,.05); }
+#dropzoneCentral.hidden { display:none; }
+.dzc-box { border:1px dashed rgba(0,212,255,.25); border-radius:16px; padding:48px 56px; display:flex; flex-direction:column; align-items:center; gap:14px; background:rgba(6,13,24,.55); transition:all .2s; pointer-events:none; }
+#dropzoneCentral.over .dzc-box { border-color:var(--accent); background:rgba(0,212,255,.07); }
+.dzc-title { font:700 16px var(--mono); color:#e0f0ff; letter-spacing:.08em; text-transform:uppercase; }
+.dzc-sub   { font:400 10px var(--mono); color:var(--muted); letter-spacing:.12em; text-transform:uppercase; }
 
 /* Progreso */
 .progress-wrap { display:none; flex-direction:column; gap:5px; }
@@ -114,17 +152,17 @@ body.light-mode .hsub { color:#4a6080; }
 /* INFO MODELO */
 .model-info { display:none; background:var(--card); border-radius:5px; border-left:3px solid var(--accent); padding:6px 10px; }
 .model-info.show { display:block; }
-.mi-name { font:600 9px var(--mono); color:var(--accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.mi-meta { font:400 8px var(--mono); color:var(--muted); margin-top:2px; }
+.mi-name { font:600 11px var(--mono); color:var(--accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mi-meta { font:400 9px var(--mono); color:var(--muted); margin-top:2px; }
 </style>
 <style>
 /* LISTA DE MODELOS */
-.sb-models-section { padding:8px 12px; border-bottom:1px solid var(--border); flex-shrink:0; }
-.sb-models-title { font:700 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.2em; margin-bottom:6px; }
+.sb-models-section { padding:8px 16px; border-bottom:1px solid var(--border); flex-shrink:0; }
+.sb-models-title { font:700 9px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.2em; margin-bottom:6px; }
 .models-list { display:flex; flex-direction:column; gap:3px; max-height:120px; overflow-y:auto; }
-.model-item { display:flex; align-items:center; gap:7px; padding:5px 8px; background:var(--card); border:1px solid var(--border); border-radius:4px; transition:all .15s; }
+.model-item { display:flex; align-items:center; gap:7px; padding:7px 10px; background:var(--card); border:1px solid var(--border); border-radius:4px; transition:all .15s; }
 .model-item:hover { border-color:var(--accent); }
-.model-item-name { font:500 9px var(--mono); color:var(--text); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.model-item-name { font:500 11px var(--mono); color:var(--text); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .model-item-btn { background:none; border:1px solid transparent; border-radius:3px; cursor:pointer; font-size:12px; padding:1px 4px; transition:all .15s; line-height:1.4; flex-shrink:0; }
 .model-item-btn:hover { border-color:var(--border); background:rgba(255,255,255,.05); }
 .model-item-btn.hidden { opacity:.4; }
@@ -132,14 +170,6 @@ body.light-mode .hsub { color:#4a6080; }
 .model-item-hidden .model-item-name { opacity:.4; text-decoration:line-through; }
 .models-empty { font:400 9px var(--mono); color:var(--muted); text-align:center; padding:8px 0; opacity:.6; }
 
-/* CONTROLES SIDEBAR */
-.sb-controls { padding:4px 12px; display:flex; flex-direction:column; gap:6px; flex-shrink:0; }
-.ctrl-title { font:700 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.15em; margin-bottom:1px; }
-.ctrl-btn { width:100%; padding:6px 10px; background:transparent; color:var(--text); border:1px solid var(--border); border-radius:4px; font:600 9px var(--mono); cursor:pointer; transition:all .15s; text-align:left; text-transform:uppercase; letter-spacing:.08em; display:flex; align-items:center; gap:7px; }
-.ctrl-btn:hover { border-color:var(--accent); color:var(--accent); background:rgba(0,212,255,.04); }
-.ctrl-btn.active { border-color:var(--accent); color:#000; background:var(--accent); }
-.ctrl-btn .icon { font-size:13px; }
-.ctrl-sep { height:1px; background:var(--border); margin:3px 0; }
 /* Oculto visualmente pero funcional */
 .ctrl-btn.nav-hidden { display:none; }
 </style>
@@ -172,13 +202,13 @@ body.light-mode .hsub { color:#4a6080; }
 .ov-text { font:400 10px var(--mono); color:var(--muted); letter-spacing:.1em; text-transform:uppercase; }
 
 /* CONTENEDOR DE PANELES DERECHOS */
-#rightPanels { display:flex; flex-direction:row; height:100%; flex-shrink:0; border-left:1px solid var(--border); pointer-events:auto; }
+#rightPanels { display:flex; flex-direction:row; height:100%; flex-shrink:0; border-left:1px solid var(--border); pointer-events:auto; overflow:hidden; }
 
 /* PANEL PROPIEDADES — consistente con reporte BIM */
 #propsPanel { width:270px; flex-shrink:0; background:var(--blue); border-right:1px solid var(--border); display:none; flex-direction:column; overflow-y:scroll; overflow-x:hidden; position:relative; }
 
 /* PANEL REPORTE */
-#reportePanel { width:300px; flex-shrink:0; background:var(--blue); display:none; flex-direction:column; overflow-y:scroll; overflow-x:hidden; position:relative; }
+#reportePanel { width:300px; flex-shrink:0; background:var(--blue); border-right:1px solid var(--border); display:none; flex-direction:column; overflow-y:scroll; overflow-x:hidden; position:relative; }
 
 /* Scrollbars individuales */
 #propsPanel::-webkit-scrollbar, #reportePanel::-webkit-scrollbar { width:6px; }
@@ -221,32 +251,41 @@ body.light-mode .hsub { color:#4a6080; }
   font-size: 10px !important;
 }
 
-/* NAVEGADOR DEL MODELO */
-#navPanel { display:flex; flex-direction:column; overflow:hidden; flex:1; min-height:50%; border-top:1px solid var(--border); background: #0d1a2d; }
-.nav-header { padding:9px 12px 8px; border-bottom:1px solid var(--border); flex-shrink:0; display:flex; align-items:center; gap:8px; }
+/* NAVEGADOR DEL MODELO — panel deslizante lateral */
+#navPanel {
+  width:0; flex-shrink:0; background:var(--blue); border-right:1px solid transparent;
+  display:flex; flex-direction:column; overflow:hidden;
+  transition:width .22s ease, border-color .22s ease;
+}
+#navPanel.open { width:280px; border-right-color:var(--border); }
+.nav-header { padding:10px 14px; border-bottom:1px solid var(--border); flex-shrink:0; display:flex; align-items:center; gap:8px; }
 .nav-title { font:700 9px var(--mono); color:var(--accent); text-transform:uppercase; letter-spacing:.18em; flex:1; }
+.nav-close { background:transparent; border:none; color:var(--muted); cursor:pointer; font-size:15px; padding:2px 5px; border-radius:3px; transition:color .12s; line-height:1; }
+.nav-close:hover { color:var(--accent); }
 .nav-body { flex:1; overflow-y:auto; padding:6px 0; display:flex; flex-direction:column; }
-.nav-empty { padding:16px 12px; font:400 9px var(--mono); color:var(--muted); text-align:center; line-height:1.7; text-transform:uppercase; letter-spacing:.08em; opacity:.6; }
+.nav-body::-webkit-scrollbar { width:3px; }
+.nav-body::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+.nav-empty { padding:24px 14px; font:400 10px var(--mono); color:var(--muted); text-align:center; line-height:1.8; text-transform:uppercase; letter-spacing:.08em; opacity:.6; }
 /* Grupos colapsables */
 .nav-group { flex-shrink:0; }
-.nav-group-hdr { display:flex; align-items:center; gap:6px; padding:5px 8px; cursor:pointer; transition:background .12s; user-select:none; }
-.nav-group-hdr:hover { background:rgba(0,212,255,.05); }
+.nav-group-hdr { display:flex; align-items:center; gap:6px; padding:6px 14px; cursor:pointer; transition:background .12s; user-select:none; }
+.nav-group-hdr:hover { background:rgba(0,212,255,.06); }
 .nav-group-arrow { font-size:9px; color:var(--muted); transition:transform .15s; flex-shrink:0; }
 .nav-group-arrow.open { transform:rotate(90deg); }
-.nav-group-title { font:700 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.15em; flex:1; }
-.nav-group-badge { font:700 8px var(--mono); padding:1px 5px; border-radius:3px; background:rgba(0,212,255,.08); color:var(--accent); flex-shrink:0; }
+.nav-group-title { font:700 9px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.15em; flex:1; }
+.nav-group-badge { font:700 8px var(--mono); padding:2px 5px; border-radius:3px; background:rgba(0,212,255,.08); color:var(--accent); flex-shrink:0; border:1px solid rgba(0,212,255,.15); }
 .nav-group-body { display:none; }
 .nav-group-body.open { display:block; }
 /* Items */
-.nav-item { display:flex; align-items:center; gap:6px; padding:4px 8px; cursor:pointer; transition:background .12s; border:1px solid transparent; border-radius:3px; margin:1px 4px; }
-.nav-item:hover { background:rgba(0,212,255,.06); border-color:var(--border); }
-.nav-item.nav-active { background:rgba(0,212,255,.12); border-color:var(--accent); }
+.nav-item { display:flex; align-items:center; gap:8px; padding:6px 14px; cursor:pointer; transition:background .12s; border-left:2px solid transparent; }
+.nav-item:hover { background:rgba(0,212,255,.06); }
+.nav-item.nav-active { background:rgba(0,212,255,.1); border-left-color:var(--accent); }
 .nav-item.nav-active .nav-item-name { color:var(--accent); }
-.nav-indent-1 { padding-left:18px; }
-.nav-indent-2 { padding-left:32px; }
-.nav-item-icon { font-size:11px; flex-shrink:0; opacity:.7; }
-.nav-item-name { font:500 9px var(--mono); color:var(--text); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.nav-item-badge { font:700 8px var(--mono); padding:1px 5px; border-radius:3px; background:rgba(0,212,255,.08); color:var(--accent); flex-shrink:0; }
+.nav-indent-1 { padding-left:28px; }
+.nav-indent-2 { padding-left:42px; }
+.nav-item-icon { font-size:13px; flex-shrink:0; opacity:.7; }
+.nav-item-name { font:500 11px var(--mono); color:var(--text); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.nav-item-badge { font:700 8px var(--mono); padding:2px 5px; border-radius:3px; background:rgba(0,212,255,.08); color:var(--accent); flex-shrink:0; border:1px solid rgba(0,212,255,.15); }
 .nav-sep { height:1px; background:var(--border); margin:4px 8px; opacity:.5; }
 
 /* PANEL REPORTE */
@@ -298,37 +337,69 @@ body.light-mode .hsub { color:#4a6080; }
 .rp-table tr.tipo-row.tipo-active td { background:rgba(0,212,255,.15); color:var(--accent); }
 .rp-table tr.tipo-row.tipo-active .td-cls { color:var(--accent); opacity:.8; }
 
-/* Claude AI Button */
-.btn-claude { background:rgba(199,125,255,.08) !important; color:#c77dff !important; border:1px solid rgba(199,125,255,.25) !important; margin-left:6px; }
-.btn-claude:hover { background:rgba(199,125,255,.15) !important; border-color:#c77dff !important; box-shadow:0 0 15px rgba(199,125,255,.2); }
-.btn-claude.active { background:rgba(199,125,255,.25) !important; border-color:#c77dff !important; box-shadow:0 0 20px rgba(199,125,255,.3); }
+/* Claude AI Button — ya no se usa en header pero se mantiene por si acaso */
+.btn-claude { background:rgba(199,125,255,.08) !important; color:#c77dff !important; border:1px solid rgba(199,125,255,.25) !important; }
+.btn-claude:hover { background:rgba(199,125,255,.15) !important; border-color:#c77dff !important; }
+.btn-claude.active { background:rgba(199,125,255,.25) !important; border-color:#c77dff !important; }
+
+/* Colores específicos botones Propiedades y Reporte — igual que autodesk */
+#btnProps.active   { border-color:var(--green); color:var(--green); background:rgba(0,200,83,.08); }
+#btnReporte.active { border-color:rgba(124,77,255,.5); color:#b39ddb; background:rgba(124,77,255,.08); }
+
+/* PANEL CLAUDE AI — scrollbar consistente */
+#claudePanel::-webkit-scrollbar { width:6px; }
+#claudePanel::-webkit-scrollbar-track { background:var(--blue); }
+#claudePanel::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+#claudePanel::-webkit-scrollbar-thumb:hover { background:var(--muted); }
 </style>
 </head>
 <body>
   <header>
     <div class="hicon">
-      <svg width="28" height="28" viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <polygon points="45,8 80,27 45,46 10,27" fill="rgba(0,212,255,0.18)" stroke="rgba(0,212,255,0.6)" stroke-width="2"/>
-        <polygon points="10,27 45,46 45,82 10,63" fill="rgba(0,212,255,0.07)" stroke="rgba(0,212,255,0.35)" stroke-width="2"/>
-        <polygon points="80,27 45,46 45,82 80,63" fill="rgba(0,212,255,0.13)" stroke="rgba(0,212,255,0.45)" stroke-width="2"/>
-        <line x1="45" y1="46" x2="45" y2="82" stroke="rgba(0,212,255,0.25)" stroke-width="1.5"/>
-        <line x1="10" y1="27" x2="45" y2="8" stroke="rgba(0,212,255,0.9)" stroke-width="2.5"/>
-        <line x1="45" y1="8" x2="80" y2="27" stroke="rgba(0,212,255,0.65)" stroke-width="2"/>
+      <svg width="36" height="36" viewBox="0 0 90 105" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g class="bit-wrap">
+        <!-- Cara superior -->
+        <polygon class="bit-face" points="45,4 75,28 15,28" fill="rgba(0,212,255,0.22)" stroke="#00d4ff" stroke-width="1.4" stroke-linejoin="round"/>
+        <!-- Cara derecha superior -->
+        <polygon points="75,28 45,4 82,52" fill="rgba(0,212,255,0.10)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+        <!-- Cara izquierda superior -->
+        <polygon points="15,28 45,4 8,52" fill="rgba(0,212,255,0.18)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+        <!-- Cara central -->
+        <polygon points="15,28 75,28 82,52 45,68 8,52" fill="rgba(0,212,255,0.07)" stroke="#00d4ff" stroke-width="1.0" stroke-linejoin="round"/>
+        <!-- Cara derecha inferior -->
+        <polygon points="75,28 82,52 62,78" fill="rgba(0,212,255,0.15)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+        <!-- Cara izquierda inferior -->
+        <polygon points="15,28 8,52 28,78" fill="rgba(0,212,255,0.20)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+        <!-- Cara base izquierda -->
+        <polygon points="8,52 28,78 45,100 45,68" fill="rgba(0,212,255,0.07)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+        <!-- Cara base derecha -->
+        <polygon points="82,52 62,78 45,100 45,68" fill="rgba(0,212,255,0.12)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+        <!-- Cara inferior -->
+        <polygon points="28,78 62,78 45,100" fill="rgba(0,212,255,0.14)" stroke="#00d4ff" stroke-width="1.2" stroke-linejoin="round"/>
+        <!-- Aristas brillantes animadas -->
+        <line class="bit-edge1" x1="15" y1="28" x2="45" y2="4" stroke="#00d4ff" stroke-width="2.4" stroke-linecap="round"/>
+        <line class="bit-edge2" x1="45" y1="4" x2="75" y2="28" stroke="#00d4ff" stroke-width="1.6" stroke-linecap="round"/>
+        <!-- Vértice superior pulsante -->
+        <circle class="bit-top" cx="45" cy="4" r="3" fill="#00d4ff"/>
+        <!-- Vértices medios -->
+        <circle class="bit-vtx-mid" cx="15" cy="28" r="1.8" fill="#00d4ff" opacity="0.5"/>
+        <circle class="bit-vtx-mid" cx="75" cy="28" r="1.8" fill="#00d4ff" opacity="0.5"/>
+        <circle class="bit-vtx-mid" cx="8"  cy="52" r="1.4" fill="#00d4ff" opacity="0.35"/>
+        <circle class="bit-vtx-mid" cx="82" cy="52" r="1.4" fill="#00d4ff" opacity="0.35"/>
+        <!-- Vértice inferior -->
+        <circle class="bit-vtx-bot" cx="45" cy="100" r="2.2" fill="#00d4ff" opacity="0.65"/>
+        </g>
       </svg>
     </div>
     <div>
       <div class="htitle">VoxelBIM</div>
-      <div class="hsub">
-        Visor BIM &middot; IFC &middot; <span style="color:var(--accent2);font-weight:700;">Claude IA</span>
-        <span style="margin-left:12px;display:inline-flex;align-items:center;border-left:1px solid var(--border);padding-left:12px;">
-          <span class="conn-dot" id="connDot"></span>
-          <span class="conn-text" id="connStatus">Esperando IFC</span>
-        </span>
-      </div>
+      <div class="hsub">Visor BIM &middot; IFC &middot; <span style="color:rgba(199,125,255,.6);">Claude IA</span></div>
     </div>
 
-    <!-- Grupo 1: Navegación 3D -->
+    <!-- Grupo 1: Árbol del proyecto + Navegación 3D -->
     <div class="header-toolbar">
+      <button class="hbar-btn" id="btnArbol" title="&Aacute;rbol del proyecto" onclick="window.toggleNav()"><span class="hb-icon">&#127795;</span> &Aacute;rbol del proyecto</button>
+      <div class="header-toolbar-sep"></div>
       <button class="hbar-btn" id="btn3D" title="Vista 3D"><span class="hb-icon">⬚</span></button>
       <button class="hbar-btn" id="btnFit" title="Zoom Extents"><span class="hb-icon">⤢</span></button>
       <button class="hbar-btn" id="btnFitSel" title="Zoom Selección"><span class="hb-icon">🔎</span></button>
@@ -337,31 +408,41 @@ body.light-mode .hsub { color:#4a6080; }
 
     <div class="header-toolbar-sep"></div>
 
-    <!-- Grupo 2: Modo claro y grilla -->
+    <!-- Grupo 2: Próximamente -->
     <div class="header-toolbar">
-      <button class="hbar-btn" id="btnLightMode" title="Modo claro/oscuro"><span class="hb-icon">◑</span></button>
-      <button class="hbar-btn" id="btnToggleGrid" title="Mostrar/ocultar grilla"><span class="hb-icon">◫</span></button>
+      <button class="hbar-btn disabled" id="btnClip" title="Pr&oacute;ximamente"><span class="hb-icon">&#9641;</span> Corte <span class="hbar-tag">PR&Oacute;X.</span></button>
+      <button class="hbar-btn disabled" id="btnMeasure" title="Pr&oacute;ximamente"><span class="hb-icon">&#8596;</span> Medir <span class="hbar-tag">PR&Oacute;X.</span></button>
+      <button class="hbar-btn disabled" id="btnPlan" title="Pr&oacute;ximamente"><span class="hb-icon">&#9744;</span> Planta <span class="hbar-tag">PR&Oacute;X.</span></button>
     </div>
 
     <div class="header-toolbar-sep"></div>
 
-    <!-- Grupo 3: Próximamente -->
-    <div class="header-toolbar">
-      <button class="hbar-btn disabled" id="btnClip" title="Próximamente"><span class="hb-icon">◩</span> Corte <span class="hbar-tag">PRÓX.</span></button>
-      <button class="hbar-btn disabled" id="btnMeasure" title="Próximamente"><span class="hb-icon">⟷</span> Medir <span class="hbar-tag">PRÓX.</span></button>
-      <button class="hbar-btn disabled" id="btnPlan" title="Próximamente"><span class="hb-icon">◰</span> Planta <span class="hbar-tag">PRÓX.</span></button>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+
+      <!-- Modo claro/oscuro y grilla -->
+      <div class="header-toolbar">
+        <button class="hbar-btn" id="btnLightMode" title="Modo claro/oscuro"><span class="hb-icon">&#9681;</span></button>
+        <button class="hbar-btn" id="btnToggleGrid" title="Mostrar/ocultar grilla"><span class="hb-icon">&#9647;</span></button>
+      </div>
+
+      <div class="header-toolbar-sep"></div>
+
+      <!-- Paneles: Propiedades, Reporte, Chat IA -->
+      <div class="header-toolbar">
+        <button class="hbar-btn" id="btnProps"><span class="hb-icon">&#9776;</span> Propiedades</button>
+        <button class="hbar-btn" id="btnReporte"><span class="hb-icon">&#9636;</span> Reporte</button>
+        <button class="hbar-btn disabled" title="Pr&oacute;ximamente"><span class="hb-icon">&#10022;</span> Chat IA <span class="hbar-tag">PR&Oacute;X.</span></button>
+      </div>
+
+      <div class="header-toolbar-sep"></div>
+
+      <!-- Estado conexión -->
+      <div style="display:inline-flex;align-items:center;gap:6px;padding-right:10px;border-right:1px solid var(--border);">
+        <span class="conn-dot" id="connDot"></span>
+        <span id="connStatus" style="font:400 9px var(--mono);color:var(--muted);white-space:nowrap;">Esperando IFC</span>
+      </div>
+      <button class="hback" onclick="history.length > 1 ? history.back() : window.location.href='/'">&#8592; Volver</button>
     </div>
-
-    <div class="header-toolbar-sep"></div>
-
-    <!-- Grupo 4: Paneles -->
-    <div class="header-toolbar">
-      <button class="hbar-btn" id="btnProps"><span class="hb-icon">☰</span> Propiedades</button>
-      <button class="hbar-btn" id="btnReporte"><span class="hb-icon">▤</span> Reporte</button>
-      <button class="hbar-btn btn-claude" id="btnClaude"><span class="hb-icon">✦</span> Claude IA</button>
-    </div>
-
-    <button class="hback" onclick="history.length > 1 ? history.back() : window.location.href='/'" style="margin-left:auto;">← Volver</button>
   </header>
 
   <div class="main">
@@ -369,12 +450,10 @@ body.light-mode .hsub { color:#4a6080; }
     <div class="sidebar">
       <div class="sb-header">
         <div class="sb-title">Cargar modelo</div>
-        <div class="dropzone" id="dropzone">
-          <input type="file" id="fileInput" accept=".ifc" style="display:none">
-          <div class="dz-icon">📂</div>
-          <div class="dz-label">Arrastra tu IFC aquí</div>
-          <div class="dz-sub">o haz clic para seleccionar</div>
-        </div>
+        <input type="file" id="fileInput" accept=".ifc" style="display:none">
+        <button class="btn-cargar-ifc" id="btnCargarIfc" onclick="document.getElementById('fileInput').click()">
+          <span>&#128194;</span> Abrir archivo IFC
+        </button>
         <div class="progress-wrap" id="progressWrap">
           <div class="progress-label" id="progressLabel">Convirtiendo IFC... 0%</div>
           <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
@@ -393,28 +472,57 @@ body.light-mode .hsub { color:#4a6080; }
         </div>
       </div>
 
-      <div class="sb-controls">
-        <!-- Botones de navegación ocultos visualmente pero funcionales -->
-        <button class="ctrl-btn nav-hidden" id="btnFitSb"></button>
-        <button class="ctrl-btn nav-hidden" id="btnOrbitSb"></button>
-        <button class="ctrl-btn nav-hidden" id="btnPlanSb"></button>
-      </div>
+      <!-- NAVEGADOR DEL MODELO — eliminado del sidebar, ahora es panel lateral -->
+    </div>
 
-      <!-- NAVEGADOR DEL MODELO -->
-      <div id="navPanel" style="flex:1;display:flex;flex-direction:column;overflow:hidden;border-top:1px solid var(--border);min-height:0;">
-        <div class="nav-header">
-          <div class="nav-title">🗂 Navegador</div>
-        </div>
-        <div class="nav-body" id="navBody">
-          <div class="nav-empty">Carga un modelo IFC<br>para navegar su estructura</div>
-        </div>
+    <!-- PANEL ÁRBOL DEL PROYECTO — deslizante lateral -->
+    <div id="navPanel">
+      <div class="nav-header">
+        <div class="nav-title">&#127795; &Aacute;rbol del proyecto</div>
+        <button class="nav-close" onclick="window.toggleNav()" title="Cerrar">&#10005;</button>
+      </div>
+      <div class="nav-body" id="navBody">
+        <div class="nav-empty">Carga un modelo IFC<br>para ver el &aacute;rbol del proyecto</div>
       </div>
     </div>
 
     <!-- VISOR 3D -->
     <div class="viewer-wrap">
       <div id="container"></div>
-      <div id="overlay">
+
+      <!-- DROPZONE CENTRAL — clic o drag & drop, sin botón, estilo voxel360 -->
+      <div id="dropzoneCentral" onclick="document.getElementById('fileInput').click()">
+        <div class="dzc-box">
+          <svg width="56" height="64" viewBox="0 0 90 105" fill="none">
+            <g class="bit-wrap">
+              <polygon class="bit-face" points="45,4 75,28 15,28" fill="rgba(0,212,255,0.22)" stroke="#00d4ff" stroke-width="1.4" stroke-linejoin="round"/>
+              <polygon points="75,28 45,4 82,52" fill="rgba(0,212,255,0.10)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+              <polygon points="15,28 45,4 8,52"  fill="rgba(0,212,255,0.18)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+              <polygon points="15,28 75,28 82,52 45,68 8,52" fill="rgba(0,212,255,0.07)" stroke="#00d4ff" stroke-width="1.0" stroke-linejoin="round"/>
+              <polygon points="75,28 82,52 62,78" fill="rgba(0,212,255,0.15)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+              <polygon points="15,28 8,52 28,78"  fill="rgba(0,212,255,0.20)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+              <polygon points="8,52 28,78 45,100 45,68" fill="rgba(0,212,255,0.07)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+              <polygon points="82,52 62,78 45,100 45,68" fill="rgba(0,212,255,0.12)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+              <polygon points="28,78 62,78 45,100" fill="rgba(0,212,255,0.14)" stroke="#00d4ff" stroke-width="1.2" stroke-linejoin="round"/>
+              <line class="bit-edge1" x1="15" y1="28" x2="45" y2="4" stroke="#00d4ff" stroke-width="2.4" stroke-linecap="round"/>
+              <line class="bit-edge2" x1="45" y1="4" x2="75" y2="28" stroke="#00d4ff" stroke-width="1.6" stroke-linecap="round"/>
+              <circle class="bit-top"     cx="45" cy="4"   r="3"   fill="#00d4ff"/>
+              <circle class="bit-vtx-mid" cx="15" cy="28"  r="1.8" fill="#00d4ff" opacity="0.5"/>
+              <circle class="bit-vtx-mid" cx="75" cy="28"  r="1.8" fill="#00d4ff" opacity="0.5"/>
+              <circle class="bit-vtx-mid" cx="8"  cy="52"  r="1.4" fill="#00d4ff" opacity="0.35"/>
+              <circle class="bit-vtx-mid" cx="82" cy="52"  r="1.4" fill="#00d4ff" opacity="0.35"/>
+              <circle class="bit-vtx-bot" cx="45" cy="100" r="2.2" fill="#00d4ff" opacity="0.65"/>
+            </g>
+          </svg>
+          <div class="dzc-title">VoxelBIM</div>
+          <div style="font:400 10px var(--mono);color:var(--accent);letter-spacing:.2em;text-transform:uppercase;opacity:.7;">Visor &amp; Revisor IFC</div>
+          <div style="width:40px;height:1px;background:var(--border);"></div>
+          <div class="dzc-sub">Haz clic o arrastra un archivo IFC</div>
+          <div style="font:400 9px var(--mono);color:var(--muted);opacity:.45;">Formatos soportados: .ifc</div>
+        </div>
+      </div>
+
+      <div id="overlay" class="hidden">
         <div style="display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;">
           <div style="width:56px;height:56px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 0 30px rgba(0,212,255,.3);opacity:.9;">⬡</div>
           <div style="font:700 22px var(--mono);color:#e0f0ff;letter-spacing:.08em;text-transform:uppercase;margin-top:4px;">VoxelBIM</div>
@@ -462,7 +570,7 @@ body.light-mode .hsub { color:#4a6080; }
       </div>
 
       <!-- PANEL CLAUDE AI -->
-      <div id="claudePanel" style="width:280px">
+      <div id="claudePanel" style="width:280px;flex-shrink:0;background:var(--blue);border-right:1px solid var(--border);display:none;flex-direction:column;overflow-y:auto;overflow-x:hidden;position:relative;">
         <div class="pp-header">
           <span class="pp-title" style="color:#c77dff">✦ Claude AI</span>
           <button class="pp-close" id="claudeClose">✕</button>
@@ -482,9 +590,10 @@ body.light-mode .hsub { color:#4a6080; }
     </div>
   </div>
 
-  <footer style="text-align:center;padding:6px;font:400 9px var(--mono);color:var(--muted);border-top:1px solid var(--border);letter-spacing:.08em;flex-shrink:0;">
-    &copy; 2026 VoxelBIM &mdash; Coordinación BIM &mdash; MIT License
+  <footer style="text-align:center;padding:6px 24px;font:400 9px var(--mono);color:var(--muted);border-top:1px solid var(--border);letter-spacing:.08em;flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:8px;">
+    &copy; 2026 VoxelBIM &mdash; Coordinaci&oacute;n BIM &mdash; MIT License
     &nbsp;&middot;&nbsp; <span style="color:rgba(199,125,255,.4);">Claude AI v4.0</span>
+    &nbsp;&middot;&nbsp; <span style="opacity:.4;">Carlos Estay Ruggieri</span>
   </footer>
 
   <!-- MODAL CONFIGURACIÓN REPORTE -->
@@ -535,5 +644,44 @@ body.light-mode .hsub { color:#4a6080; }
   </div>
 
   <script type="module" src="/src/main.js"></script>
+
+  <script>
+  /* ══ BIT — animación aleatoria + click rojo ══ */
+  (function() {
+    const anims = [
+      'bit-spin 4s cubic-bezier(.45,0,.55,1) infinite',
+      'bit-float 3s ease-in-out infinite',
+      'bit-warp 2s ease-in-out infinite',
+      'bit-tremble .28s ease-in-out infinite',
+      'bit-rainbow 3s linear infinite',
+      'bit-spin 4s cubic-bezier(.45,0,.55,1) infinite, bit-float 3s ease-in-out infinite',
+    ];
+    document.querySelectorAll('.bit-wrap').forEach(el => {
+      const pick = anims[Math.floor(Math.random() * anims.length)];
+      el._bitAnim = pick;
+      el.style.animation = pick;
+      el.style.transformOrigin = '45px 52px';
+      el.addEventListener('click', function() {
+        const isNo = this.classList.contains('bit-no-state');
+        if (isNo) {
+          this.classList.remove('bit-no-state');
+          this.style.animation = this._bitAnim;
+        } else {
+          this.classList.add('bit-no-state');
+          this.style.animation = 'bit-no 1.4s ease-in-out infinite';
+        }
+      });
+    });
+  })();
+
+  /* ══ NAVEGADOR — toggle panel lateral ══ */
+  window.toggleNav = function() {
+    const panel = document.getElementById('navPanel');
+    const btn   = document.getElementById('btnNav');
+    const isOpen = panel.classList.contains('open');
+    panel.classList.toggle('open');
+    if (btn) btn.classList.toggle('active', !isOpen);
+  };
+  </script>
 </body>
 </html>
