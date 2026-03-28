@@ -30,6 +30,43 @@
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
 html,body { height:100%; }
 body { font-family:var(--sans); background:var(--bg); color:var(--text); display:flex; flex-direction:column; min-height:100vh; }
+/* ══ BIT ANIMATIONS ══ */
+@keyframes bit-spin       { 0%{transform:rotate(0deg) scaleX(1)} 25%{transform:rotate(90deg) scaleX(.45)} 50%{transform:rotate(180deg) scaleX(1)} 75%{transform:rotate(270deg) scaleX(.45)} 100%{transform:rotate(360deg) scaleX(1)} }
+@keyframes bit-float      { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-6px)} }
+@keyframes bit-warp       { 0%,100%{transform:scale(1,1)} 25%{transform:scale(1.25,.72)} 50%{transform:scale(.72,1.25)} 75%{transform:scale(1.1,.88)} }
+@keyframes bit-tremble    { 0%,100%{transform:translate(0,0) rotate(0deg)} 20%{transform:translate(-2px,1px) rotate(-4deg)} 40%{transform:translate(2px,-1px) rotate(4deg)} 60%{transform:translate(-1px,2px) rotate(-3deg)} 80%{transform:translate(1px,-2px) rotate(3deg)} }
+@keyframes bit-rainbow    { 0%{filter:hue-rotate(0deg)} 100%{filter:hue-rotate(360deg)} }
+@keyframes bit-no         { 0%,100%{transform:scale(1) rotate(0deg)} 50%{transform:scale(1.18) rotate(180deg)} }
+@keyframes bit-bounce     { 0%,100%{transform:translateY(0) scaleY(1) scaleX(1)} 40%{transform:translateY(-18px) scaleY(1.08) scaleX(.94)} 70%{transform:translateY(5px) scaleY(.88) scaleX(1.08)} 85%{transform:translateY(-5px) scaleY(1.03) scaleX(.98)} }
+@keyframes bit-swing      { 0%,100%{transform:rotate(0deg)} 25%{transform:rotate(18deg)} 75%{transform:rotate(-18deg)} }
+@keyframes bit-orbit      { 0%{transform:translate(0,0)} 25%{transform:translate(8px,-5px)} 50%{transform:translate(0,-10px)} 75%{transform:translate(-8px,-5px)} 100%{transform:translate(0,0)} }
+@keyframes bit-shake-x    { 0%,100%{transform:translateX(0)} 15%{transform:translateX(-5px)} 30%{transform:translateX(5px)} 45%{transform:translateX(-4px)} 60%{transform:translateX(4px)} 75%{transform:translateX(-2px)} 90%{transform:translateX(2px)} }
+@keyframes bit-breathe    { 0%,100%{transform:scale(1)} 50%{transform:scale(1.18)} }
+@keyframes bit-squish     { 0%,100%{transform:scale(1,1)} 30%{transform:scale(1.45,.62)} 60%{transform:scale(.7,1.4)} 80%{transform:scale(1.15,.88)} }
+@keyframes bit-morph      { 0%,100%{transform:skewX(0deg)} 25%{transform:skewX(18deg)} 75%{transform:skewX(-18deg)} }
+@keyframes bit-glitch     { 0%,89%,100%{transform:translate(0,0);filter:none} 90%{transform:translate(-4px,2px);filter:hue-rotate(90deg)} 91%{transform:translate(4px,-2px);filter:hue-rotate(200deg) brightness(1.4)} 92%{transform:translate(-2px,1px);filter:hue-rotate(280deg)} 93%{transform:translate(0,0);filter:none} 96%{transform:translate(3px,-1px);filter:brightness(1.6)} 97%{transform:translate(0,0);filter:none} }
+@keyframes bit-flicker    { 0%,19%,21%,54%,56%,79%,81%,100%{opacity:1} 20%{opacity:.12} 55%{opacity:.35} 80%{opacity:.04} }
+@keyframes bit-drunk      { 0%{transform:translate(0,0) rotate(0deg)} 20%{transform:translate(5px,-6px) rotate(9deg)} 40%{transform:translate(-4px,-9px) rotate(-6deg)} 60%{transform:translate(-6px,-3px) rotate(7deg)} 80%{transform:translate(4px,-7px) rotate(-9deg)} 100%{transform:translate(0,0) rotate(0deg)} }
+@keyframes bit-hyperspace { 0%,100%{transform:scaleX(1) scaleY(1);opacity:1} 35%{transform:scaleX(.03) scaleY(1.1);opacity:.8} 36%{transform:scaleX(.03) scaleY(1.1);opacity:.1} 37%{transform:scaleX(1.4) scaleY(.75);opacity:1} 65%{transform:scaleX(1) scaleY(1)} }
+@keyframes bit-explode    { 0%,100%{transform:scale(1);opacity:1} 25%{transform:scale(1.9);opacity:.5} 26%{transform:scale(.05);opacity:.1} 50%{transform:scale(1.1);opacity:.95} }
+@keyframes bit-nod        { 0%,100%{transform:rotate(0deg)} 20%{transform:rotate(-6deg)} 40%{transform:rotate(5deg)} 60%{transform:rotate(-3deg)} }
+@keyframes bit-scan       { 0%,100%{transform:translateY(-10px);opacity:.5} 50%{transform:translateY(10px);opacity:1} }
+@keyframes bit-pulse   { 0%,100%{opacity:.95} 50%{opacity:.15} }
+@keyframes bit-edge-a  { 0%,100%{opacity:1;stroke-width:2.4} 45%{opacity:.1;stroke-width:.4} 65%{opacity:.9;stroke-width:2.0} }
+@keyframes bit-edge-b  { 0%,100%{opacity:1;stroke-width:1.6} 45%{opacity:.1;stroke-width:.4} 65%{opacity:.8;stroke-width:1.4} }
+@keyframes bit-glow-f  { 0%,100%{opacity:.22} 50%{opacity:.55} }
+@keyframes bit-vtx-m   { 0%,100%{opacity:.5} 50%{opacity:.08} }
+@keyframes bit-vtx-b   { 0%,100%{opacity:.65} 50%{opacity:.15} }
+.bit-wrap    { transform-origin:45px 52px; cursor:pointer; }
+.bit-top     { animation:bit-pulse  2s ease-in-out infinite; }
+.bit-ea      { animation:bit-edge-a 2s ease-in-out infinite; }
+.bit-eb      { animation:bit-edge-b 2s ease-in-out infinite .15s; }
+.bit-face    { animation:bit-glow-f 2s ease-in-out infinite; }
+.bit-vtx-mid { animation:bit-vtx-m  2s ease-in-out infinite; }
+.bit-vtx-bot { animation:bit-vtx-b  2s ease-in-out infinite .3s; }
+.bit-wrap.bit-no-state polygon { stroke:#ff3d57 !important; transition:stroke .3s, fill .3s; }
+.bit-wrap.bit-no-state line    { stroke:#ff3d57 !important; transition:stroke .3s; }
+.bit-wrap.bit-no-state circle  { fill:#ff3d57 !important;   transition:fill .3s; }
 /* LOGIN */
 #loginScreen { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:9999; padding:40px; }
 #loginScreen.hidden { display:none; }
@@ -67,8 +104,8 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
 @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
 /* PORTAL */
 #portal { display:none; flex-direction:column; min-height:100vh; }
-.portal-header { background:var(--navy); padding:11px 24px; display:flex; align-items:center; gap:14px; border-bottom:2px solid var(--accent); flex-shrink:0; }
-.portal-icon { width:34px; height:34px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:16px; }
+.portal-header { background:var(--navy); padding:16px 24px; min-height:72px; display:flex; align-items:center; gap:14px; border-bottom:2px solid var(--accent); flex-shrink:0; }
+.portal-icon { background:none; overflow:visible; width:34px; height:34px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .portal-main { flex:1; display:flex; align-items:center; justify-content:center; padding:40px; }
 .portal-grid { width:100%; max-width:960px; }
 .portal-label { font:700 9px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.2em; margin-bottom:8px; text-align:center; }
@@ -111,26 +148,27 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
       <div class="login-badge"><div class="login-badge-dot"></div><span>VoxelBIM</span></div>
       <div class="login-headline">
         <div style="display:flex;align-items:center;gap:22px;line-height:1;">
-          <div style="flex-shrink:0;width:90px;height:90px;position:relative;">
-            <style>
-              @keyframes voxel-float { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-5px)} }
-              @keyframes voxel-glow  { 0%,100%{filter:drop-shadow(0 0 8px rgba(0,212,255,.4))} 50%{filter:drop-shadow(0 0 20px rgba(0,212,255,.8))} }
-              @keyframes voxel-edge  { 0%,100%{opacity:.5} 50%{opacity:1} }
-              .voxel-wrap { animation: voxel-float 3.5s ease-in-out infinite, voxel-glow 3.5s ease-in-out infinite; }
-              .voxel-edge-top { animation: voxel-edge 3.5s ease-in-out infinite; }
-            </style>
-            <svg class="voxel-wrap" width="90" height="90" viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <!-- cara superior -->
-              <polygon points="45,8 80,27 45,46 10,27" fill="rgba(0,212,255,0.18)" stroke="rgba(0,212,255,0.6)" stroke-width="1.2"/>
-              <!-- cara izquierda -->
-              <polygon points="10,27 45,46 45,82 10,63" fill="rgba(0,212,255,0.07)" stroke="rgba(0,212,255,0.35)" stroke-width="1.2"/>
-              <!-- cara derecha -->
-              <polygon points="80,27 45,46 45,82 80,63" fill="rgba(0,212,255,0.13)" stroke="rgba(0,212,255,0.45)" stroke-width="1.2"/>
-              <!-- arista vertical central -->
-              <line x1="45" y1="46" x2="45" y2="82" stroke="rgba(0,212,255,0.25)" stroke-width="1"/>
-              <!-- aristas superiores con brillo -->
-              <line class="voxel-edge-top" x1="10" y1="27" x2="45" y2="8" stroke="rgba(0,212,255,0.9)" stroke-width="1.8"/>
-              <line class="voxel-edge-top" x1="45" y1="8" x2="80" y2="27" stroke="rgba(0,212,255,0.65)" stroke-width="1.4"/>
+          <div style="flex-shrink:0;width:90px;height:90px;display:flex;align-items:center;justify-content:center;">
+            <svg width="90" height="90" viewBox="0 0 90 105" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g class="bit-wrap">
+                <polygon class="bit-face" points="45,4 75,28 15,28" fill="rgba(0,212,255,0.22)" stroke="#00d4ff" stroke-width="1.4" stroke-linejoin="round"/>
+                <polygon points="75,28 45,4 82,52" fill="rgba(0,212,255,0.10)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+                <polygon points="15,28 45,4 8,52"  fill="rgba(0,212,255,0.18)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+                <polygon points="15,28 75,28 82,52 45,68 8,52" fill="rgba(0,212,255,0.07)" stroke="#00d4ff" stroke-width="1.0" stroke-linejoin="round"/>
+                <polygon points="75,28 82,52 62,78" fill="rgba(0,212,255,0.15)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+                <polygon points="15,28 8,52 28,78"  fill="rgba(0,212,255,0.20)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+                <polygon points="8,52 28,78 45,100 45,68" fill="rgba(0,212,255,0.07)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+                <polygon points="82,52 62,78 45,100 45,68" fill="rgba(0,212,255,0.12)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+                <polygon points="28,78 62,78 45,100" fill="rgba(0,212,255,0.14)" stroke="#00d4ff" stroke-width="1.2" stroke-linejoin="round"/>
+                <line class="bit-ea" x1="15" y1="28" x2="45" y2="4" stroke="#00d4ff" stroke-width="2.4" stroke-linecap="round"/>
+                <line class="bit-eb" x1="45" y1="4" x2="75" y2="28" stroke="#00d4ff" stroke-width="1.6" stroke-linecap="round"/>
+                <circle class="bit-top"     cx="45" cy="4"   r="3"   fill="#00d4ff"/>
+                <circle class="bit-vtx-mid" cx="15" cy="28"  r="1.8" fill="#00d4ff" opacity="0.5"/>
+                <circle class="bit-vtx-mid" cx="75" cy="28"  r="1.8" fill="#00d4ff" opacity="0.5"/>
+                <circle class="bit-vtx-mid" cx="8"  cy="52"  r="1.4" fill="#00d4ff" opacity="0.35"/>
+                <circle class="bit-vtx-mid" cx="82" cy="52"  r="1.4" fill="#00d4ff" opacity="0.35"/>
+                <circle class="bit-vtx-bot" cx="45" cy="100" r="2.2" fill="#00d4ff" opacity="0.65"/>
+              </g>
             </svg>
           </div>
           <span>Voxel<br><span style="color:var(--accent);text-shadow:0 0 40px rgba(0,212,255,.4);">BIM</span></span>
@@ -175,10 +213,32 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
 <!-- PORTAL -->
 <div id="portal">
   <div class="portal-header">
-    <div class="portal-icon">🧊</div>
+    <div class="portal-icon">
+      <svg width="34" height="34" viewBox="0 0 90 105" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g class="bit-wrap">
+          <polygon class="bit-face" points="45,4 75,28 15,28" fill="rgba(0,212,255,0.22)" stroke="#00d4ff" stroke-width="1.4" stroke-linejoin="round"/>
+          <polygon points="75,28 45,4 82,52" fill="rgba(0,212,255,0.10)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+          <polygon points="15,28 45,4 8,52"  fill="rgba(0,212,255,0.18)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+          <polygon points="15,28 75,28 82,52 45,68 8,52" fill="rgba(0,212,255,0.07)" stroke="#00d4ff" stroke-width="1.0" stroke-linejoin="round"/>
+          <polygon points="75,28 82,52 62,78" fill="rgba(0,212,255,0.15)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+          <polygon points="15,28 8,52 28,78"  fill="rgba(0,212,255,0.20)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+          <polygon points="8,52 28,78 45,100 45,68" fill="rgba(0,212,255,0.07)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+          <polygon points="82,52 62,78 45,100 45,68" fill="rgba(0,212,255,0.12)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+          <polygon points="28,78 62,78 45,100" fill="rgba(0,212,255,0.14)" stroke="#00d4ff" stroke-width="1.2" stroke-linejoin="round"/>
+          <line class="bit-ea" x1="15" y1="28" x2="45" y2="4" stroke="#00d4ff" stroke-width="2.4" stroke-linecap="round"/>
+          <line class="bit-eb" x1="45" y1="4" x2="75" y2="28" stroke="#00d4ff" stroke-width="1.6" stroke-linecap="round"/>
+          <circle class="bit-top"     cx="45" cy="4"   r="3"   fill="#00d4ff"/>
+          <circle class="bit-vtx-mid" cx="15" cy="28"  r="1.8" fill="#00d4ff" opacity="0.5"/>
+          <circle class="bit-vtx-mid" cx="75" cy="28"  r="1.8" fill="#00d4ff" opacity="0.5"/>
+          <circle class="bit-vtx-mid" cx="8"  cy="52"  r="1.4" fill="#00d4ff" opacity="0.35"/>
+          <circle class="bit-vtx-mid" cx="82" cy="52"  r="1.4" fill="#00d4ff" opacity="0.35"/>
+          <circle class="bit-vtx-bot" cx="45" cy="100" r="2.2" fill="#00d4ff" opacity="0.65"/>
+        </g>
+      </svg>
+    </div>
     <div>
       <div style="font:600 13px var(--mono);color:#e0f0ff;letter-spacing:.05em;text-transform:uppercase;">VoxelBIM</div>
-      <div style="font:400 10px var(--mono);color:var(--muted);margin-top:1px;">Carlos Estay Ruggieri</div>
+      <div id="headerUserSub" style="font:400 10px var(--mono);color:var(--muted);margin-top:1px;">—</div>
     </div>
     <span id="headerPlanBadge" class="header-plan"></span>
     <button class="btn-logout" onclick="cerrarSesion()">Cerrar sesión</button>
@@ -206,7 +266,7 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
           </div>
           <div class="mc-tags"><span class="mc-tag">Estado</span><span class="mc-tag tag-beta">Próximamente</span></div>
         </a>
-        <div class="module-card disabled locked">
+        <div id="linkReportesDemo" class="module-card disabled locked">
           <div class="mc-icon" style="background:rgba(245,197,24,.06);border:1px solid var(--border);">📊</div>
           <div>
             <div class="mc-title">Generación de Reportes</div>
@@ -258,14 +318,14 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
           </div>
           <div class="mc-tags"><span class="mc-tag tag-live">Activo</span><span class="mc-tag" style="background:rgba(0,212,255,.06);color:var(--muted);border:1px solid var(--border);">RVT · BIM 360</span></div>
         </a>
-        <div class="module-card disabled locked">
+        <a id="linkReportesPro" href="/app/revisor.html" class="module-card" onclick="abrirModulo('/app/revisor.html'); return false;">
           <div class="mc-icon" style="background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.2);">📊</div>
           <div>
             <div class="mc-title">Generación de Reportes</div>
             <div class="mc-desc">Reportes detallados por disciplina, fecha y proyecto en formato estándar.</div>
           </div>
-          <div class="mc-tags"><span class="mc-tag tag-soon">Próximamente</span></div>
-        </div>
+          <div class="mc-tags"><span class="mc-tag tag-live">Activo</span><span class="mc-tag" style="background:rgba(0,212,255,.06);color:var(--muted);border:1px solid var(--border);">IFC · PDF</span></div>
+        </a>
         <a id="linkInventario" href="/app/inventario.html" class="module-card" onclick="abrirModulo('/app/inventario.html'); return false;">
           <div class="mc-icon" style="background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.2);">📤</div>
           <div>
@@ -347,6 +407,9 @@ function mostrarPortal(plan) {
   var portal = document.getElementById('portal');
   portal.style.display = 'flex';
   var isPro = plan === 'pro';
+  // Subtítulo de usuario en header
+  var userLabels = { 'pro': 'admin', 'demo_explorer': 'demo1', 'demo_autodesk': 'demo2' };
+  document.getElementById('headerUserSub').textContent = userLabels[plan] || plan;
   // Badge en header
   var hb = document.getElementById('headerPlanBadge');
   hb.textContent = isPro ? '★ Pro' : 'Demo';
@@ -368,13 +431,16 @@ function mostrarPortal(plan) {
   if (!isPro) {
     var cardExp = document.getElementById('linkExplorerDemo');
     var cardAut = document.getElementById('linkAutodeskDemo');
-    
+    var cardRep = document.getElementById('linkReportesDemo');
+
     if (plan === 'demo_explorer') {
       activarCard(cardExp, getVisorUrl(), 'Activo');
       bloquearCard(cardAut, 'Solo Pro');
+      bloquearCard(cardRep, 'Solo Pro');
     } else {
       bloquearCard(cardExp, 'Solo Pro');
       activarCard(cardAut, '/app/autodesk.html', 'Activo');
+      activarCard(cardRep, '/app/revisor.html', 'Activo');
     }
   }
 }
@@ -414,6 +480,48 @@ function cerrarSesion() {
   }
   ['loginUser','loginPass'].forEach(function(id){
     document.getElementById(id).addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+  });
+})();
+
+/* ══ BIT — animación aleatoria + click rojo ══ */
+(function() {
+  const anims = [
+    'bit-spin 4s cubic-bezier(.45,0,.55,1) infinite',
+    'bit-float 3s ease-in-out infinite',
+    'bit-warp 2s ease-in-out infinite',
+    'bit-tremble .28s ease-in-out infinite',
+    'bit-rainbow 3s linear infinite',
+    'bit-spin 4s cubic-bezier(.45,0,.55,1) infinite, bit-float 3s ease-in-out infinite',
+    'bit-bounce .9s cubic-bezier(.36,.07,.19,.97) infinite',
+    'bit-swing 2.5s ease-in-out infinite',
+    'bit-orbit 3s linear infinite',
+    'bit-shake-x .5s ease-in-out infinite',
+    'bit-breathe 2.5s ease-in-out infinite',
+    'bit-squish 1.8s ease-in-out infinite',
+    'bit-morph 2s ease-in-out infinite',
+    'bit-glitch 3s steps(1) infinite',
+    'bit-flicker 2.5s steps(1) infinite',
+    'bit-drunk 4s ease-in-out infinite',
+    'bit-hyperspace 3s ease-in-out infinite',
+    'bit-explode 2s ease-in-out infinite',
+    'bit-nod 1.2s ease-in-out infinite',
+    'bit-scan 2s ease-in-out infinite',
+  ];
+  document.querySelectorAll('.bit-wrap').forEach(function(el) {
+    var pick = anims[Math.floor(Math.random() * anims.length)];
+    el._bitAnim = pick;
+    el.style.animation = pick;
+    el.style.transformOrigin = '45px 52px';
+    el.addEventListener('click', function() {
+      var isNo = this.classList.contains('bit-no-state');
+      if (isNo) {
+        this.classList.remove('bit-no-state');
+        this.style.animation = this._bitAnim;
+      } else {
+        this.classList.add('bit-no-state');
+        this.style.animation = 'bit-no 1.4s ease-in-out infinite';
+      }
+    });
   });
 })();
 </script>

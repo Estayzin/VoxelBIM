@@ -1,0 +1,1102 @@
+﻿<!--
+  ============================================================
+  Revisor IFC — Módulo de revisión de modelos
+  Autor:    Carlos Estay Ruggieri
+  Contacto: c.estay@outlook.com
+  Rol:      Coordinación BIM
+  Versión:  2.0 | 2026
+  Repo:     https://github.com/Estayzin/Revisor-IFC
+  Licencia: MIT — ver LICENSE en el repositorio
+  ============================================================
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Carlos Estay Ruggieri">
+<meta name="description" content="Revisor IFC — Verificación y reporte de modelos IFC por especialidad según estándares PlanBIM Chile.">
+<meta name="copyright" content="Carlos Estay Ruggieri, 2026">
+<title>VoxelBIM — Generación de Reportes</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#060d18; --blue:#0a1628; --accent:#00d4ff; --green:#00c853;
+  --bg:#0a0f1e; --card:#0d1526; --text:#c8d8f0; --muted:#4a6080; --border:#1a2a40;
+  --mono:'JetBrains Mono',monospace; --sans:'Syne',sans-serif;
+  --accent2:#7c4dff; --warn:#ff6b35; --red:#ff3d57;
+}
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html, body { height:100%; overflow:hidden; }
+body { font-family:var(--sans); background:var(--bg); color:var(--text); display:flex; flex-direction:column; height:100vh; font-size:13px; letter-spacing:.01em; }
+
+/* HEADER */
+header { background:var(--navy); padding:16px 24px; min-height:72px; display:flex; align-items:center; gap:14px; border-bottom:2px solid var(--accent); flex-shrink:0; box-shadow:0 2px 20px rgba(0,212,255,.08); }
+.hicon { background:none; overflow:visible; width:34px; height:34px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.htitle { font:700 13px var(--mono); color:#e0f0ff; letter-spacing:.05em; text-transform:uppercase; }
+.hsub   { font:400 10px var(--mono); color:var(--muted); margin-top:1px; }
+.hback  { padding:5px 12px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:4px; font:600 9px var(--mono); text-transform:uppercase; letter-spacing:.1em; text-decoration:none; transition:all .15s; cursor:pointer; white-space:nowrap; }
+.hback:hover { border-color:var(--accent); color:var(--accent); }
+/* Bit animations */
+@keyframes bit-pulse  { 0%,100%{opacity:.95} 50%{opacity:.15} }
+@keyframes bit-edge-a { 0%,100%{opacity:1;stroke-width:2.4} 45%{opacity:.1;stroke-width:.4} 65%{opacity:.9;stroke-width:2.0} }
+@keyframes bit-edge-b { 0%,100%{opacity:1;stroke-width:1.6} 45%{opacity:.1;stroke-width:.4} 65%{opacity:.8;stroke-width:1.4} }
+@keyframes bit-glow   { 0%,100%{opacity:.22} 50%{opacity:.55} }
+@keyframes bit-vtx    { 0%,100%{opacity:.5}  50%{opacity:.08} }
+@keyframes bit-vtx2   { 0%,100%{opacity:.65} 50%{opacity:.15} }
+.bit-wrap    { transform-origin:45px 52px; }
+.bit-top     { animation:bit-pulse  2s ease-in-out infinite; }
+.bit-edge1   { animation:bit-edge-a 2s ease-in-out infinite; }
+.bit-edge2   { animation:bit-edge-b 2s ease-in-out infinite .15s; }
+.bit-face    { animation:bit-glow   2s ease-in-out infinite; }
+.bit-vtx-mid { animation:bit-vtx   2s ease-in-out infinite; }
+.bit-vtx-bot { animation:bit-vtx2  2s ease-in-out infinite .3s; }
+
+/* WORKSPACE */
+.workspace { display:flex; flex:1; overflow:hidden; }
+
+/* PANEL IZQUIERDO */
+.panel-left { width:300px; flex-shrink:0; display:flex; flex-direction:column; border-right:1px solid var(--border); background:var(--blue); overflow-y:auto; }
+.sb-header { padding:12px 16px; border-bottom:1px solid var(--border); flex-shrink:0; display:flex; flex-direction:column; gap:8px; }
+.sb-title { font:700 9px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.2em; }
+.btn-cargar-ifc { width:100%; padding:10px; background:var(--accent); color:#000; border:none; border-radius:6px; font:700 11px var(--mono); cursor:pointer; letter-spacing:.08em; text-transform:uppercase; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:8px; }
+.btn-cargar-ifc:hover { background:#00bcd4; box-shadow:0 0 20px rgba(0,212,255,.3); }
+.btn-cargar-ifc.cargado { background:rgba(0,200,83,.15); color:var(--green); border:1px solid rgba(0,200,83,.3); }
+.finfo { display:none; }
+.finfo.show { display:block; }
+.fname { font:600 11px var(--mono); color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; letter-spacing:.02em; }
+.fmeta { font:400 9px var(--mono); color:var(--muted); margin-top:2px; letter-spacing:.03em; }
+.pl { padding:16px; display:flex; flex-direction:column; gap:12px; }
+
+.btn-gen { width:100%; padding:10px; background:linear-gradient(135deg,var(--green),#00a844); color:#000; border:none; border-radius:6px; font:700 11px var(--mono); cursor:pointer; transition:all .15s; text-transform:uppercase; letter-spacing:.1em; box-shadow:0 0 15px rgba(0,200,83,.2); }
+.btn-gen:hover:not(:disabled) { box-shadow:0 0 25px rgba(0,200,83,.4); transform:translateY(-1px); }
+.btn-gen:disabled { background:#1a2a40; color:var(--muted); cursor:not-allowed; box-shadow:none; }
+
+.sbox { display:none; background:var(--navy); border-radius:6px; overflow:hidden; border:1px solid var(--border); }
+.sbox.show { display:block; }
+.shdr { padding:7px 12px; background:rgba(0,212,255,.05); font:600 9px var(--mono); color:var(--accent); text-transform:uppercase; letter-spacing:.15em; display:flex; align-items:center; gap:6px; }
+.slog { padding:8px 12px; font:400 10px var(--mono); color:#4a8090; max-height:100px; overflow-y:auto; line-height:1.9; }
+.log-ok{color:#00c853} .log-warn{color:#ff6b35} .log-error{color:#ff3d57} .log-info{color:#00d4ff}
+.spin { width:11px; height:11px; border:2px solid rgba(138,171,204,.3); border-top-color:#8aabcc; border-radius:50%; animation:spin .8s linear infinite; display:none; }
+.spin.show { display:inline-block; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.pwrap { height:3px; background:rgba(255,255,255,.08); display:none; }
+.pwrap.show { display:block; }
+.pbar { height:100%; background:linear-gradient(90deg,var(--accent),#00bcd4); width:0%; transition:width .3s ease; }
+
+.res { display:none; }
+.res.show { display:block; }
+.res-hdr { font:700 10px var(--sans); text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:7px; }
+.rcard { background:var(--card); border-radius:6px; overflow:hidden; box-shadow:0 1px 8px rgba(0,0,0,.3); margin-bottom:5px; display:flex; align-items:stretch; cursor:pointer; transition:all .15s; border:1px solid var(--border); }
+.rcard:hover { border-color:var(--accent); box-shadow:0 0 12px rgba(0,212,255,.15); transform:translateX(2px); }
+.rcard.active { border-color:var(--accent); box-shadow:0 0 15px rgba(0,212,255,.2); }
+.racc { width:3px; align-self:stretch; background:var(--accent); flex-shrink:0; }
+.rbody { padding:8px 11px; flex:1; min-width:0; }
+.rname { font:600 11px var(--mono); color:var(--text); letter-spacing:.03em; }
+.rmeta { font:400 9px var(--mono); color:var(--muted); margin-top:2px; letter-spacing:.05em; }
+
+/* PANEL DERECHO */
+.panel-right { flex:1; display:flex; flex-direction:column; overflow:hidden; background:var(--bg); position:relative; }
+.view-content { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+/* TOOLBAR DEL REPORTE */
+.vtoolbar { display:none; padding:7px 14px; background:var(--navy); align-items:center; gap:10px; flex-shrink:0; border-bottom:1px solid var(--border); }
+.vtoolbar.show { display:flex; }
+.vt-title { font:600 11px var(--mono); color:var(--text); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; letter-spacing:.05em; text-transform:uppercase; }
+.btn-vdl { padding:5px 12px; background:transparent; color:var(--accent); border:1px solid var(--accent); border-radius:4px; font:600 10px var(--mono); cursor:pointer; transition:all .15s; flex-shrink:0; text-transform:uppercase; letter-spacing:.08em; }
+.btn-vdl:hover { background:rgba(0,212,255,.1); }
+
+.vframe { flex:1; border:none; width:100%; display:none; }
+.vframe.show { display:block; }
+
+/* DROPZONE CENTRAL — igual a voxelbim */
+#dropzoneCentral { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:25; cursor:pointer; transition:background .2s; pointer-events:auto; }
+#dropzoneCentral.over { background:rgba(0,212,255,.05); }
+#dropzoneCentral.hidden { display:none; }
+.dzc-box { border:1px dashed rgba(0,212,255,.25); border-radius:16px; padding:48px 56px; display:flex; flex-direction:column; align-items:center; gap:14px; background:rgba(6,13,24,.55); transition:all .2s; pointer-events:none; }
+#dropzoneCentral.over .dzc-box { border-color:var(--accent); background:rgba(0,212,255,.07); }
+.dzc-title { font:700 16px var(--mono); color:#e0f0ff; letter-spacing:.08em; text-transform:uppercase; }
+.dzc-sub   { font:400 10px var(--mono); color:var(--muted); letter-spacing:.12em; text-transform:uppercase; }
+
+/* pasos de configuracion */
+.step-label{font:700 9px var(--mono);text-transform:uppercase;letter-spacing:.15em;color:var(--muted);margin-bottom:6px;}
+.sel-esp{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:4px;font:500 11px var(--mono);color:var(--text);background:var(--navy);cursor:pointer;outline:none;letter-spacing:.03em;}
+.sel-esp:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,212,255,.1);}
+.ents-toolbar{display:flex;gap:5px;margin-bottom:7px;}
+.btn-chk{padding:4px 10px;border:1px solid var(--border);border-radius:3px;font:600 9px var(--mono);color:var(--muted);background:transparent;cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.08em;}
+.btn-chk:hover{border-color:var(--accent);color:var(--accent);}
+.ents-list{display:flex;flex-direction:column;gap:3px;max-height:220px;overflow-y:auto;}
+.ent-item{display:flex;align-items:center;gap:8px;padding:6px 9px;background:var(--navy);border-radius:4px;border:1px solid var(--border);cursor:pointer;transition:all .15s;user-select:none;}
+.ent-item:hover{border-color:var(--accent);background:rgba(0,212,255,.04);}
+.ent-item input[type=checkbox]{width:13px;height:13px;accent-color:var(--accent);flex-shrink:0;cursor:pointer;}
+.ent-name{font:600 11px var(--mono);color:var(--text);letter-spacing:.02em;}
+.ent-cls{font:400 9px var(--mono);color:var(--muted);margin-top:1px;letter-spacing:.04em;}
+/* CONFIG REVISIONES */
+.cfg-section{background:var(--navy);border:1px solid var(--border);border-radius:5px;padding:8px 10px;}
+.cfg-title{font:600 9px var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.12em;margin-bottom:7px;}
+.cfg-field{flex:1;}
+.cfg-field label,.cfg-field-full label{display:block;font:500 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;}
+.cfg-field input,.cfg-field-full input{width:100%;padding:5px 8px;background:var(--blue);border:1px solid var(--border);border-radius:3px;font:400 11px var(--mono);color:var(--text);outline:none;text-align:center;}
+.cfg-field input:focus,.cfg-field-full input:focus{border-color:var(--accent);}
+.cfg-field-full{width:100%;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hicon">
+    <svg width="36" height="36" viewBox="0 0 90 105" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g class="bit-wrap">
+        <polygon class="bit-face" points="45,4 75,28 15,28" fill="rgba(0,212,255,0.22)" stroke="#00d4ff" stroke-width="1.4" stroke-linejoin="round"/>
+        <polygon points="75,28 45,4 82,52" fill="rgba(0,212,255,0.10)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+        <polygon points="15,28 45,4 8,52" fill="rgba(0,212,255,0.18)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+        <polygon points="15,28 75,28 82,52 45,68 8,52" fill="rgba(0,212,255,0.07)" stroke="#00d4ff" stroke-width="1.0" stroke-linejoin="round"/>
+        <polygon points="75,28 82,52 62,78" fill="rgba(0,212,255,0.15)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+        <polygon points="15,28 8,52 28,78" fill="rgba(0,212,255,0.20)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+        <polygon points="8,52 28,78 45,100 45,68" fill="rgba(0,212,255,0.07)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+        <polygon points="82,52 62,78 45,100 45,68" fill="rgba(0,212,255,0.12)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+        <polygon points="28,78 62,78 45,100" fill="rgba(0,212,255,0.14)" stroke="#00d4ff" stroke-width="1.2" stroke-linejoin="round"/>
+        <line class="bit-edge1" x1="15" y1="28" x2="45" y2="4" stroke="#00d4ff" stroke-width="2.4" stroke-linecap="round"/>
+        <line class="bit-edge2" x1="45" y1="4" x2="75" y2="28" stroke="#00d4ff" stroke-width="1.6" stroke-linecap="round"/>
+        <circle class="bit-top" cx="45" cy="4" r="3" fill="#00d4ff"/>
+        <circle class="bit-vtx-mid" cx="15" cy="28" r="1.8" fill="#00d4ff" opacity="0.5"/>
+        <circle class="bit-vtx-mid" cx="75" cy="28" r="1.8" fill="#00d4ff" opacity="0.5"/>
+        <circle class="bit-vtx-mid" cx="8" cy="52" r="1.4" fill="#00d4ff" opacity="0.35"/>
+        <circle class="bit-vtx-mid" cx="82" cy="52" r="1.4" fill="#00d4ff" opacity="0.35"/>
+        <circle class="bit-vtx-bot" cx="45" cy="100" r="2.2" fill="#00d4ff" opacity="0.65"/>
+      </g>
+    </svg>
+  </div>
+  <div>
+    <div class="htitle">VoxelBIM</div>
+    <div class="hsub">Generaci&oacute;n de Reportes &middot; IFC</div>
+  </div>
+  <button class="hback" style="margin-left:auto;" onclick="history.length > 1 ? history.back() : window.location.href='/'">&#8592; Volver</button>
+</header>
+
+<div class="workspace">
+
+  <!-- PANEL IZQUIERDO -->
+  <div class="panel-left">
+    <div class="sb-header">
+      <div class="sb-title">Cargar modelo IFC</div>
+      <input type="file" id="fi" accept=".ifc" style="display:none">
+      <button class="btn-cargar-ifc" id="btnCargarIfc" onclick="document.getElementById('fi').click()">
+        &#128194;&nbsp; Abrir archivo IFC
+      </button>
+      <div class="finfo" id="finfo">
+        <div class="fname" id="fname">—</div>
+        <div class="fmeta" id="fmeta">—</div>
+      </div>
+    </div>
+
+    <div class="pl">
+      <div id="configBlock" style="display:none;flex-direction:column;gap:12px">
+        <div>
+          <div class="step-label">2. Especialidad</div>
+          <select id="selEsp" class="sel-esp">
+            <option value="">-- Selecciona especialidad --</option>
+          </select>
+        </div>
+        <div id="entsBlock" style="display:none">
+          <div class="step-label">3. Entidades a revisar</div>
+          <div class="ents-toolbar">
+            <button class="btn-chk" id="btnAll">Todas</button>
+            <button class="btn-chk" id="btnNone">Ninguna</button>
+          </div>
+          <div class="ents-list" id="entsList"></div>
+        </div>
+
+        <!-- PASO 4: CONFIGURACIÓN DE REVISIONES -->
+        <div id="configRevBlock" style="display:none;flex-direction:column;gap:8px;">
+          <div class="step-label">4. Configuración de revisiones</div>
+
+          <!-- Origen interno -->
+          <div class="cfg-section">
+            <div class="cfg-title">&#9675; Origen interno (0,0,0)</div>
+            <div style="display:flex;gap:6px;">
+              <div class="cfg-field"><label>X</label><input type="number" id="cfgX" value="0" step="any"></div>
+              <div class="cfg-field"><label>Y</label><input type="number" id="cfgY" value="0" step="any"></div>
+              <div class="cfg-field"><label>Z</label><input type="number" id="cfgZ" value="0" step="any"></div>
+            </div>
+          </div>
+
+          <!-- Nombre Sitio -->
+          <div class="cfg-section">
+            <div class="cfg-title">&#9675; Caracteres IfcSite</div>
+            <div class="cfg-field-full">
+              <label>N° caracteres esperados</label>
+              <input type="number" id="cfgSite" value="3" min="1" max="20">
+            </div>
+          </div>
+
+          <!-- Nombre Edificio -->
+          <div class="cfg-section">
+            <div class="cfg-title">&#9675; Caracteres IfcBuilding</div>
+            <div class="cfg-field-full">
+              <label>N° caracteres esperados</label>
+              <input type="number" id="cfgBuilding" value="2" min="1" max="20">
+            </div>
+          </div>
+
+          <!-- Niveles -->
+          <div class="cfg-section">
+            <div class="cfg-title">&#9675; Caracteres IfcBuildingStorey</div>
+            <div class="cfg-field-full">
+              <label>N° caracteres esperados</label>
+              <input type="number" id="cfgStorey" value="5" min="1" max="20">
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-gen" id="btnGen" disabled>&#9654;&nbsp; Generar Reporte</button>
+      </div>
+
+      <div class="sbox" id="sbox">
+        <div class="shdr">
+          <div class="spin" id="spin"></div>
+          <span id="stitle">Procesando...</span>
+        </div>
+        <div class="pwrap" id="pwrap"><div class="pbar" id="pbar"></div></div>
+        <div class="slog" id="slog"></div>
+      </div>
+
+      <div class="res" id="res">
+        <div class="res-hdr">Reporte generado</div>
+        <div id="rlist"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PANEL DERECHO -->
+  <div class="panel-right">
+    <!-- Dropzone central — igual a voxelbim -->
+    <div id="dropzoneCentral" onclick="document.getElementById('fi').click()">
+      <div class="dzc-box">
+        <svg width="56" height="64" viewBox="0 0 90 105" fill="none">
+          <g class="bit-wrap">
+            <polygon class="bit-face" points="45,4 75,28 15,28" fill="rgba(0,212,255,0.22)" stroke="#00d4ff" stroke-width="1.4" stroke-linejoin="round"/>
+            <polygon points="75,28 45,4 82,52" fill="rgba(0,212,255,0.10)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+            <polygon points="15,28 45,4 8,52"  fill="rgba(0,212,255,0.18)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+            <polygon points="15,28 75,28 82,52 45,68 8,52" fill="rgba(0,212,255,0.07)" stroke="#00d4ff" stroke-width="1.0" stroke-linejoin="round"/>
+            <polygon points="75,28 82,52 62,78" fill="rgba(0,212,255,0.15)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+            <polygon points="15,28 8,52 28,78"  fill="rgba(0,212,255,0.20)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+            <polygon points="8,52 28,78 45,100 45,68" fill="rgba(0,212,255,0.07)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+            <polygon points="82,52 62,78 45,100 45,68" fill="rgba(0,212,255,0.12)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+            <polygon points="28,78 62,78 45,100" fill="rgba(0,212,255,0.14)" stroke="#00d4ff" stroke-width="1.2" stroke-linejoin="round"/>
+            <line class="bit-edge1" x1="15" y1="28" x2="45" y2="4" stroke="#00d4ff" stroke-width="2.4" stroke-linecap="round"/>
+            <line class="bit-edge2" x1="45" y1="4" x2="75" y2="28" stroke="#00d4ff" stroke-width="1.6" stroke-linecap="round"/>
+            <circle class="bit-top"     cx="45" cy="4"   r="3"   fill="#00d4ff"/>
+            <circle class="bit-vtx-mid" cx="15" cy="28"  r="1.8" fill="#00d4ff" opacity="0.5"/>
+            <circle class="bit-vtx-mid" cx="75" cy="28"  r="1.8" fill="#00d4ff" opacity="0.5"/>
+            <circle class="bit-vtx-mid" cx="8"  cy="52"  r="1.4" fill="#00d4ff" opacity="0.35"/>
+            <circle class="bit-vtx-mid" cx="82" cy="52"  r="1.4" fill="#00d4ff" opacity="0.35"/>
+            <circle class="bit-vtx-bot" cx="45" cy="100" r="2.2" fill="#00d4ff" opacity="0.65"/>
+          </g>
+        </svg>
+        <div class="dzc-title">VoxelBIM</div>
+        <div style="font:400 10px var(--mono);color:var(--accent);letter-spacing:.2em;text-transform:uppercase;opacity:.7;">Generaci&oacute;n de Reportes &middot; IFC</div>
+        <div style="width:40px;height:1px;background:var(--border);"></div>
+        <div class="dzc-sub">Haz clic o arrastra un archivo IFC</div>
+        <div style="font:400 9px var(--mono);color:var(--muted);opacity:.45;">Formatos soportados: .ifc</div>
+      </div>
+    </div>
+    <div class="vtoolbar" id="vtoolbar">
+      <span class="vt-title" id="vtitle">-</span>
+      <button class="btn-vdl" id="vbtnDl">&#11015;&nbsp; Descargar</button>
+    </div>
+    <div class="view-content" id="viewContent">
+      <iframe class="vframe" id="vframe" src="about:blank"></iframe>
+    </div>
+  </div>
+
+</div><!-- /workspace -->
+
+<script>
+// ============================================================
+// PROTECCIÓN DE SESIÓN
+// ============================================================
+(function(){
+  var isLocal = window.location.protocol === 'file:';
+  if (!isLocal && sessionStorage.getItem('ifc_auth') !== '1') {
+    window.location.href = 'index.html';
+  }
+})();
+
+// ============================================================
+// ESPECIALIDADES
+// ============================================================
+var ESP = {
+  "Coordinacion":         {cod:"COO",ents:[["IFCGRID","Grilla"],["IFCSITE","Sitio"],["IFCBUILDING","Edificio"],["IFCBUILDINGSTOREY","Nivel"],["IFCSPACE","Espacio"],["IFCZONE","Zona"],["IFCWALL","Muro"],["IFCCURTAINWALL","Muro Cortina"],["IFCWINDOW","Ventana"],["IFCDOOR","Puerta"],["IFCROOF","Cubierta"],["IFCCOVERING","Cielo Falso / Piso"],["IFCBEAM","Viga"],["IFCCOLUMN","Columna"],["IFCFOOTING","Fundacion"],["IFCSLAB","Losa"],["IFCSTAIR","Escalera"],["IFCRAMP","Rampa"],["IFCRAILING","Baranda"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCDUCTSEGMENT","Segmento de Ducto"],["IFCDUCTFITTING","Fitting de Ducto"],["IFCCABLECARRIERSEGMENT","Bandeja de Cable"],["IFCCABLECARRIERFITTING","Fitting Bandeja de Cable"],["IFCELECTRICDISTRIBUTIONBOARD","Tablero Electrico"],["IFCAIRTERMINAL","Terminal de Aire"],["IFCDAMPER","Compuerta"],["IFCPUMP","Bomba"],["IFCTANK","Estanque"],["IFCVALVE","Valvula"],["IFCLIGHTFIXTURE","Luminaria"],["IFCSENSOR","Sensor"],["IFCFIRESUPPRESSIONTERMINAL","Terminal Supresion Incendio"],["IFCALARM","Alarma"],["IFCMEDICALDEVICE","Dispositivo Medico"],["IFCFURNITURE","Mobiliario"],["IFCTRANSPORTELEMENT","Elemento de Transporte"],["IFCSANITARYTERMINAL","Aparato Sanitario"],["IFCWASTETERMINAL","Terminal de Residuos"],["IFCOUTLET","Salida Electrica"],["IFCSWITCHINGDEVICE","Interruptor"],["IFCUNITARYEQUIPMENT","Equipo Unitario"],["IFCCHILLER","Enfriador"],["IFCDISTRIBUTIONCHAMBERELEME","Camara de Distribucion"],["IFCDISTRIBUTIONELEMENT","Elemento de Distribucion"],["IFCAUDIOVISUALAPPLIANCE","Equipo Audiovisual"],["IFCCOMMUNICATIONSAPPLIANCE","Equipo de Comunicaciones"]]},
+  "Sitio":                {cod:"SIT",ents:[["IFCGRID","Grilla"],["IFCSITE","Sitio"],["IFCCIVILELEMENT","Elemento Civil"],["IFCGEOGRAPHICELEMENT","Elemento Geografico"],["IFCSLAB","Losa"],["IFCWALL","Muro"]]},
+  "Arquitectura":         {cod:"ARQ",ents:[["IFCGRID","Grilla"],["IFCWALL","Muro"],["IFCCURTAINWALL","Muro Cortina"],["IFCWINDOW","Ventana"],["IFCDOOR","Puerta"],["IFCROOF","Cubierta"],["IFCCOVERING","Cielo Falso / Piso"],["IFCSANITARYTERMINAL","Aparato Sanitario"],["IFCRAILING","Baranda"],["IFCFURNITURE","Mobiliario"],["IFCVALVE","Valvula"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCWASTETERMINAL","Terminal de Residuos"],["IFCTRANSPORTELEMENT","Elemento de Transporte"],["IFCSPACE","Espacio"],["IFCZONE","Zona"]]},
+  "Volumetrico":          {cod:"VOL",ents:[["IFCGRID","Grilla"],["IFCZONE","Zona"],["IFCSPACE","Espacio"]]},
+  "Estructural":          {cod:"EST",ents:[["IFCGRID","Grilla"],["IFCBEAM","Viga"],["IFCCOLUMN","Columna"],["IFCFOOTING","Fundacion"],["IFCSLAB","Losa"],["IFCWALL","Muro"]]},
+  "Agua Potable":         {cod:"APO",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCPUMP","Bomba"],["IFCTANK","Estanque"],["IFCVALVE","Valvula"]]},
+  "Aguas Tratadas":       {cod:"ATR",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCPUMP","Bomba"],["IFCTANK","Estanque"],["IFCVALVE","Valvula"]]},
+  "Alcantarillado":       {cod:"ALC",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCDISTRIBUTIONCHAMBERELEME","Camara de Distribucion"]]},
+  "Corrientes Debiles":   {cod:"CEC",ents:[["IFCGRID","Grilla"],["IFCCABLECARRIERSEGMENT","Bandeja de Cable"],["IFCCABLECARRIERFITTING","Fitting Bandeja de Cable"],["IFCDISTRIBUTIONCHAMBERELEME","Camara de Distribucion"],["IFCOUTLET","Salida Electrica"],["IFCSENSOR","Sensor"],["IFCAUDIOVISUALAPPLIANCE","Equipo Audiovisual"],["IFCCOMMUNICATIONSAPPLIANCE","Equipo de Comunicaciones"],["IFCELECTRICDISTRIBUTIONBOARD","Tablero Electrico"]]},
+  "Climatizacion":        {cod:"CLI",ents:[["IFCGRID","Grilla"],["IFCAIRTERMINAL","Terminal de Aire"],["IFCDAMPER","Compuerta"],["IFCDUCTFITTING","Fitting de Ducto"],["IFCDUCTSEGMENT","Segmento de Ducto"],["IFCUNITARYEQUIPMENT","Equipo Unitario"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCPUMP","Bomba"],["IFCSOLARDEVICE","Equipo Solar"],["IFCTANK","Estanque"],["IFCCHILLER","Enfriador"],["IFCVALVE","Valvula"]]},
+  "Combustible":          {cod:"COM",ents:[["IFCGRID","Grilla"],["IFCTANK","Estanque"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCVALVE","Valvula"]]},
+  "Control Centralizado": {cod:"CCT",ents:[["IFCGRID","Grilla"],["IFCELECTRICDISTRIBUTIONBOARD","Tablero Electrico"],["IFCDISTRIBUTIONCONTROLELEMENT","Elemento de Control"]]},
+  "Correo Neumatico":     {cod:"COR",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCDISTRIBUTIONELEMENT","Elemento de Distribucion"]]},
+  "Aguas Lluvias":        {cod:"ALL",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCDISTRIBUTIONCHAMBERELEME","Camara de Distribucion"]]},
+  "Gases Clinicos":       {cod:"GCL",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCVALVE","Valvula"],["IFCUNITARYCONTROLELEMENT","Elemento de Control Unitario"],["IFCTANK","Estanque"],["IFCMEDICALDEVICE","Dispositivo Medico"]]},
+  "Iluminacion":          {cod:"ILU",ents:[["IFCGRID","Grilla"],["IFCLIGHTFIXTURE","Luminaria"],["IFCSWITCHINGDEVICE","Interruptor"]]},
+  "Proteccion Incendios": {cod:"PCI",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCSENSOR","Sensor"],["IFCTANK","Estanque"],["IFCPUMP","Bomba"],["IFCFIRESUPPRESSIONTERMINAL","Terminal Supresion Incendio"],["IFCALARM","Alarma"],["IFCVALVE","Valvula"]]},
+  "Electricidad":         {cod:"ELE",ents:[["IFCGRID","Grilla"],["IFCCABLECARRIERSEGMENT","Bandeja de Cable"],["IFCCABLECARRIERFITTING","Fitting Bandeja de Cable"],["IFCDISTRIBUTIONCHAMBERELEME","Camara de Distribucion"],["IFCELECTRICDISTRIBUTIONBOARD","Tablero Electrico"]]}
+};
+
+var COD_PRIO = {SIT:1,VOL:1};
+
+// ============================================================
+// DETECCIÓN DE ESPECIALIDAD POR NOMBRE
+// ============================================================
+function detectarCodigo(nombre) {
+  var upper = nombre.toUpperCase();
+  var partes = upper.split(/[_\-\s\.]+/);
+  for (var i=0; i<partes.length; i++) {
+    for (var k in ESP) { if (ESP[k].cod === partes[i]) return ESP[k].cod; }
+  }
+  var prioCod = null;
+  for (var k in ESP) {
+    var cod = ESP[k].cod;
+    if (upper.indexOf(cod) !== -1) {
+      if (COD_PRIO[cod]) { prioCod = cod; break; }
+      if (!prioCod) prioCod = cod;
+    }
+  }
+  return prioCod;
+}
+
+// ============================================================
+// LISTAS DE CLASES IFC
+// ============================================================
+var IGNORAR = {
+  IFCPROJECT:1,
+  IFCRELAGGREGATES:1,IFCRELCONTAINEDINSPATIALSTRUCTURE:1,
+  IFCRELASSOCIATESMATERIAL:1,IFCRELDEFINESBYPROPERTIES:1,
+  IFCRELDEFINESBYTYPE:1,IFCRELCONNECTSPATHELEMENTS:1,
+  IFCPROPERTYSET:1,IFCPROPERTYSINGLEVALUE:1,IFCMATERIAL:1,
+  IFCMATERIALLAYERSET:1,IFCMATERIALLAYER:1,IFCMATERIALLIST:1,
+  IFCLOCALPLACEMENT:1,IFCAXIS2PLACEMENT3D:1,IFCAXIS2PLACEMENT2D:1,
+  IFCCARTESIANPOINT:1,IFCDIRECTION:1,IFCOWNERHISTORY:1,
+  IFCPERSON:1,IFCORGANIZATION:1,IFCPERSONANDORGANIZATION:1,
+  IFCAPPLICATION:1,IFCUNITASSIGNMENT:1,IFCSIUNIT:1,
+  IFCGEOMETRICREPRESENTATIONCONTEXT:1,IFCGEOMETRICREPRESENTATIONSUBCONTEXT:1,
+  IFCSHAPEREPRESENTATION:1,IFCPRODUCTDEFINITIONSHAPE:1,
+  IFCEXTRUDEDAREASOLID:1,IFCPOLYLINE:1,IFCCOMPOSITECURVE:1,
+  IFCTRIMMEDCURVE:1,IFCCIRCLE:1,IFCLINE:1,IFCPLANE:1,
+  IFCPRESENTATIONLAYERASSIGNMENT:1,IFCCOLOURRGB:1,
+  IFCSURFACESTYLE:1,IFCSURFACESTYLERENDERING:1,
+  IFCSTYLEDITEM:1,IFCSTYLEDREPRESENTATION:1,
+  IFCANNOTATION:1,IFCGRID:1,IFCSPACE:1,IFCZONE:1,
+  IFCRELSPACEBOUNDARY:1,IFCVIRTUALELEMENT:1,
+  IFCQUANTITYAREA:1,IFCQUANTITYLENGTH:1,IFCQUANTITYVOLUME:1,
+  IFCELEMENTQUANTITY:1,IFCDISTRIBUTIONPORT:1,
+  IFCOPENINGELEMENT:1
+};
+
+var PRODUCTOS = {
+  IFCWALL:1,IFCWALLSTANDARDCASE:1,IFCCURTAINWALL:1,
+  IFCCOLUMN:1,IFCCOLUMNSTANDARDCASE:1,
+  IFCBEAM:1,IFCBEAMSTANDARDCASE:1,
+  IFCSLAB:1,IFCSLABSTANDARDCASE:1,
+  IFCROOF:1,IFCFOOTING:1,IFCPILE:1,
+  IFCDOOR:1,IFCWINDOW:1,
+  IFCRAILING:1,IFCSTAIR:1,IFCSTAIRFLIGHT:1,
+  IFCRAMP:1,IFCRAMPFLIGHT:1,
+  IFCCOVERING:1,IFCMEMBER:1,IFCPLATE:1,
+  IFCELEMENTASSEMBLY:1,IFCBUILDINGELEMENTPROXY:1,
+  IFCSITE:1,IFCBUILDING:1,IFCBUILDINGSTOREY:1,
+  IFCCIVILELEMENT:1,IFCGEOGRAPHICELEMENT:1,
+  IFCFURNITURE:1,IFCFURNITURESTANDARD:1,IFCSYSTEMFURNITUREELEMENT:1,
+  IFCTRANSPORTELEMENT:1,
+  IFCSANITARYTERMINAL:1,IFCWASTETERMINAL:1,
+  IFCDISCRETEACCESSORY:1,IFCMECHANICALFASTENER:1,
+  IFCPIPESEGMENT:1,IFCPIPEFITTING:1,IFCPUMP:1,
+  IFCTANK:1,IFCVALVE:1,IFCFLOW:1,
+  IFCFLOWSEGMENT:1,IFCFLOWFITTING:1,IFCFLOWTERMINAL:1,
+  IFCFLOWMOVINGDEVICE:1,IFCFLOWSTORAGEDEVICE:1,
+  IFCFLOWCONTROLLER:1,IFCFLOWTREATMENTDEVICE:1,
+  IFCDISTRIBUTIONCHAMBERELEME:1,IFCDISTRIBUTIONCHAMBERELEMENT:1,
+  IFCAIRTERMINAL:1,IFCDAMPER:1,IFCDUCTFITTING:1,IFCDUCTSEGMENT:1,
+  IFCUNITARYEQUIPMENT:1,IFCCHILLER:1,IFCSOLARDEVICE:1,
+  IFCCOIL:1,IFCBOILER:1,IFCCOMPRESSOR:1,IFCCONDENSER:1,
+  IFCCOOLEDBEAM:1,IFCCOOLINGTOWER:1,IFCENGINE:1,
+  IFCEVAPORATIVECOOLER:1,IFCEVAPORATOR:1,IFCFAN:1,
+  IFCFILTER:1,IFCHEATEXCHANGER:1,IFCHUMIDIFIER:1,
+  IFCMEDICALDEVICE:1,
+  IFCELECTRICDISTRIBUTIONBOARD:1,IFCELECTRICGENERATOR:1,
+  IFCELECTRICMOTOR:1,IFCELECTRICAPPLIANCE:1,
+  IFCELECTRICTIMECONTROL:1,IFCLAMP:1,
+  IFCLIGHTFIXTURE:1,IFCSWITCHINGDEVICE:1,IFCOUTLET:1,
+  IFCCABLECARRIERSEGMENT:1,IFCCABLECARRIERFITTING:1,
+  IFCCABLESEGMENT:1,IFCCABLEFITTING:1,
+  IFCJUNCTIONBOX:1,IFCMOTORCONNECTION:1,
+  IFCPROTECTIVEDEVICE:1,IFCTRANSFORMER:1,
+  IFCUNITARYCONTROLELEMENT:1,
+  IFCSENSOR:1,IFCACTUATOR:1,IFCALARM:1,
+  IFCCONTROLLER:1,IFCDISTRIBUTIONCONTROLELEMENT:1,
+  IFCAUDIOVISUALAPPLIANCE:1,IFCCOMMUNICATIONSAPPLIANCE:1,
+  IFCFIRESUPPRESSIONTERMINAL:1,
+  IFCGRID:1,IFCSPACE:1,IFCZONE:1,
+  IFCDISTRIBUTIONELEMENT:1,IFCBUILDINGELEMENT:1,
+  IFCENERGYCONVERSIONDEVICE:1,IFCDISTRIBUTIONFLOWELEMENT:1,
+  IFCDISTRIBUTIONCONTROLELE:1,
+};
+
+var COMP = {
+  IFCSTAIRFLIGHT:"Tramo de Escalera (complemento de IfcStair)",
+  IFCRAMPFLIGHT: "Tramo de Rampa (complemento de IfcRamp)",
+  IFCELEMENTASSEMBLY:"Componentes agrupados (complemento para Estructuras)",
+  IFCDISCRETEACCESSORY:"Componente de puerta / quincalleria",
+  IFCPILE:"Pila de elemento estructural",
+  IFCRAMP:"Rampa",
+  IFCSTAIR:"Escalera",
+  IFCMEMBER:"Elemento de fachada",
+  IFCPLATE:"Pieza de acero"
+};
+
+// ============================================================
+// PARSEO IFC — cuenta clases y guarda expressIDs por clase
+// ============================================================
+function parsearIFC(texto) {
+  var conteo    = {};   // cls -> count
+  var idsPorCls = {};   // cls -> [expressId, ...]  (solo PRODUCTOS)
+  var instancias = {};  // id  -> {cls, pos}
+
+  var re = /#(\d+)\s*=\s*(IFC[A-Z0-9]+)\s*\(/g, m;
+  while ((m = re.exec(texto)) !== null) {
+    var id = parseInt(m[1]), cls = m[2];
+    instancias[m[1]] = {cls:cls, pos: m.index + m[0].length};
+    if (PRODUCTOS[cls]) {
+      conteo[cls] = (conteo[cls]||0) + 1;
+      if (!idsPorCls[cls]) idsPorCls[cls] = [];
+      idsPorCls[cls].push(id);
+    }
+  }
+  return {conteo:conteo, instancias:instancias, idsPorCls:idsPorCls, texto:texto};
+}
+
+// ============================================================
+// UTILIDADES ATRIBUTOS IFC
+// ============================================================
+function extraerRaw(texto, pos) {
+  var depth=1, i=pos, out="";
+  while (i<texto.length && depth>0) {
+    var c=texto[i];
+    if (c==="(") depth++;
+    else if (c===")") { depth--; if(!depth) break; }
+    out+=c; i++;
+  }
+  return out;
+}
+function splitAttrs(raw) {
+  var attrs=[],depth=0,cur="";
+  for (var i=0;i<raw.length;i++){
+    var c=raw[i];
+    if(c==="("||c==="["){depth++;cur+=c;}
+    else if(c===")"||c==="]"){depth--;cur+=c;}
+    else if(c===","&&depth===0){attrs.push(cur.trim());cur="";}
+    else cur+=c;
+  }
+  if(cur.trim()) attrs.push(cur.trim());
+  return attrs;
+}
+function strVal(a){
+  if(!a||a==="$"||a==="*") return null;
+  var m=a.match(/^'(.*)'$/); return m?m[1]:a;
+}
+function refId(a){
+  if(!a) return null;
+  var m=a.match(/^#(\d+)$/); return m?m[1]:null;
+}
+
+// ============================================================
+// DICCIONARIO UNIFORMAT II — descripciones de códigos
+// ============================================================
+var UNIFORMAT = {
+  // A - Substructure
+  'A':'Substructure','A10':'Foundations','A1010':'Standard Foundations',
+  'A1020':'Special Foundations','A1030':'Slab on Grade','A20':'Basement Construction',
+  'A2010':'Basement Excavation','A2020':'Basement Walls',
+  // B - Shell
+  'B':'Shell','B10':'Superstructure','B1010':'Floor Construction',
+  'B1020':'Roof Construction','B20':'Exterior Enclosure',
+  'B2010':'Exterior Walls','B2020':'Exterior Windows','B2030':'Exterior Doors',
+  'B30':'Roofing','B3010':'Roof Coverings','B3020':'Roof Openings',
+  // C - Interiors
+  'C':'Interiors','C10':'Interior Construction','C1010':'Partitions',
+  'C1020':'Interior Doors','C1030':'Fittings','C20':'Stairs',
+  'C2010':'Stair Construction','C30':'Interior Finishes',
+  'C3010':'Wall Finishes','C3020':'Floor Finishes','C3030':'Ceiling Finishes',
+  // D - Services
+  'D':'Services','D10':'Conveying','D1010':'Elevators & Lifts',
+  'D1020':'Escalators & Moving Walks','D20':'Plumbing',
+  'D2010':'Plumbing Fixtures','D2020':'Domestic Water Distribution',
+  'D2030':'Sanitary Waste','D2040':'Rain Water Drainage',
+  'D2090':'Other Plumbing Systems','D30':'HVAC',
+  'D3010':'Energy Supply','D3020':'Heat Generating Systems',
+  'D3030':'Cooling Generating Systems','D3040':'Distribution Systems',
+  'D3050':'Terminal & Package Units','D3060':'Controls & Instrumentation',
+  'D3070':'Systems Testing & Balancing','D3090':'Other HVAC Systems & Equipment',
+  'D40':'Fire Protection','D4010':'Sprinklers',
+  'D4020':'Standpipes','D4030':'Fire Protection Specialties',
+  'D4090':'Other Fire Protection Systems','D50':'Electrical',
+  'D5010':'Electrical Service & Distribution','D5020':'Lighting & Branch Wiring',
+  'D5030':'Communications & Security','D5040':'Other Electrical Systems',
+  'D5090':'Other Electrical Systems',
+  // E - Equipment & Furnishings
+  'E':'Equipment & Furnishings','E10':'Equipment',
+  'E1010':'Commercial Equipment','E1020':'Institutional Equipment',
+  'E1030':'Vehicular Equipment','E1090':'Other Equipment',
+  'E20':'Furnishings','E2010':'Fixed Furnishings','E2020':'Movable Furnishings',
+  // F - Special Construction
+  'F':'Special Construction & Demolition',
+  'F10':'Special Construction','F1010':'Special Structures',
+  'F1020':'Integrated Construction','F1030':'Special Construction Systems',
+  'F1040':'Special Facilities','F1050':'Special Controls & Instrumentation',
+  'F20':'Selective Building Demolition',
+  // G - Building Sitework
+  'G':'Building Sitework','G10':'Site Preparation',
+  'G1010':'Site Clearing','G1020':'Site Demolition & Relocations',
+  'G1030':'Site Earthwork','G1040':'Hazardous Waste Remediation',
+  'G20':'Site Improvements','G2010':'Roadways','G2020':'Parking Lots',
+  'G2030':'Pedestrian Paving','G2040':'Site Development',
+  'G2050':'Landscaping','G30':'Site Mechanical Utilities',
+  'G3010':'Water Supply','G3020':'Sanitary Sewer','G3030':'Storm Sewer',
+  'G3040':'Heating Distribution','G3050':'Cooling Distribution',
+  'G3060':'Fuel Distribution','G3090':'Other Site Mechanical Utilities',
+  'G40':'Site Electrical Utilities','G4010':'Electrical Distribution',
+  'G4020':'Site Lighting','G4030':'Site Communications & Security',
+  'G4090':'Other Site Electrical Utilities',
+  'G90':'Other Site Construction'
+};
+function descUniformat(code) {
+  if (!code) return null;
+  var c = code.toString().toUpperCase().replace(/[\.\-\s]/g,'');
+  // Buscar desde el código más largo al más corto
+  for (var len = Math.min(c.length, 10); len >= 1; len--) {
+    var key = c.substring(0, len);
+    if (UNIFORMAT[key]) return UNIFORMAT[key];
+  }
+  return null;
+}
+
+// ============================================================
+// VERIFICACIONES
+// ============================================================
+function resolverCoordenadas(inst, texto) {
+  if (!inst) return null;
+  var raw = extraerRaw(texto, inst.pos);
+  var attrs = splitAttrs(raw);
+  var placementRef = null;
+  for (var i=3; i<=6 && i<attrs.length; i++) {
+    var rid = refId(attrs[i]);
+    if (rid && instancias[rid] && instancias[rid].cls === "IFCLOCALPLACEMENT") {
+      placementRef = rid; break;
+    }
+  }
+  if (!placementRef) return null;
+  var lpInst = instancias[placementRef];
+  if (!lpInst) return null;
+  var lpRaw = extraerRaw(texto, lpInst.pos);
+  var lpAttrs = splitAttrs(lpRaw);
+  var ap3dRef = null;
+  for (var i=0; i<lpAttrs.length; i++) {
+    var rid = refId(lpAttrs[i]);
+    if (rid && instancias[rid] && instancias[rid].cls === "IFCAXIS2PLACEMENT3D") {
+      ap3dRef = rid; break;
+    }
+  }
+  if (!ap3dRef) return null;
+  var apInst = instancias[ap3dRef];
+  if (!apInst) return null;
+  var apRaw = extraerRaw(texto, apInst.pos);
+  var apAttrs = splitAttrs(apRaw);
+  var ptRef = refId(apAttrs[0]);
+  if (!ptRef) return null;
+  var ptInst = instancias[ptRef];
+  if (!ptInst || ptInst.cls !== "IFCCARTESIANPOINT") return null;
+  var ptRaw = extraerRaw(texto, ptInst.pos);
+  var coords = ptRaw.replace(/[\(\)]/g,"").split(",").map(function(v){return parseFloat(v.trim())||0;});
+  return {x:coords[0]||0, y:coords[1]||0, z:coords[2]||0};
+}
+
+var instancias = {};
+function verificarOrigen(est) {
+  instancias = est.instancias;
+  var ox = parseFloat(document.getElementById('cfgX').value) || 0;
+  var oy = parseFloat(document.getElementById('cfgY').value) || 0;
+  var oz = parseFloat(document.getElementById('cfgZ').value) || 0;
+  var resultado = [];
+  var tipos = ["IFCSITE","IFCBUILDING"];
+  for (var t=0; t<tipos.length; t++) {
+    var tipo = tipos[t];
+    for (var id in est.instancias) {
+      if (est.instancias[id].cls === tipo) {
+        var coords = resolverCoordenadas(est.instancias[id], est.texto);
+        var raw = extraerRaw(est.texto, est.instancias[id].pos);
+        var attrs = splitAttrs(raw);
+        var nombre = strVal(attrs[2]) || strVal(attrs[1]) || "(sin nombre)";
+        var x=coords?coords.x:null, y=coords?coords.y:null, z=coords?coords.z:null;
+        var ok = x===ox && y===oy && z===oz;
+        resultado.push({entidad:tipo, nombre:nombre, x:x!==null?x:"N/A", y:y!==null?y:"N/A", z:z!==null?z:"N/A", ok:ok});
+        break;
+      }
+    }
+  }
+  return resultado;
+}
+function verificarNombres(est) {
+  var resultado = [];
+  var nSite = parseInt(document.getElementById('cfgSite').value) || 3;
+  var nBuilding = parseInt(document.getElementById('cfgBuilding').value) || 2;
+  var reglas = {
+    IFCSITE:    {largo:nSite,     desc:nSite+" caracteres"},
+    IFCBUILDING:{largo:nBuilding, desc:nBuilding+" caracteres"}
+  };
+  for (var tipo in reglas) {
+    for (var id in est.instancias) {
+      if (est.instancias[id].cls === tipo) {
+        var raw = extraerRaw(est.texto, est.instancias[id].pos);
+        var attrs = splitAttrs(raw);
+        var nombre = strVal(attrs[2]) || strVal(attrs[1]) || "";
+        var largo = nombre.length;
+        var ok = largo === reglas[tipo].largo;
+        resultado.push({tipo:tipo, nombre:nombre, largo:largo, desc:"Debe tener "+reglas[tipo].desc, ok:ok});
+        break;
+      }
+    }
+  }
+  return resultado;
+}
+function verificarNiveles(est) {
+  var nStorey = parseInt(document.getElementById('cfgStorey').value) || 5;
+  var resultado = [];
+  for (var id in est.instancias) {
+    if (est.instancias[id].cls === "IFCBUILDINGSTOREY") {
+      var raw = extraerRaw(est.texto, est.instancias[id].pos);
+      var attrs = splitAttrs(raw);
+      var nombre = strVal(attrs[2]) || strVal(attrs[1]) || "";
+      resultado.push({id:"#"+id, nombre:nombre, largo:nombre.length, ok:nombre.length===nStorey});
+    }
+  }
+  return resultado;
+}
+function obtenerNoClasificados(conteo) {
+  var clsEsp = {};
+  for (var k in ESP) { for (var i=0; i<ESP[k].ents.length; i++) clsEsp[ESP[k].ents[i][0]]=1; }
+  var nc = [], comp = [];
+  for (var cls in conteo) {
+    if (!clsEsp[cls]) {
+      if (COMP[cls]) comp.push([cls, COMP[cls], conteo[cls]]);
+      else nc.push([cls, conteo[cls]]);
+    }
+  }
+  nc.sort(function(a,b){return b[1]-a[1];});
+  return {nc:nc, comp:comp};
+}
+function verificarClasificacion(est) {
+  var total=0, con_clas=0, codigos={};
+  var reRel = /IFCRELASSOCIATESCLASSIFICATION\s*\(/gi, m;
+  while ((m = reRel.exec(est.texto)) !== null) {
+    var raw = extraerRaw(est.texto, m.index + m[0].length);
+    var attrs = splitAttrs(raw);
+    var setRef = refId(attrs[5]);
+    var code = null, system = null;
+    if (setRef && est.instancias[setRef]) {
+      var csRaw = extraerRaw(est.texto, est.instancias[setRef].pos);
+      var csAttrs = splitAttrs(csRaw);
+      code   = strVal(csAttrs[0]) || strVal(csAttrs[4]);
+      system = strVal(csAttrs[1]);
+    }
+    if (!code) continue;
+    var related = attrs[4];
+    var reRef = /#(\d+)/g, rm;
+    while ((rm = reRef.exec(related)) !== null) {
+      total++;
+      con_clas++;
+      if (!codigos[code]) codigos[code]={codigo:code,sistema:system,cantidad:0};
+      codigos[code].cantidad++;
+    }
+  }
+  var codArr = Object.values ? Object.values(codigos) : Object.keys(codigos).map(function(k){return codigos[k];});
+  codArr.sort(function(a,b){return b.cantidad-a.cantidad;});
+  return {total:total, con_clas:con_clas, codigos:codArr};
+}
+
+// ============================================================
+// CSS PARA REPORTE HTML GENERADO
+// ============================================================
+var CSS="<style>@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap');:root{--navy:#060d18;--blue:#0a1628;--accent:#00d4ff;--green:#00c853;--bg:#0a0f1e;--card:#0d1526;--text:#c8d8f0;--muted:#4a6080;--border:#1a2a40;--mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;--accent2:#7c4dff;--warn:#ff6b35;--red:#ff3d57}*{box-sizing:border-box;margin:0;padding:0}body{font-family:var(--sans);background:var(--bg);color:var(--text);padding:32px;font-size:13px;line-height:1.5;min-height:100vh}.rpt-header{background:var(--navy);border:1px solid var(--border);border-top:3px solid var(--accent);border-radius:8px;padding:24px 28px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:flex-start}.rpt-header h1{font:700 16px var(--mono);color:#e0f0ff;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}.rpt-header p{font:400 10px var(--mono);color:var(--muted);margin-top:3px;letter-spacing:.04em}.rpt-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);border-radius:12px;font:600 9px var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.12em}.resumen{display:flex;gap:12px;margin-bottom:20px}.card{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:14px 18px;flex:1;text-align:center}.card .numero{font:700 28px var(--mono);color:var(--accent);margin-bottom:4px}.card .numero.red{color:var(--red)}.card .numero.green{color:var(--green)}.card .label{font:400 9px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em}.seccion-titulo{font:700 9px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.18em;margin-bottom:8px;padding-left:10px;border-left:3px solid var(--accent);display:flex;align-items:center;gap:8px}table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:24px;font-size:12px}th{background:var(--navy);color:var(--muted);padding:9px 14px;text-align:left;font:600 9px var(--mono);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--border)}td{padding:9px 14px;border-bottom:1px solid var(--border);font:400 12px var(--mono);color:var(--text)}tr:last-child td{border-bottom:none}tr.present td{background:rgba(0,200,83,.04)}tr.absent td{background:rgba(255,61,87,.04)}tr.unclassified td{background:rgba(255,107,53,.04)}tr.proxy td{background:rgba(255,107,53,.06)}tr.proxy-hito td{background:rgba(0,200,83,.04)}.cantidad{font-weight:700;font-size:13px;text-align:center}tr.present .cantidad{color:var(--green)}tr.absent .cantidad{color:var(--red)}tr.unclassified .cantidad{color:var(--warn)}tr.proxy .cantidad{color:var(--warn)}tr.proxy-hito .cantidad{color:var(--green)}.estado{text-align:center;font-size:16px}tr.present .estado{color:var(--green)}tr.absent .estado{color:var(--red)}code{background:rgba(0,212,255,.08);color:var(--accent);padding:2px 7px;border-radius:3px;font:400 11px var(--mono);border:1px solid rgba(0,212,255,.15)}.sec-box{border-radius:6px 6px 0 0;padding:10px 16px;margin-bottom:0;font:600 11px var(--mono)}.sec-box-ok{background:rgba(0,200,83,.08);border-left:3px solid var(--green);color:var(--green)}.sec-box-err{background:rgba(255,61,87,.08);border-left:3px solid var(--red);color:var(--red)}.sec-box-warn{background:rgba(255,107,53,.08);border-left:3px solid var(--warn);color:var(--warn)}.sec-box-info{background:rgba(0,212,255,.06);border-left:3px solid var(--accent);color:var(--accent)}.seccion-nc{margin-top:0}.nc-header{background:rgba(255,107,53,.06);border-left:3px solid var(--warn);border-radius:6px 6px 0 0;padding:12px 16px}.nc-titulo{display:block;font:700 11px var(--mono);color:var(--warn);margin-bottom:4px}.nc-subtitulo{display:block;font:400 10px var(--mono);color:var(--muted)}.footer{margin-top:24px;font:400 9px var(--mono);color:var(--muted);text-align:center;letter-spacing:.08em;padding-top:16px;border-top:1px solid var(--border)}.section-wrap{margin-bottom:28px}.accordion-btn{transition:background .15s}.accordion-btn:hover{background:rgba(255,107,53,.1)!important}</style>";
+
+// ============================================================
+// SECCIONES HTML DEL REPORTE
+// ============================================================
+function hOrigen(res){
+  if(!res.length)return "";
+  var ok=res.every(function(r){return r.ok;});
+  var cls=ok?"sec-box-ok":"sec-box-err";
+  var f=res.map(function(r){return "<tr class='"+(r.ok?'present':'absent')+"'><td>"+r.entidad+"</td><td>"+r.nombre+"</td><td class='cantidad'>"+r.x+"</td><td class='cantidad'>"+r.y+"</td><td class='cantidad'>"+r.z+"</td><td class='estado'>"+(r.ok?'&#10003;':'&#10007;')+"</td></tr>";}).join("");
+  return "<div class='section-wrap'><div class='seccion-titulo'>"+(ok?'&#10003;':'&#10007;')+" Verificacion de Origen Interno</div><div class='sec-box "+cls+"'>"+(ok?"Origen interno en (0,0,0) &mdash; correcto":"Modelo desplazado del origen (0,0,0)")+"</div><table><thead><tr><th>Entidad</th><th>Nombre</th><th style='text-align:center'>X</th><th style='text-align:center'>Y</th><th style='text-align:center'>Z</th><th style='text-align:center'>OK</th></tr></thead><tbody>"+f+"</tbody></table></div>";
+}
+function hNombres(res){
+  if(!res.length)return "";
+  var ok=res.every(function(r){return r.ok;});
+  var cls=ok?"sec-box-ok":"sec-box-err";
+  var f=res.map(function(r){return "<tr class='"+(r.ok?'present':'absent')+"'><td><code>"+r.tipo+"</code></td><td><strong>"+r.nombre+"</strong></td><td class='cantidad'>"+r.largo+"</td><td style='text-align:center;font-size:11px;color:var(--muted);'>"+r.desc+"</td><td class='estado'>"+(r.ok?'&#10003;':'&#10007;')+"</td></tr>";}).join("");
+  return "<div class='section-wrap'><div class='seccion-titulo'>"+(ok?'&#10003;':'&#10007;')+" Nombres de Sitio y Edificio</div><div class='sec-box "+cls+"'>"+(ok?"Nombres correctos":"Nombre(s) de Sitio o Edificio incorrectos")+"</div><table><thead><tr><th>Entidad</th><th>Nombre</th><th style='text-align:center'>N&#176; caracteres</th><th style='text-align:center'>Regla</th><th style='text-align:center'>OK</th></tr></thead><tbody>"+f+"</tbody></table></div>";
+}
+function hNiveles(res){
+  if(!res.length)return "<div class='section-wrap'><div class='seccion-titulo'>Niveles del Proyecto</div><div class='sec-box sec-box-info'>No se encontraron IfcBuildingStorey en el modelo.</div></div>";
+  var ok=res.every(function(r){return r.ok;}),nOk=res.filter(function(r){return r.ok;}).length;
+  var cls=ok?"sec-box-ok":"sec-box-err";
+  var f=res.map(function(r){return "<tr class='"+(r.ok?'present':'absent')+"'><td>"+r.id+"</td><td><strong>"+r.nombre+"</strong></td><td class='cantidad'>"+r.largo+"</td><td class='estado'>"+(r.ok?'&#10003;':'&#10007;')+"</td></tr>";}).join("");
+  return "<div class='section-wrap'><div class='seccion-titulo'>"+(ok?'&#10003;':'&#10007;')+" Niveles del Proyecto</div><div class='sec-box "+cls+"'>"+(ok?"Todos los niveles tienen 5 caracteres ("+nOk+"/"+res.length+")":(res.length-nOk)+" nivel(es) con nombre incorrecto &mdash; se esperan exactamente 5 caracteres")+"</div><table><thead><tr><th>ID</th><th>Nombre</th><th style='text-align:center'>N&#176; caracteres</th><th style='text-align:center'>OK</th></tr></thead><tbody>"+f+"</tbody></table></div>";
+}
+function hClas(res, ncData){
+  if(!res||res.total===0)return "";
+  var noClasificados = ncData ? ncData.nc : [];
+  var totalNoClasif = noClasificados.reduce(function(s,n){return s+n[1];},0);
+  var pct=res.total?Math.round(res.con_clas/res.total*100):0;
+  var pctNoClasif=res.total?Math.round(totalNoClasif/res.total*100):0;
+  var sub="Del total de <strong>"+res.total+"</strong> elementos: "
+    +"<span style='color:var(--accent)'>"+res.con_clas+" clasificados ("+pct+"%)</span>"
+    +" &nbsp;·&nbsp; "
+    +"<span style='color:var(--warn)'>"+totalNoClasif+" sin clasificar ("+pctNoClasif+"%)</span>.";
+
+  if(!res.codigos.length){
+    return "<div class='section-wrap'>"
+      +"<div class='seccion-titulo'>&#9632; Clasificacion de Elementos</div>"
+      +"<div class='sec-box sec-box-warn'>"+sub+" No se encontraron codigos de clasificacion.</div>"
+      +"</div>";
+  }
+
+  // Acordeón de clasificados por código — uno por código
+  var uid = 'clas_'+Math.random().toString(36).substr(2,6);
+  var filasClas = res.codigos.map(function(c, idx){
+    var desc = descUniformat(c.codigo);
+    var descHtml = desc ? " <span style='color:var(--accent);'>— "+desc+"</span>" : "";
+    var rowId = uid+'_'+idx;
+    // Buscar elementos de este código (placeholder — el IFC solo da conteo total por código)
+    return "<tr class='present'>"
+      +"<td><code>"+c.codigo+"</code>"+descHtml+"</td>"
+      +"<td style='color:var(--muted);font-size:11px;'>"+(c.sistema||"&mdash;")+"</td>"
+      +"<td class='cantidad' style='color:var(--accent);'>"+c.cantidad+"</td>"
+      +"</tr>";
+  }).join("");
+
+  // Botón acordeón para ver el detalle de clasificados
+  var acordeonClas = "<button onclick=\"var d=document.getElementById('"+uid+"_det');var a=document.getElementById('"+uid+"_arr');if(d.style.display==='none'){d.style.display='block';a.textContent='▾';}else{d.style.display='none';a.textContent='▸';}\" "
+    +"style='width:100%;padding:10px 14px;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.2);border-top:none;border-radius:0 0 6px 6px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font:600 10px var(--mono);color:var(--accent);text-align:left;'>"
+    +"<span>Ver detalle por código Uniformat &nbsp;<span style='background:rgba(0,212,255,.12);border-radius:10px;padding:1px 8px;'>"+res.codigos.length+" códigos · "+res.con_clas+" elementos</span></span>"
+    +"<span id='"+uid+"_arr'>▸</span>"
+    +"</button>"
+    +"<div id='"+uid+"_det' style='display:none;'>"
+    +"<table style='border-radius:0;margin-bottom:0;border-top:none;'>"
+    +"<thead><tr><th>Código</th><th>Sistema</th><th style='text-align:center'>Elementos</th></tr></thead>"
+    +"<tbody>"+filasClas+"</tbody>"
+    +"<tfoot><tr><td colspan='2' style='font-weight:bold;padding:9px 14px;color:var(--text);'>Total clasificados</td>"
+    +"<td class='cantidad' style='font-weight:bold;color:var(--accent);'>"+res.con_clas+"</td></tr></tfoot>"
+    +"</table></div>";
+
+  return "<div class='section-wrap'>"
+    +"<div class='seccion-titulo'>&#9632; Clasificacion de Elementos</div>"
+    +"<div class='sec-box sec-box-warn' style='border-radius:6px;'>"+sub+"</div>"
+    +acordeonClas
+    +"</div>";
+}
+
+function generarHTML(espNombre, ents, entsNoRev, est, modeloNombre, fecha) {
+  var conteo=est.conteo,filas="",totalEsp=0,presentes=0,ausentes=0;
+  for(var i=0;i<ents.length;i++){
+    var cls=ents[i][0],nom=ents[i][1],qty=conteo[cls]||0;
+    totalEsp+=qty; qty>0?presentes++:ausentes++;
+    var clsLower=cls.charAt(0)+cls.slice(1).toLowerCase();
+    filas+="<tr class='"+(qty>0?'present':'absent')+"'><td>"+nom+"</td><td><code>"+clsLower+"</code></td><td class='cantidad'>"+qty+"</td><td class='estado'>"+(qty>0?'&#10003;':'&#10007;')+"</td></tr>";
+  }
+  var ncData=obtenerNoClasificados(conteo);
+  var rOrg=verificarOrigen(est),rNom=verificarNombres(est),rNiv=verificarNiveles(est),rCla=verificarClasificacion(est);
+
+  var secNoRev="";
+  if(entsNoRev&&entsNoRev.length){
+    var fnr="";
+    for(var i=0;i<entsNoRev.length;i++){
+      var cls=entsNoRev[i][0],nom=entsNoRev[i][1];
+      var qty=conteo[cls]||0;
+      fnr+="<tr style='opacity:.5'><td>"+nom+"</td><td><code>"+cls+"</code></td><td class='cantidad' style='color:var(--muted);'>"+(qty||"&mdash;")+"</td></tr>";
+    }
+    secNoRev="<div class='section-wrap'><div class='seccion-titulo'>&#9711; Entidades no revisadas ("+entsNoRev.length+")</div>"
+      +"<div class='sec-box sec-box-info'>Entidades de la especialidad no incluidas en esta revision.</div>"
+      +"<table><thead><tr><th>Nombre</th><th>Clase IFC</th><th style='text-align:center'>En modelo</th></tr></thead>"
+      +"<tbody>"+fnr+"</tbody></table></div>";
+  }
+
+  var secNc="";
+  if(ncData.nc.length){
+    var fn="",tnc=0;
+    for(var i=0;i<ncData.nc.length;i++){
+      var cls=ncData.nc[i][0],qty=ncData.nc[i][1]; tnc+=qty;
+      var isP=cls==="IFCBUILDINGELEMENTPROXY";
+      var rc=isP&&qty===1?"proxy-hito":isP?"proxy":"unclassified";
+      var et=isP&&qty===1?" <span style='color:var(--green);font-size:10px;'>&nbsp;&#8505; Hito de sitio</span>":isP?" <span style='color:var(--warn);font-size:10px;'>&nbsp;&#9888; Proxy</span>":"";
+      fn+="<tr class='"+rc+"'><td><code>"+cls+"</code>"+et+"</td><td class='cantidad'>"+qty+"</td></tr>";
+    }
+    secNc="<div class='section-wrap'><div class='seccion-titulo'>&#9888; Entidades fuera de clasificacion</div>"
+      +"<div class='nc-header'><span class='nc-titulo'>Entidades no clasificadas en esta especialidad</span>"
+      +"<span class='nc-subtitulo'>Existen en el modelo pero no forman parte del listado de esta especialidad.</span></div>"
+      +"<table><thead><tr><th>Clase IFC</th><th style='text-align:center'>Cantidad</th></tr></thead><tbody>"+fn+"</tbody>"
+      +"<tfoot><tr><td style='font-weight:bold;padding:9px 14px;color:var(--text);'>Total no clasificados</td><td class='cantidad' style='color:var(--warn);font-weight:bold;'>"+tnc+"</td></tr></tfoot></table></div>";
+  } else {
+    secNc="<div class='section-wrap'><div class='seccion-titulo'>&#10003; Sin entidades fuera de clasificacion</div>"
+      +"<div class='sec-box sec-box-ok'>Todas las entidades del modelo estan dentro del listado de esta especialidad.</div></div>";
+  }
+
+  var secComp="";
+  if(ncData.comp.length){
+    var fc=ncData.comp.map(function(c){return "<tr><td><code>"+c[0]+"</code></td><td style='font-size:11px;color:var(--muted);'>"+c[1]+"</td><td class='cantidad' style='color:var(--accent);'>"+c[2]+"</td></tr>";}).join("");
+    secComp="<div class='section-wrap'><div class='seccion-titulo'>&#9432; Entidades complementarias</div>"
+      +"<div class='sec-box sec-box-info'>Subcomponentes geometricos sin clasificacion independiente.</div>"
+      +"<table><thead><tr><th>Clase IFC</th><th>Descripcion</th><th style='text-align:center'>Cantidad</th></tr></thead><tbody>"+fc+"</tbody></table></div>";
+  }
+
+  return "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'><title>Reporte &mdash; "+espNombre+"</title>"+CSS+"</head><body>"
+    +"<div class='rpt-header'><div><h1>Reporte IFC &mdash; "+espNombre+"</h1><p>Modelo: "+modeloNombre+"</p><p>Generado: "+fecha+"</p></div><div class='rpt-badge'>&#127959; PlanBIM</div></div>"
+    +"<div class='resumen'>"
+    +"<div class='card'><div class='numero'>"+ents.length+"</div><div class='label'>Revisadas</div></div>"
+    +"<div class='card'><div class='numero green'>"+presentes+"</div><div class='label'>Presentes</div></div>"
+    +"<div class='card'><div class='numero red'>"+ausentes+"</div><div class='label'>Ausentes</div></div>"
+    +"<div class='card'><div class='numero'>"+totalEsp+"</div><div class='label'>Total elementos</div></div></div>"
+    +hOrigen(rOrg)+hNombres(rNom)+hNiveles(rNiv)
+    +"<div class='section-wrap'><div class='seccion-titulo'>&#9776; Entidades del listado</div>"
+    +"<table><thead><tr><th>Nombre</th><th>Clase IFC</th><th style='text-align:center'>Cantidad</th><th style='text-align:center'>Estado</th></tr></thead><tbody>"+filas+"</tbody></table></div>"
+    +secNoRev+secNc+secComp+hClas(rCla, ncData)
+    +"<div class='footer'>Creado por Carlos Estay Ruggieri &mdash; Plataforma BIM MOP Chile</div></body></html>";
+}
+
+// ============================================================
+
+
+// ============================================================
+// FLUJO PRINCIPAL
+// ============================================================
+var selFile = null;
+var pendingBuffer = null;
+var pendingIdsEsp = [];
+
+function log(msg,t){var el=document.getElementById("slog"),d=document.createElement("div");if(t)d.className="log-"+t;d.textContent=msg;el.appendChild(d);el.scrollTop=el.scrollHeight;}
+function prog(p){document.getElementById("pbar").style.width=p+"%";}
+
+function poblarDropdown(){
+  var sel=document.getElementById("selEsp");
+  for(var k in ESP){
+    var opt=document.createElement("option");
+    opt.value=k; opt.textContent=ESP[k].cod+"\u2014"+k;
+    sel.appendChild(opt);
+  }
+}
+
+function actualizarEntidades(){
+  var espNom=document.getElementById("selEsp").value;
+  var block=document.getElementById("entsBlock");
+  var lista=document.getElementById("entsList");
+  if(!espNom){block.style.display="none";document.getElementById("btnGen").disabled=true;return;}
+  var ents=ESP[espNom].ents;
+  lista.innerHTML="";
+  for(var i=0;i<ents.length;i++){
+    (function(ent){
+      var item=document.createElement("label");
+      item.className="ent-item";
+      var cb=document.createElement("input");
+      cb.type="checkbox"; cb.checked=true; cb.value=ent[0];
+      cb.addEventListener("change",validarSeleccion);
+      var info=document.createElement("div");
+      info.innerHTML="<div class='ent-name'>"+ent[1]+"</div><div class='ent-cls'>"+ent[0].charAt(0)+ent[0].slice(1).toLowerCase()+"</div>";
+      item.appendChild(cb); item.appendChild(info);
+      lista.appendChild(item);
+    })(ents[i]);
+  }
+  block.style.display="block";
+  document.getElementById("configRevBlock").style.display="flex";
+  validarSeleccion();
+}
+
+function validarSeleccion(){
+  var cbs=document.querySelectorAll("#entsList input[type=checkbox]"),ok=false;
+  for(var i=0;i<cbs.length;i++) if(cbs[i].checked){ok=true;break;}
+  document.getElementById("btnGen").disabled=!ok;
+}
+
+function procesar(){
+  var espNom=document.getElementById("selEsp").value; if(!espNom)return;
+  var cbs=document.querySelectorAll("#entsList input[type=checkbox]");
+  var entsSelec=[],allEnts=ESP[espNom].ents;
+  for(var i=0;i<cbs.length;i++) if(cbs[i].checked)
+    for(var j=0;j<allEnts.length;j++) if(allEnts[j][0]===cbs[i].value){entsSelec.push(allEnts[j]);break;}
+  var entsNoRev=[];
+  for(var j=0;j<allEnts.length;j++){
+    var sel=false; for(var i=0;i<entsSelec.length;i++) if(entsSelec[i][0]===allEnts[j][0]){sel=true;break;}
+    if(!sel) entsNoRev.push(allEnts[j]);
+  }
+
+  document.getElementById("sbox").classList.add("show");
+  document.getElementById("spin").classList.add("show");
+  document.getElementById("pwrap").classList.add("show");
+  document.getElementById("slog").innerHTML="";
+  document.getElementById("rlist").innerHTML="";
+  document.getElementById("res").classList.remove("show");
+  document.getElementById("btnGen").disabled=true;
+
+  pendingBuffer = null;
+  pendingIdsEsp = [];
+
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var texto=e.target.result;
+      log("Archivo leido ("+(texto.length/1024/1024).toFixed(1)+" MB).","ok"); prog(20);
+      log("Parseando productos IFC...","info");
+      var est=parsearIFC(texto);
+      log("Especialidad: "+espNom+" | "+entsSelec.length+" entidades seleccionadas.","info"); prog(50);
+
+      // Recoger expressIDs de las entidades seleccionadas para el visor
+      var idsEsp = [];
+      for(var i=0;i<entsSelec.length;i++){
+        var cls = entsSelec[i][0];
+        if(est.idsPorCls[cls]) idsEsp = idsEsp.concat(est.idsPorCls[cls]);
+      }
+      log("ExpressIDs para visor 3D: "+idsEsp.length+" elementos.","info"); prog(60);
+
+      var mn=selFile.name,fecha=new Date().toLocaleString("es-CL");
+      var html=generarHTML(espNom,entsSelec,entsNoRev,est,mn,fecha);
+      var base=mn.replace(/\.[^.]+$/,"");
+      var narch=base+"_"+espNom.replace(/[ /]/g,"_")+"_reporte.html";
+      var total=0;
+      for(var i=0;i<entsSelec.length;i++) total+=(est.conteo[entsSelec[i][0]]||0);
+      var rep={nombre:espNom,narch:narch,html:html,total:total};
+      prog(80);
+      log("\u2714 "+narch+" ("+total+" elementos)","ok"); prog(100);
+      document.getElementById("spin").classList.remove("show");
+      document.getElementById("stitle").textContent="Listo";
+      document.getElementById("res").classList.add("show");
+
+      var card=document.createElement("div");
+      card.className="rcard active";
+      card.innerHTML="<div class='racc'></div><div class='rbody'><div class='rname'>"+rep.nombre+"</div><div class='rmeta'>"+rep.total+" elementos \u00b7 "+entsSelec.length+" entidades</div></div>";
+      card.addEventListener("click",function(){
+        mostrarReporte(rep);
+        document.querySelectorAll(".rcard").forEach(function(c){c.classList.remove("active");});
+        card.classList.add("active");
+      });
+      document.getElementById("rlist").appendChild(card);
+      mostrarReporte(rep);
+
+      // Guardar buffer IFC y IDs para cuando se active el visor 3D
+      pendingIdsEsp = idsEsp;
+
+    }catch(err){
+      document.getElementById("spin").classList.remove("show");
+      document.getElementById("stitle").textContent="Error al procesar";
+      log("ERROR: "+err.message,"error"); console.error(err);
+    }
+    document.getElementById("btnGen").disabled=false;
+  };
+
+  // Leer como texto para el reporte
+  var readerTxt = new FileReader();
+  readerTxt.onload = function(e){
+    // ya manejado arriba
+  };
+  log("Leyendo: "+selFile.name,"info"); prog(10);
+  reader.readAsText(selFile,"UTF-8");
+
+}
+
+// ============================================================
+// EVENTOS UI
+// ============================================================
+function handleFile(file){
+  if(!file||!file.name.toLowerCase().endsWith(".ifc")){alert("Por favor selecciona un archivo .ifc");return;}
+  selFile=file;
+  document.getElementById("fname").textContent=file.name;
+  document.getElementById("fmeta").textContent=(file.size/1024/1024).toFixed(1)+" MB";
+  document.getElementById("finfo").classList.add("show");
+  document.getElementById("btnCargarIfc").classList.add("cargado");
+  var cod=detectarCodigo(file.name),selEsp=document.getElementById("selEsp");
+  if(cod){ for(var k in ESP){ if(ESP[k].cod===cod){selEsp.value=k;break;} } }
+  else selEsp.value="";
+  actualizarEntidades();
+  document.getElementById("configBlock").style.display="flex";
+  document.getElementById("sbox").classList.remove("show");
+  document.getElementById("res").classList.remove("show");
+  var fr=document.getElementById("vframe"),tb=document.getElementById("vtoolbar");
+  fr.classList.remove("show"); fr.src="about:blank";
+  tb.classList.remove("show");
+  document.getElementById("dropzoneCentral").classList.remove("hidden");
+  document.getElementById("rlist").innerHTML="";
+  if(typeof currentBlobUrl!=="undefined"&&currentBlobUrl){URL.revokeObjectURL(currentBlobUrl);currentBlobUrl=null;}
+  pendingBuffer=null; pendingIdsEsp=[];
+}
+
+poblarDropdown();
+var fi=document.getElementById("fi");
+var dzc=document.getElementById("dropzoneCentral");
+fi.addEventListener("change",function(e){handleFile(e.target.files[0]);});
+dzc.addEventListener("dragover",function(e){e.preventDefault();dzc.classList.add("over");});
+dzc.addEventListener("dragleave",function(){dzc.classList.remove("over");});
+dzc.addEventListener("drop",function(e){e.preventDefault();dzc.classList.remove("over");handleFile(e.dataTransfer.files[0]);});
+document.getElementById("selEsp").addEventListener("change",actualizarEntidades);
+document.getElementById("btnAll").addEventListener("click",function(){
+  document.querySelectorAll("#entsList input[type=checkbox]").forEach(function(c){c.checked=true;});
+  validarSeleccion();
+});
+document.getElementById("btnNone").addEventListener("click",function(){
+  document.querySelectorAll("#entsList input[type=checkbox]").forEach(function(c){c.checked=false;});
+  validarSeleccion();
+});
+document.getElementById("btnGen").addEventListener("click",procesar);
+
+// ============================================================
+// VISOR REPORTE (iframe)
+// ============================================================
+var currentBlobUrl = null;
+
+function mostrarReporte(rep) {
+  if (currentBlobUrl) { URL.revokeObjectURL(currentBlobUrl); currentBlobUrl = null; }
+  var blob = new Blob([rep.html], {type:"text/html;charset=utf-8"});
+  currentBlobUrl = URL.createObjectURL(blob);
+  var frame   = document.getElementById("vframe");
+  var toolbar = document.getElementById("vtoolbar");
+  document.getElementById("vtitle").textContent = rep.nombre;
+  frame.src = currentBlobUrl;
+  toolbar.classList.add("show");
+  frame.classList.add("show");
+  document.getElementById("dropzoneCentral").classList.add("hidden");
+  document.getElementById("vbtnDl").onclick = function(){
+    var a = document.createElement("a");
+    a.href = currentBlobUrl; a.download = rep.narch; a.click();
+  };
+}
+</script>
+<script src="./js/web-ifc-api.js"></script>
+<script>
+// web-ifc 0.0.44 UMD — exponer IfcAPI globalmente
+(function() {
+  if (typeof WebIFC !== 'undefined' && WebIFC.IfcAPI) {
+    window._IfcAPI = WebIFC.IfcAPI;
+    console.log('web-ifc 0.0.68 IIFE cargado. IfcAPI:', !!window._IfcAPI);
+  } else {
+    console.warn('WebIFC no encontrado — revisar js/web-ifc-api.js');
+  }
+})();
+</script>
+<footer style="text-align:center;padding:6px 24px;font:400 9px var(--mono);color:var(--muted);border-top:1px solid var(--border);letter-spacing:.08em;flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:8px;">
+  &copy; 2026 VoxelBIM &mdash; Coordinaci&oacute;n BIM &mdash; MIT License
+  &nbsp;&middot;&nbsp; <span style="opacity:.4;">Carlos Estay Ruggieri</span>
+</footer>
+</body>
+</html>
+

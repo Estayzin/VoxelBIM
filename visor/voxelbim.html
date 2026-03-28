@@ -102,8 +102,8 @@ header { background:var(--navy); padding:16px 24px; min-height:72px; display:fle
 
 /* Modo claro */
 body.light-mode {
-  --navy:#f0f4f8; --blue:#e4eaf0; --accent:#0077aa; --green:#00804d;
-  --bg:#dce3ea; --card:#f5f8fb; --text:#1a2a3a; --muted:#6a8aaa;
+  --navy:#f0f4f8; --blue:#e8eef4; --accent:#0077aa; --green:#00804d;
+  --bg:#dce3ea; --card:#f0f5f9; --text:#1a2a3a; --muted:#5a7a9a;
   --border:#b0c4d8; --accent2:#5533aa; --warn:#cc4400; --red:#cc0022;
 }
 body.light-mode .viewer-wrap { background:#c8d8e8; }
@@ -112,6 +112,37 @@ body.light-mode .ov-icon { opacity:.3; }
 body.light-mode .ov-text { color:#4a6080; }
 body.light-mode header { box-shadow:0 2px 20px rgba(0,119,170,.1); }
 body.light-mode .hsub { color:#4a6080; }
+
+/* Dropzone central en modo claro */
+body.light-mode #dropzoneCentral .dzc-box {
+  background:rgba(255,255,255,.75);
+  border-color:rgba(0,119,170,.3);
+}
+body.light-mode #dropzoneCentral.over .dzc-box {
+  background:rgba(255,255,255,.9);
+  border-color:var(--accent);
+}
+body.light-mode .dzc-title { color:#1a2a3a; }
+body.light-mode .dzc-sub   { color:#5a7a9a; }
+
+/* Sidebar en modo claro */
+body.light-mode .sidebar { background:#e8eef4; border-right-color:#b0c4d8; }
+body.light-mode .sb-header { border-bottom-color:#b0c4d8; }
+body.light-mode .model-item { background:#f0f5f9; border-color:#c8d8e8; }
+body.light-mode .models-empty { color:#7a9ab8; }
+
+/* Panels en modo claro */
+body.light-mode #propsPanel,
+body.light-mode #reportePanel,
+body.light-mode #navPanel { background:#e8eef4; border-color:#b0c4d8; }
+body.light-mode .props-sec { background:#f0f5f9; border-color:#b0c4d8; }
+body.light-mode .rp-sec    { background:#f0f5f9; border-color:#b0c4d8; }
+
+/* Tooltip en modo claro */
+body.light-mode #tooltip { background:#f0f5f9; border-color:var(--accent); box-shadow:0 0 20px rgba(0,119,170,.15); }
+
+/* Footer en modo claro */
+body.light-mode footer { border-top-color:#b0c4d8; }
 </style>
 <style>
 /* LAYOUT */
@@ -413,17 +444,12 @@ body.light-mode .hsub { color:#4a6080; }
       <button class="hbar-btn disabled" id="btnClip" title="Pr&oacute;ximamente"><span class="hb-icon">&#9641;</span> Corte <span class="hbar-tag">PR&Oacute;X.</span></button>
       <button class="hbar-btn disabled" id="btnMeasure" title="Pr&oacute;ximamente"><span class="hb-icon">&#8596;</span> Medir <span class="hbar-tag">PR&Oacute;X.</span></button>
       <button class="hbar-btn disabled" id="btnPlan" title="Pr&oacute;ximamente"><span class="hb-icon">&#9744;</span> Planta <span class="hbar-tag">PR&Oacute;X.</span></button>
+      <button class="hbar-btn" id="btnToggleGrid" title="Mostrar/ocultar grilla"><span class="hb-icon">&#9647;</span> Grilla</button>
     </div>
 
     <div class="header-toolbar-sep"></div>
 
     <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
-
-      <!-- Modo claro/oscuro y grilla -->
-      <div class="header-toolbar">
-        <button class="hbar-btn" id="btnLightMode" title="Modo claro/oscuro"><span class="hb-icon">&#9681;</span></button>
-        <button class="hbar-btn" id="btnToggleGrid" title="Mostrar/ocultar grilla"><span class="hb-icon">&#9647;</span></button>
-      </div>
 
       <div class="header-toolbar-sep"></div>
 
@@ -433,6 +459,11 @@ body.light-mode .hsub { color:#4a6080; }
         <button class="hbar-btn" id="btnReporte"><span class="hb-icon">&#9636;</span> Reporte</button>
         <button class="hbar-btn disabled" title="Pr&oacute;ximamente"><span class="hb-icon">&#10022;</span> Chat IA <span class="hbar-tag">PR&Oacute;X.</span></button>
       </div>
+
+      <div class="header-toolbar-sep"></div>
+
+      <!-- Modo claro/oscuro -->
+      <button class="hbar-btn" id="btnLightMode" title="Modo claro/oscuro"><span class="hb-icon">&#9681;</span></button>
 
       <div class="header-toolbar-sep"></div>
 
@@ -682,6 +713,22 @@ body.light-mode .hsub { color:#4a6080; }
     panel.classList.toggle('open');
     if (btn) btn.classList.toggle('active', !isOpen);
   };
+
+  /* ══ MODO CLARO/OSCURO ══ */
+  (function() {
+    const btn = document.getElementById('btnLightMode');
+    if (!btn) return;
+    // Restaurar preferencia guardada
+    if (localStorage.getItem('voxelbim_theme') === 'light') {
+      document.body.classList.add('light-mode');
+      btn.classList.add('active');
+    }
+    btn.addEventListener('click', function() {
+      const isLight = document.body.classList.toggle('light-mode');
+      btn.classList.toggle('active', isLight);
+      localStorage.setItem('voxelbim_theme', isLight ? 'light' : 'dark');
+    });
+  })();
   </script>
 </body>
 </html>

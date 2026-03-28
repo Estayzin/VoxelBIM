@@ -40,20 +40,19 @@ grid.config.primarySize = 1;
 grid.config.secondarySize = 10;
 grid.config.visible = false;
 
-// Helper para rutas de activos (Worker y WASM) según el entorno
-const getBaseUrl = () => {
-  const h = window.location.hostname;
-  const p = window.location.port;
-  // Local con server.js
-  if ((h === 'localhost' || h === '127.0.0.1') && p === '3000') {
-    return '/visor/dist';
+// Cargar worker: usar URL relativa que funcione en desarrollo y Cloudflare Pages
+const getWorkerUrl = () => {
+  // En desarrollo local (vite dev)
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return '/visor/dist/worker.mjs';
   }
-  // Cloudflare Pages (raíz)
-  return '';
+  
+  // En Cloudflare Pages: el worker está servido desde la raíz
+  // Siempre usar ruta absoluta desde la raíz del dominio
+  return '/worker.mjs';
 };
 
-const _base = getBaseUrl();
-const workerUrl = _base + '/worker.mjs';
+const workerUrl = getWorkerUrl();
 console.log('[VoxelBIM] Initializing worker from:', workerUrl);
 
 const fragments = components.get(OBC.FragmentsManager);
@@ -62,6 +61,14 @@ try {
   console.log('[VoxelBIM] Worker initialized successfully');
 } catch (e) {
   console.error('[VoxelBIM] Failed to initialize worker:', e);
+  // Fallback: intentar con ruta absoluta
+  try {
+    console.log('[VoxelBIM] Attempting fallback worker URL');
+    fragments.init('/worker.mjs', { classicWorker: false });
+  } catch (e2) {
+    console.error('[VoxelBIM] Fallback also failed:', e2);
+    throw new Error('Could not initialize Web Worker. Check that worker.mjs is accessible at: ' + workerUrl);
+  }
 }
 
 world.camera.controls.addEventListener("update", () => fragments.core.update());
@@ -104,37 +111,9 @@ let _clsFiltroActiva = null;
 let _espActual = 'ARQ';
 let _estActual = null;
 let _nombreArchivoActual = '';
+let _planMode = false;
 let _cfgX = 0, _cfgY = 0, _cfgZ = 0;
 let _cfgSite = 3, _cfgBuilding = 2, _cfgStorey = 5;
-
-// PANEL MANAGEMENT (Dual side panels)
-const rightPanels = document.getElementById('rightPanels');
-window.actualizarVisPadre = () => {
-  const rp = document.getElementById('rightPanels');
-  if (!rp) return;
-  const p1 = document.getElementById('propsPanel');
-  const p2 = document.getElementById('reportePanel');
-  const p3 = document.getElementById('claudePanel');
-  const any_p1 = (p1 && p1.style.display && p1.style.display !== 'none');
-  const any_p2 = (p2 && p2.style.display && p2.style.display !== 'none');
-  const any_p3 = (p3 && p3.style.display && p3.style.display !== 'none');
-  rp.style.display = (any_p1 || any_p2 || any_p3) ? 'flex' : 'none';
-};
-window.togglePanel = (id) => {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const isVis = el.style.display && el.style.display !== 'none';
-  el.style.display = isVis ? 'none' : 'flex';
-  
-  let btnId = '';
-  if (id === 'propsPanel') btnId = 'btnProps';
-  else if (id === 'reportePanel') btnId = 'btnReporte';
-  else if (id === 'claudePanel') btnId = 'btnClaude';
-  
-  const btn = document.getElementById(btnId);
-  if (btn) isVis ? btn.classList.remove('active') : btn.classList.add('active');
-  window.actualizarVisPadre();
-};
 
 const setProgress = (v) => {
   const pct = Math.round(v * 100);
@@ -144,12 +123,6 @@ const setProgress = (v) => {
 };
 
 const loadIfc = async (file) => {
-  // Ocultar dropzone central y botón al cargar
-  const dzc = document.getElementById('dropzoneCentral');
-  if (dzc) dzc.classList.add('hidden');
-  const btnCargar = document.getElementById('btnCargarIfc');
-  if (btnCargar) { btnCargar.className = 'btn-cargar-ifc cargado'; btnCargar.innerHTML = '&#10003; Modelo cargado'; btnCargar.onclick = null; }
-
   overlay.classList.add("hidden");
   progressWrap.classList.add("show");
   modelName.textContent = file.name;
@@ -164,15 +137,8 @@ const loadIfc = async (file) => {
   _espActual = detectarEspecialidad(file.name);
   _estActual = est;
   try {
-    await ifcLoader.load(new Uint8Array(buffer), false, file.name, { processData: { progressCallback: setProgress } });
+    await ifcLoader.load(new Uint8Array(buffer), true, file.name, { processData: { progressCallback: setProgress } });
     setProgress(1);
-    
-    // Actualizar indicador de estado Premium
-    const cDot = document.getElementById('connDot');
-    const cStatus = document.getElementById('connStatus');
-    if (cDot) cDot.classList.add('active');
-    if (cStatus) { cStatus.textContent = 'En línea'; cStatus.style.color = 'var(--green)'; }
-
     await renderNavegador(est);
     if (world.camera.fitToItems) await world.camera.fitToItems();
   } catch(err) {
@@ -182,29 +148,16 @@ const loadIfc = async (file) => {
   }
 };
 
+const dropzone = document.getElementById("dropzone");
 const fileInput = document.getElementById("fileInput");
+dropzone.addEventListener("click", () => fileInput.click());
 fileInput.addEventListener("change", () => { if (fileInput.files[0]) loadIfc(fileInput.files[0]); });
-
-// Dropzone central — drag & drop sobre el visor
-const dzc = document.getElementById("dropzoneCentral");
-if (dzc) {
-  dzc.addEventListener("dragover",  (e) => { e.preventDefault(); dzc.classList.add("over"); });
-  dzc.addEventListener("dragleave", ()  => dzc.classList.remove("over"));
-  dzc.addEventListener("drop", (e) => {
-    e.preventDefault(); dzc.classList.remove("over");
-    if (e.dataTransfer.files[0]) loadIfc(e.dataTransfer.files[0]);
-  });
-}
-
-// Drag & drop sobre el viewer-wrap completo (cuando el dzc ya está oculto, modelos adicionales)
-const viewerWrap = document.querySelector(".viewer-wrap");
-if (viewerWrap) {
-  viewerWrap.addEventListener("dragover",  (e) => { e.preventDefault(); });
-  viewerWrap.addEventListener("drop", (e) => {
-    e.preventDefault();
-    if (e.dataTransfer.files[0]) loadIfc(e.dataTransfer.files[0]);
-  });
-}
+dropzone.addEventListener("dragover", (e) => { e.preventDefault(); dropzone.classList.add("over"); });
+dropzone.addEventListener("dragleave", () => dropzone.classList.remove("over"));
+dropzone.addEventListener("drop", (e) => {
+  e.preventDefault(); dropzone.classList.remove("over");
+  if (e.dataTransfer.files[0]) loadIfc(e.dataTransfer.files[0]);
+});
 
 const casters = components.get(OBC.Raycasters);
 const caster = casters.get(world);
@@ -255,11 +208,7 @@ function getNivelDeElemento(localId) {
 }
 
 function renderProps(data, localId, bb = null) {
-  if (!data) { 
-    if (propsEmpty) propsEmpty.style.display = 'block'; 
-    if (propsBody) propsBody.style.display = 'none'; 
-    return; 
-  }
+  if (!data) { propsEmpty.style.display = 'block'; propsBody.style.display = 'none'; return; }
   const cls  = data._category?.value ?? 'Desconocido';
   const ico  = IFC_ICO[cls] || '▪';
   const clsL = cls.charAt(0) + cls.slice(1).toLowerCase();
@@ -313,13 +262,6 @@ highlighter.events.select.onHighlight.add(async (modelIdMap) => {
     // Contar total de elementos seleccionados
     let total = 0;
     for (const ids of Object.values(modelIdMap)) total += ids.size;
-
-    if (total > 0) {
-      const pp = document.getElementById('propsPanel');
-      if (pp && (!pp.style.display || pp.style.display === 'none')) {
-        window.togglePanel('propsPanel');
-      }
-    }
 
     if (total === 1) {
       // Un solo elemento → mostrar sus propiedades
@@ -450,7 +392,6 @@ document.getElementById('ctxShowAll').addEventListener('click', async () => {
   hiddenElements.clear();
   await hider.set(true);
   isolatedCategories.clear();
-  isolatedLevels.clear();
   _clsFiltroActiva = null;
   document.querySelectorAll('.ent-row.ent-active').forEach(r => r.classList.remove('ent-active'));
   document.querySelectorAll('.tipo-row.tipo-active').forEach(r => { r.classList.remove('tipo-active'); r._tipoActivo = false; });
@@ -518,7 +459,6 @@ document.addEventListener('keydown', async (e) => {
 
 const hider = components.get(OBC.Hider);
 const isolatedCategories = new Set();
-const isolatedLevels = new Set();
 
 document.getElementById("btnFit").addEventListener("click", () => world.camera.fitToItems());
 document.getElementById("btn3D").addEventListener("click", () => {
@@ -565,10 +505,13 @@ document.getElementById("btnPlan").addEventListener("click", async () => {
   }
 });
 document.getElementById("btnProps").addEventListener("click", () => {
-  window.togglePanel('propsPanel');
+  const visible = document.getElementById("rightPanel").style.display !== 'none';
+  document.getElementById("rightPanel").style.display = visible ? 'none' : '';
+  document.getElementById("btnProps").classList.toggle("active", !visible);
 });
 document.getElementById("propsClose").addEventListener("click", () => {
-  window.togglePanel('propsPanel');
+  propsPanel.classList.remove("show");
+  document.getElementById("btnProps").classList.remove("active");
 });
 document.getElementById("btnClip").addEventListener("click", () => {});
 
@@ -993,7 +936,6 @@ document.getElementById("btnToggleGrid").addEventListener("click", () => {
 document.getElementById("btnResetVis").addEventListener("click", async () => {
   await hider.set(true);
   isolatedCategories.clear();
-  isolatedLevels.clear();
   _clsFiltroActiva = null;
   document.querySelectorAll('.ent-row.ent-active').forEach(r => r.classList.remove('ent-active'));
   document.querySelectorAll('.tipo-row.tipo-active').forEach(r => { r.classList.remove('tipo-active'); r._tipoActivo = false; });
@@ -1177,16 +1119,7 @@ async function renderNavegador(est) {
   }
 
   navBody.innerHTML = html || '<div class="nav-empty">Carga un modelo IFC<br>para navegar su estructura</div>';
-
-  // Abrir el panel automáticamente al cargar un modelo
-  const navPanel = document.getElementById('navPanel');
-  const btnArbol = document.getElementById('btnArbol');
-  if (navPanel && !navPanel.classList.contains('open')) {
-    navPanel.classList.add('open');
-    if (btnArbol) btnArbol.classList.add('active');
-  }
 }
-window.renderNavegador = renderNavegador;
 
 window.navSeleccionar = async (tipo, id, e) => {
   const ctrlPressed = e?.ctrlKey || e?.metaKey || false;
@@ -1296,7 +1229,7 @@ function getPunto(r,inst,t){if(!r||!inst[r]||inst[r].cls!=='IFCCARTESIANPOINT')r
 function getOffset(plRef,inst,t){if(!plRef||!inst[plRef])return null;const lp=splitAttrs(extraerRaw(t,inst[plRef].pos));let ap=null;for(let i=0;i<lp.length;i++){const r=refId(lp[i]);if(r&&inst[r]&&(inst[r].cls==='IFCAXIS2PLACEMENT3D'||inst[r].cls==='IFCAXIS2PLACEMENT2D')){ap=r;break;}}if(!ap)return null;return getPunto(refId(splitAttrs(extraerRaw(t,inst[ap].pos))[0]),inst,t);}
 function verificarOrigen(est){const res=[];['IFCSITE','IFCBUILDING'].forEach(tipo=>{for(const id in est.instancias){if(est.instancias[id].cls===tipo){const attrs=splitAttrs(extraerRaw(est.texto,est.instancias[id].pos));const nombre=strVal(attrs[2])||strVal(attrs[1])||'(sin nombre)';let plRef=null;for(let i=3;i<=8&&i<attrs.length;i++){const rid=refId(attrs[i]);if(rid&&est.instancias[rid]&&est.instancias[rid].cls==='IFCLOCALPLACEMENT'){plRef=rid;break;}}let x=null,y=null,z=null;if(plRef){const off=getOffset(plRef,est.instancias,est.texto);if(off){x=off.x;y=off.y;z=off.z;}}res.push({tipo,nombre,x,y,z,ok:x===null||(Math.abs(x-_cfgX)<0.001&&Math.abs(y-_cfgY)<0.001&&Math.abs(z-_cfgZ)<0.001)});break;}}});return res;}
 function verificarNombres(est){const res=[];[{tipo:'IFCSITE',min:_cfgSite},{tipo:'IFCBUILDING',min:_cfgBuilding}].forEach(cfg=>{for(const id in est.instancias){if(est.instancias[id].cls===cfg.tipo){const attrs=splitAttrs(extraerRaw(est.texto,est.instancias[id].pos));const nombre=strVal(attrs[2])||strVal(attrs[1])||'';res.push({tipo:cfg.tipo,nombre,largo:nombre.length,ok:nombre.length>=cfg.min});break;}}});return res;}
-function verificarNiveles(est){const niveles=[];for(const id in est.instancias){if(est.instancias[id].cls==='IFCBUILDINGSTOREY'){const attrs=splitAttrs(extraerRaw(est.texto,est.instancias[id].pos));const nombre=strVal(attrs[2])||strVal(attrs[1])||'';niveles.push({id:'#'+id,nombre,largo:nombre.length,ok:nombre.length === _cfgStorey});}}return niveles;}
+function verificarNiveles(est){const niveles=[];for(const id in est.instancias){if(est.instancias[id].cls==='IFCBUILDINGSTOREY'){const attrs=splitAttrs(extraerRaw(est.texto,est.instancias[id].pos));const nombre=strVal(attrs[2])||strVal(attrs[1])||'';niveles.push({id:'#'+id,nombre,largo:nombre.length,ok:nombre.length>=_cfgStorey});}}return niveles;}
 function rpSec(t,b,bc,inner,open){return`<div class="rp-sec"><div class="rp-sec-hdr" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'"><span class="rp-sec-title">${t}</span><span class="rp-badge ${bc}">${b}</span></div><div class="rp-content" style="display:${open?'block':'none'}">${inner}</div></div>`;}
 
 function renderReporte(est) {
@@ -1338,30 +1271,17 @@ function renderReporte(est) {
 
   // 1. Origen
   const orig = verificarOrigen(est);
-  if (orig.length) { const ok=orig.every(r=>r.ok); const filas=orig.map(r=>{const c=r.x!==null?`(${[r.x,r.y,r.z].map(v=>(+v).toFixed(3)).join(', ')})`:'N/A';return`<tr><td class="td-name">${r.tipo.charAt(0)+r.tipo.slice(1).toLowerCase()}<div class="td-cls">${esc(r.nombre)}</div></td><td style="font:400 9px var(--mono);color:var(--muted)">${c}</td><td class="td-ok">${r.ok?'<span class="ic-ok">✓</span>':'<span class="ic-err">✗</span>'}</td></tr>`;}).join(''); html+=rpSec('3.2 Posición Local',ok?'OK':'Error',ok?'rp-ok':'rp-err',`<table class="rp-table">${filas}</table>`,true); }
+  if (orig.length) { const ok=orig.every(r=>r.ok); const filas=orig.map(r=>{const c=r.x!==null?`(${[r.x,r.y,r.z].map(v=>(+v).toFixed(3)).join(', ')})`:'N/A';return`<tr><td class="td-name">${r.tipo.charAt(0)+r.tipo.slice(1).toLowerCase()}<div class="td-cls">${esc(r.nombre)}</div></td><td style="font:400 9px var(--mono);color:var(--muted)">${c}</td><td class="td-ok">${r.ok?'<span class="ic-ok">✓</span>':'<span class="ic-err">✗</span>'}</td></tr>`;}).join(''); html+=rpSec('3.2 Posición Local',ok?'OK':'Error',ok?'rp-ok':'rp-err',`<table class="rp-table">${filas}</table>`,!ok); }
   const noms = verificarNombres(est);
-  if (noms.length) { const ok=noms.every(r=>r.ok); const filas=noms.map(r=>`<tr><td class="td-name">${r.tipo.charAt(0)+r.tipo.slice(1).toLowerCase()}</td><td style="font:400 9px var(--mono)">"${esc(r.nombre)}" (${r.largo} car.)</td><td class="td-ok">${r.ok?'<span class="ic-ok">✓</span>':'<span class="ic-err">✗</span>'}</td></tr>`).join(''); html+=rpSec('3.3.a Nombre del sitio y del edificio',ok?'OK':'Error',ok?'rp-ok':'rp-err',`<div class="rp-msg">Sitio: ≥3 car. · Edificio: ≥2 car.</div><table class="rp-table">${filas}</table>`,true); }
+  if (noms.length) { const ok=noms.every(r=>r.ok); const filas=noms.map(r=>`<tr><td class="td-name">${r.tipo.charAt(0)+r.tipo.slice(1).toLowerCase()}</td><td style="font:400 9px var(--mono)">"${esc(r.nombre)}" (${r.largo} car.)</td><td class="td-ok">${r.ok?'<span class="ic-ok">✓</span>':'<span class="ic-err">✗</span>'}</td></tr>`).join(''); html+=rpSec('3.3.a Nombre del sitio y del edificio',ok?'OK':'Error',ok?'rp-ok':'rp-err',`<div class="rp-msg">Sitio: ≥3 car. · Edificio: ≥2 car.</div><table class="rp-table">${filas}</table>`,!ok); }
   const nivs = verificarNiveles(est);
-  if (nivs.length) {
-    const ok = nivs.every(r => r.ok);
-    const nOk = nivs.filter(r => r.ok).length;
-    const filas = nivs.map(r => {
-      const nid = r.id.startsWith('#') ? r.id.slice(1) : r.id;
-      return `<tr id="nivrow_${nid}" class="niv-row" onclick="window.onNivelClick('${nid}',event)">
-        <td class="td-name">${esc(r.nombre || '(sin nombre)')}</td>
-        <td style="text-align:center;font:400 9px var(--mono);color:var(--muted)">${r.largo} car.</td>
-        <td class="td-ok">${r.ok ? '<span class="ic-ok">✓</span>' : '<span class="ic-err">✗</span>'}</td>
-      </tr>`;
-    }).join('');
-    html += rpSec(`3.3.b Denominación de los niveles del edificio`, `${nOk}/${nivs.length} OK`, ok ? 'rp-ok' : nOk > 0 ? 'rp-warn' : 'rp-err', `<div class="rp-msg">Requerimiento: ${_cfgStorey} car.</div><table class="rp-table">${filas}</table>`, true);
-  }
+  if (nivs.length) { const ok=nivs.every(r=>r.ok); const nOk=nivs.filter(r=>r.ok).length; const filas=nivs.map(r=>`<tr><td class="td-name">${esc(r.nombre||'(sin nombre)')}</td><td style="text-align:center;font:400 9px var(--mono);color:var(--muted)">${r.largo} car.</td><td class="td-ok">${r.ok?'<span class="ic-ok">✓</span>':'<span class="ic-err">✗</span>'}</td></tr>`).join(''); html+=rpSec(`3.3.b Denominación de los niveles del edificio`,`${nOk}/${nivs.length} OK`,ok?'rp-ok':nOk>0?'rp-warn':'rp-err',`<table class="rp-table">${filas}</table>`,!ok); }
   const espKey=Object.keys(ESP).find(k=>ESP[k].cod===_espActual)||'Arquitectura'; const espEnts=ESP[espKey].ents;
   let filasP='',filasA='',presentes=0;
   espEnts.forEach(([cls,nom])=>{
     const qty=conteo[cls]||0; if(qty>0)presentes++;
     const ico=IFC_ICO[cls]||''; const isProxy=cls==='IFCBUILDINGELEMENTPROXY';
-    const statusIcon = isProxy ? (qty === 0 ? '<span class="ic-ok">✓</span>' : '<span style="color:var(--warn)">⚠</span>') : (qty > 0 ? '<span class="ic-ok">✓</span>' : '<span class="ic-err">✗</span>');
-    const fila=`<tr id="entrow_${cls}" class="ent-row${isProxy?' td-proxy':''}" onclick="window.onEntidadClick('${cls}',event)"><td class="td-name">${ico} ${nom}<div class="td-cls">${cls.charAt(0)+cls.slice(1).toLowerCase()}</div></td><td class="td-ok">${statusIcon}</td><td class="td-qty${qty===0?' zero':''}" ${isProxy&&qty>0?'style="color:var(--warn)"':''}>${qty}</td></tr>`;
+    const fila=`<tr id="entrow_${cls}" class="ent-row${isProxy?' td-proxy':''}" onclick="window.onEntidadClick('${cls}',event)"><td class="td-name">${ico} ${nom}<div class="td-cls">${cls.charAt(0)+cls.slice(1).toLowerCase()}</div></td><td class="td-ok">${qty>0?(isProxy?'<span style="color:var(--warn)">⚠</span>':'<span class="ic-ok">✓</span>'):'<span class="ic-err">✗</span>'}</td><td class="td-qty${qty===0?' zero':''}" ${isProxy&&qty>0?'style="color:var(--warn)"':''}>${qty}</td></tr>`;
     if(qty>0)filasP+=fila; else filasA+=fila;
   });
   let filas='';
@@ -1409,42 +1329,20 @@ function extraerTiposDelIFC(est) {
   return por;
 }
 
-function renderSecTipos(est, filtrarCls, filtrarIds = null) {
-  let tiposParaRender = _tiposCache || extraerTiposDelIFC(est);
-  
-  // Si filtramos por IDs (niveles), debemos recalcular temporalmente el conteo de tipos
-  if (filtrarIds && filtrarIds.size > 0) {
-    const por = {};
-    for (const id of filtrarIds) {
-      const inst = est.instancias[id];
-      if (!inst) continue;
-      const attrs = splitAttrs(extraerRaw(est.texto, inst.pos));
-      const nombre = strVal(attrs[2]) || strVal(attrs[1]) || '';
-      if (!nombre || !nombre.includes(':')) continue;
-      const partes = nombre.split(':');
-      const fam = partes[0], tip = partes.length >= 3 ? partes.slice(1, -1).join(':') : partes[1];
-      if (!por[inst.cls]) por[inst.cls] = new Map();
-      if (!por[inst.cls].has(fam)) por[inst.cls].set(fam, new Map());
-      const prev = por[inst.cls].get(fam).get(tip) || 0;
-      por[inst.cls].get(fam).set(tip, prev + 1);
-    }
-    tiposParaRender = por;
-  }
-
+function renderSecTipos(est, filtrarCls) {
+  _tiposCache = _tiposCache || extraerTiposDelIFC(est);
   const espKey = Object.keys(ESP).find(k=>ESP[k].cod===_espActual)||'Arquitectura';
   const espEnts = ESP[espKey].ents.map(([cls])=>cls);
-  let relevantes = Object.entries(tiposParaRender).filter(([cls])=>espEnts.includes(cls));
+  let relevantes = Object.entries(_tiposCache).filter(([cls])=>espEnts.includes(cls));
   if (filtrarCls) relevantes = relevantes.filter(([cls])=>cls===filtrarCls);
-  
-  const tituloFiltro = filtrarCls ? ` — ${IFC_ICO[filtrarCls]||''} ${filtrarCls.charAt(0)+filtrarCls.slice(1).toLowerCase()}` : 
-                      (filtrarIds ? ' — Filtrado por Nivel' : '');
+  const tituloFiltro = filtrarCls ? ` — ${IFC_ICO[filtrarCls]||''} ${filtrarCls.charAt(0)+filtrarCls.slice(1).toLowerCase()}` : '';
   const tituloSec = '3.5 Estructura y denominación';
 
   if (!relevantes.length) return `<div class="rp-sec" id="sec5wrap">
     <div class="rp-sec-hdr" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
       <span class="rp-sec-title">${tituloSec}${tituloFiltro}</span><span class="rp-badge rp-info">Sin datos</span>
     </div>
-    <div class="rp-content" style="display:block"><div class="rp-msg">No se encontraron tipos.</div></div>
+    <div class="rp-content" style="display:none"><div class="rp-msg">No se encontraron tipos.</div></div>
   </div>`;
 
   // Construir índice de lookup: idx → {cls, fam, tip, nombre completo}
@@ -1478,7 +1376,7 @@ function renderSecTipos(est, filtrarCls, filtrarIds = null) {
       <span class="rp-sec-title">${tituloSec}${tituloFiltro}</span>
       <span class="rp-badge rp-info">${totalTipos} tipos</span>
     </div>
-    <div class="rp-content" style="display:block">
+    <div class="rp-content" style="display:${filtrarCls?'block':'none'}">
       <table class="rp-table">
         <tr style="background:rgba(0,0,0,.2)">
           <td style="font:700 8px var(--mono);color:var(--muted);padding:3px 10px">ESTRUCTURA / DENOMINACIÓN</td>
@@ -1489,13 +1387,13 @@ function renderSecTipos(est, filtrarCls, filtrarIds = null) {
     </div>
   </div>`;
 }
-function actualizarSec5(filtrarCls, filtrarIds = null) {
+function actualizarSec5(filtrarCls) {
   _clsFiltroActiva = filtrarCls;
   if (!_estActual) return;
   const sec5 = document.getElementById('sec5wrap');
   if (!sec5) return;
   const tmp = document.createElement('div');
-  tmp.innerHTML = renderSecTipos(_estActual, filtrarCls, filtrarIds);
+  tmp.innerHTML = renderSecTipos(_estActual, filtrarCls);
   sec5.replaceWith(tmp.firstElementChild);
 }
 window.resetFiltroTipos = () => actualizarSec5(null);
@@ -1612,65 +1510,14 @@ window.destacarTipo = async (idx, rowEl, e) => {
   }
 };
 
-window.onNivelClick = async (id, e) => {
-  if (!_estActual) return;
-  const ctrlPressed = e?.ctrlKey || e?.metaKey || false;
-  const rowEl = document.getElementById('nivrow_' + id);
-
-  if (!ctrlPressed) {
-    // Sin Ctrl: deseleccionar todo y aislar solo este nivel
-    isolatedLevels.clear();
-    isolatedCategories.clear();
-    document.querySelectorAll('.niv-row.niv-active').forEach(r => r.classList.remove('niv-active'));
-    document.querySelectorAll('.ent-row.ent-active').forEach(r => r.classList.remove('ent-active'));
-    await hider.set(true);
-    isolatedLevels.add(id);
-    if (rowEl) rowEl.classList.add('niv-active');
-  } else {
-    // Con Ctrl: toggle de este nivel
-    if (isolatedLevels.has(id)) {
-      isolatedLevels.delete(id);
-      if (rowEl) rowEl.classList.remove('niv-active');
-    } else {
-      isolatedLevels.add(id);
-      if (rowEl) rowEl.classList.add('niv-active');
-    }
-  }
-
-  if (isolatedLevels.size === 0 && isolatedCategories.size === 0) {
-    await hider.set(true);
-    actualizarSec5(null);
-    renderProps(null, null);
-    return;
-  }
-
-  // Combinar elementos de todos los niveles seleccionados (y categorías si permitiéramos)
-  const map = {};
-  const allElemIds = [];
-  isolatedLevels.forEach(lid => {
-    const ids = _estActual.elemsPorNivel[lid] || [];
-    allElemIds.push(...ids.map(Number));
-  });
-
-  if (allElemIds.length) {
-    for (const [, model] of fragments.list) {
-      map[model.modelId] = new Set(allElemIds);
-    }
-    await hider.isolate(map);
-    try { await highlighter.highlightByID('select', map, true, true); } catch(e) {}
-  } else if (isolatedLevels.size > 0) {
-    await hider.isolate({});
-  }
-  
-  // Actualizar sección 5 filtrando por los elementos de los niveles seleccionados
-  actualizarSec5(null, allElemIds.length ? new Set(allElemIds) : null);
-};
-
-// (espSel fue removido del HTML, la especialidad se cambia desde el reporte mismo o el modal)
+const espSel = document.getElementById('espSel');
+Object.keys(ESP).forEach(k=>{ const opt=document.createElement('option'); opt.value=ESP[k].cod; opt.textContent=k; if(ESP[k].cod==='ARQ')opt.selected=true; espSel.append(opt); });
+espSel.addEventListener('change', () => { _espActual=espSel.value; _tiposCache=null; _clsFiltroActiva=null; if(_estActual)renderReporte(_estActual); });
 
 // Cambiar especialidad desde sección 0
 window._cambiarEsp = (cod) => {
   _espActual = cod;
+  espSel.value = cod;
   _tiposCache = null;
   _clsFiltroActiva = null;
   if (_estActual) renderReporte(_estActual);
@@ -1699,24 +1546,23 @@ const modalCfg = document.getElementById('modalCfg');
 
 // Poblar select de especialidades en el modal
 const mcfgEsp = document.getElementById('mcfgEsp');
-if (mcfgEsp) {
-  Object.keys(ESP).forEach(k => {
-    const opt = document.createElement('option');
-    opt.value = ESP[k].cod;
-    opt.textContent = `${k} (${ESP[k].cod})`;
-    mcfgEsp.append(opt);
-  });
-}
+Object.keys(ESP).forEach(k => {
+  const opt = document.createElement('option');
+  opt.value = ESP[k].cod;
+  opt.textContent = `${k} (${ESP[k].cod})`;
+  mcfgEsp.append(opt);
+});
 
 // Abrir modal al hacer clic en Reporte (solo si hay modelo cargado)
 document.getElementById('btnReporte').addEventListener('click', () => {
-  const rp = document.getElementById('reportePanel');
-  if (rp.style.display && rp.style.display !== 'none') {
-    window.togglePanel('reportePanel');
+  if (reportePanel.classList.contains('show')) {
+    reportePanel.classList.remove('show');
+    document.getElementById('btnReporte').classList.remove('active');
     return;
   }
   if (!_estActual) {
-    window.togglePanel('reportePanel');
+    reportePanel.classList.add('show');
+    document.getElementById('btnReporte').classList.add('active');
     return;
   }
   // Precargar valores detectados
@@ -1744,36 +1590,19 @@ document.getElementById('mcfgOk').addEventListener('click', () => {
   _cfgSite = parseInt(document.getElementById('mcfgSite').value) || 3;
   _cfgBuilding = parseInt(document.getElementById('mcfgBuilding').value) || 2;
   _cfgStorey = parseInt(document.getElementById('mcfgStorey').value) || 5;
+  espSel.value = _espActual;
   _tiposCache = null;
   _clsFiltroActiva = null;
   modalCfg.style.display = 'none';
   renderReporte(_estActual);
-  const rp = document.getElementById('reportePanel');
-  if (!rp.style.display || rp.style.display === 'none') {
-    window.togglePanel('reportePanel');
-  }
+  reportePanel.classList.add('show');
+  document.getElementById('btnReporte').classList.add('active');
 });
 
 document.getElementById('reporteClose').addEventListener('click', () => {
-  window.togglePanel('reportePanel');
+  reportePanel.classList.remove('show');
+  document.getElementById('btnReporte').classList.remove('active');
 });
-
-document.getElementById('btnClaude')?.addEventListener('click', () => {
-  window.togglePanel('claudePanel');
-});
-document.getElementById('claudeClose')?.addEventListener('click', () => {
-  window.togglePanel('claudePanel');
-});
-
-// ══ ÁRBOL DEL PROYECTO — panel deslizante lateral ══
-window.toggleNav = () => {
-  const panel = document.getElementById('navPanel');
-  const btn   = document.getElementById('btnArbol');
-  const abriendo = !panel.classList.contains('open');
-  panel.classList.toggle('open');
-  if (btn) btn.classList.toggle('active', abriendo);
-  if (abriendo && _estActual) window.renderNavegador(_estActual);
-};
 
 // ══════════════════════════════════════════════════════════════════
 // 📋 LOG DE MEJORAS FUTURAS

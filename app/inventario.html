@@ -4,14 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VoxelBIM — Inventario BIM</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<!-- WEB-IFC API -->
-<script src="https://unpkg.com/web-ifc@0.0.66/web-ifc-api.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root {
   --navy:#060d18; --blue:#0a1628; --accent:#00d4ff; --green:#00c853;
   --bg:#0a0f1e; --card:#0d1526; --text:#c8d8f0; --muted:#4a6080;
-  --border:#1a2a40; --mono:'JetBrains Mono',monospace; --sans:'Inter',sans-serif;
+  --border:#1a2a40; --mono:'JetBrains Mono',monospace; --sans:'Syne',sans-serif;
   --accent2:#7c4dff; --warn:#ff6b35; --red:#ff3d57;
 }
 
@@ -20,48 +19,82 @@ html, body { height:100%; overflow:hidden; }
 body { font-family:var(--sans); background:var(--bg); color:var(--text); display:flex; flex-direction:column; height:100vh; font-size:13px; }
 
 /* HEADER */
-header { background:var(--navy); padding:10px 16px; min-height:52px; display:flex; align-items:center; gap:12px; border-bottom:2px solid var(--accent); flex-shrink:0; box-shadow:0 2px 20px rgba(0,212,255,.08); }
-.hicon { width:28px; height:28px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
-.htitle { font:600 11px var(--mono); color:var(--text); letter-spacing:.08em; text-transform:uppercase; }
-.hsub { font:400 9px var(--mono); color:var(--muted); margin-top:1px; }
-.hback { padding:4px 12px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:4px; font:600 9px var(--mono); text-transform:uppercase; letter-spacing:.1em; text-decoration:none; transition:all .15s; margin-left:auto; }
-.hback:hover { border-color:var(--accent); color:var(--accent); background:rgba(0,212,255,.05); }
+header { background:var(--navy); padding:16px 24px; min-height:72px; display:flex; align-items:center; gap:14px; border-bottom:2px solid var(--accent); flex-shrink:0; box-shadow:0 2px 20px rgba(0,212,255,.08); }
+.hicon { background:none; overflow:visible; width:34px; height:34px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.htitle { font:700 13px var(--mono); color:#e0f0ff; letter-spacing:.05em; text-transform:uppercase; }
+.hsub   { font:400 10px var(--mono); color:var(--muted); margin-top:1px; }
+.hback  { padding:5px 12px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:4px; font:600 9px var(--mono); text-transform:uppercase; letter-spacing:.1em; text-decoration:none; transition:all .15s; cursor:pointer; white-space:nowrap; margin-left:auto; }
+.hback:hover { border-color:var(--accent); color:var(--accent); }
+
+/* Bit animations */
+@keyframes bit-pulse  { 0%,100%{opacity:.95} 50%{opacity:.15} }
+@keyframes bit-edge-a { 0%,100%{opacity:1;stroke-width:2.4} 45%{opacity:.1;stroke-width:.4} 65%{opacity:.9;stroke-width:2.0} }
+@keyframes bit-edge-b { 0%,100%{opacity:1;stroke-width:1.6} 45%{opacity:.1;stroke-width:.4} 65%{opacity:.8;stroke-width:1.4} }
+@keyframes bit-glow   { 0%,100%{opacity:.22} 50%{opacity:.55} }
+@keyframes bit-vtx    { 0%,100%{opacity:.5}  50%{opacity:.08} }
+@keyframes bit-vtx2   { 0%,100%{opacity:.65} 50%{opacity:.15} }
+@keyframes bit-spin   { 0%{transform:rotate(0deg) scaleX(1)} 25%{transform:rotate(90deg) scaleX(.45)} 50%{transform:rotate(180deg) scaleX(1)} 75%{transform:rotate(270deg) scaleX(.45)} 100%{transform:rotate(360deg) scaleX(1)} }
+@keyframes bit-float  { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-6px)} }
+@keyframes bit-warp   { 0%,100%{transform:scale(1,1)} 25%{transform:scale(1.25,.72)} 50%{transform:scale(.72,1.25)} 75%{transform:scale(1.1,.88)} }
+@keyframes bit-bounce { 0%,100%{transform:translateY(0) scaleY(1) scaleX(1)} 40%{transform:translateY(-14px) scaleY(1.05) scaleX(.95)} 60%{transform:translateY(-16px) scaleY(.97) scaleX(1.03)} 80%{transform:translateY(-2px) scaleY(1.04) scaleX(.98)} }
+@keyframes bit-swing  { 0%,100%{transform:rotate(0deg)} 25%{transform:rotate(8deg)} 75%{transform:rotate(-8deg)} }
+@keyframes bit-breathe{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
+.bit-wrap    { transform-origin:45px 52px; cursor:pointer; }
+.bit-top     { animation:bit-pulse  2s ease-in-out infinite; }
+.bit-edge1   { animation:bit-edge-a 2s ease-in-out infinite; }
+.bit-edge2   { animation:bit-edge-b 2s ease-in-out infinite .15s; }
+.bit-face    { animation:bit-glow   2s ease-in-out infinite; }
+.bit-vtx-mid { animation:bit-vtx   2s ease-in-out infinite; }
+.bit-vtx-bot { animation:bit-vtx2  2s ease-in-out infinite .3s; }
+.bit-wrap.bit-no-state polygon { stroke:#ff3d57 !important; transition:stroke .3s, fill .3s; }
+.bit-wrap.bit-no-state line    { stroke:#ff3d57 !important; transition:stroke .3s; }
+.bit-wrap.bit-no-state circle  { fill:#ff3d57 !important;   transition:fill .3s; }
 
 /* WORKSPACE */
 .workspace { display:flex; flex:1; overflow:hidden; }
 
-/* SIDEBAR FILTROS */
-.sidebar { width:260px; flex-shrink:0; background:var(--blue); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
-.sb-header { padding:14px 16px; border-bottom:1px solid var(--border); }
-.sb-title { font:700 8px var(--mono); color:var(--accent); text-transform:uppercase; letter-spacing:.15em; display:flex; align-items:center; gap:6px; }
-.sb-body { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:20px; }
+/* SIDEBAR */
+.sidebar { width:300px; flex-shrink:0; background:var(--blue); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+.sb-header { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:8px; }
+.sb-title { font:700 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.2em; }
+.sb-body { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:16px; }
 
-.filter-sec { margin-bottom: 20px; }
-.filter-label { font:600 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.12em; margin-bottom:8px; display:block; }
+.btn-cargar-ifc { width:100%; padding:10px; background:var(--accent); color:#000; border:none; border-radius:6px; font:700 11px var(--mono); cursor:pointer; letter-spacing:.08em; text-transform:uppercase; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:8px; }
+.btn-cargar-ifc:hover { background:#00bcd4; box-shadow:0 0 20px rgba(0,212,255,.3); }
+.btn-cargar-ifc.cargado { background:rgba(0,200,83,.15); color:var(--green); border:1px solid rgba(0,200,83,.3); }
+.model-tag { display:none; }
+.model-tag.show { display:flex; flex-direction:column; gap:2px; }
+.mt-name { font:600 10px var(--mono); color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mt-meta { font:400 9px var(--mono); color:var(--muted); }
+
+.filter-sec { display:flex; flex-direction:column; gap:8px; }
+.filter-label { font:600 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.12em; display:block; }
 .filter-sel { width:100%; background:var(--navy); border:1px solid var(--border); border-radius:4px; padding:8px 10px; color:var(--text); font:400 10px var(--mono); outline:none; cursor:pointer; }
 .filter-sel:focus { border-color:var(--accent); }
 
-/* Dropzone */
-.dropzone { border:1px dashed var(--border); border-radius:6px; padding:12px 10px; text-align:center; cursor:pointer; transition:all .2s; background:rgba(0,212,255,.02); margin-bottom:10px; }
-.dropzone:hover,.dropzone.over { border-color:var(--accent); background:rgba(0,212,255,.06); }
-.dz-icon { font-size:20px; opacity:.5; margin-bottom:3px; }
-.dz-label { font:600 9px var(--mono); color:var(--text); text-transform:uppercase; letter-spacing:.08em; }
-.dz-sub { font:400 9px var(--mono); color:var(--muted); margin-top:2px; }
-
 /* Progreso */
-.progress-wrap { display:none; flex-direction:column; gap:5px; margin-bottom:12px; }
+.progress-wrap { display:none; flex-direction:column; gap:5px; }
 .progress-wrap.show { display:flex; }
 .progress-label { font:400 9px var(--mono); color:var(--accent); letter-spacing:.05em; }
 .progress-bar-bg { height:3px; background:rgba(255,255,255,.08); border-radius:2px; }
 .progress-bar-fill { height:100%; background:linear-gradient(90deg,var(--accent),#00bcd4); width:0%; transition:width .3s ease; border-radius:2px; }
 
-/* INFO MODELO */
-.model-info { display:none; background:var(--card); border-radius:5px; border-left:3px solid var(--accent); padding:6px 10px; margin-bottom:12px; }
-.model-info.show { display:block; }
-.mi-name { font:600 9px var(--mono); color:var(--accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.mi-meta { font:400 8px var(--mono); color:var(--muted); margin-top:2px; }
+/* CLASS SELECTOR */
+.cls-toolbar { display:flex; gap:6px; }
+.cls-btn { flex:1; padding:4px 8px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:3px; font:600 8px var(--mono); text-transform:uppercase; letter-spacing:.1em; cursor:pointer; transition:all .15s; }
+.cls-btn:hover { border-color:var(--accent); color:var(--accent); }
+.cls-group { margin-bottom:12px; }
+.cls-group-label { font:700 8px var(--mono); color:var(--accent2); text-transform:uppercase; letter-spacing:.15em; margin-bottom:6px; padding-bottom:5px; border-bottom:1px solid rgba(124,77,255,.2); }
+.cls-item { display:flex; align-items:center; gap:8px; padding:5px 6px; border-radius:4px; cursor:pointer; transition:background .1s; }
+.cls-item:hover { background:rgba(0,212,255,.04); }
+.cls-item input[type=checkbox] { width:12px; height:12px; accent-color:var(--accent); flex-shrink:0; cursor:pointer; }
+.cls-name { flex:1; font:400 10px var(--mono); color:var(--text); }
+.cls-count { font:700 9px var(--mono); color:var(--muted); background:rgba(255,255,255,.05); border-radius:3px; padding:1px 6px; min-width:26px; text-align:center; }
+.cls-empty { font:400 9px var(--mono); color:var(--muted); text-align:center; padding:24px 0; letter-spacing:.05em; }
+
+/* MAIN */
 .main { flex:1; display:flex; flex-direction:column; background:var(--bg); overflow:hidden; position:relative; }
-.main-header { padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:rgba(6,13,24,.4); }
+.main-header { padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:rgba(6,13,24,.4); flex-shrink:0; }
 .main-title { font:700 11px var(--mono); color:var(--text); text-transform:uppercase; letter-spacing:.1em; }
 .main-stats { display:flex; gap:20px; }
 .stat-item { text-align:right; }
@@ -73,323 +106,1011 @@ table { width:100%; border-collapse:collapse; background:rgba(255,255,255,.01); 
 th { background:rgba(0,212,255,.04); text-align:left; padding:12px 14px; font:700 8px var(--mono); color:var(--accent); text-transform:uppercase; letter-spacing:.12em; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:2; }
 td { padding:10px 14px; font:400 10px var(--mono); color:var(--text); border-bottom:1px dotted var(--border); }
 tr:hover td { background:rgba(0,212,255,.02); }
-.tr-group { background:rgba(26,42,64,.4) !important; font-weight:700; color:var(--accent2) !important; }
-.td-num { text-align:right; font-weight:600; font-variant-numeric: tabular-nums; }
+.tr-group td { background:rgba(26,42,64,.5) !important; font-weight:700; }
+.td-num { text-align:right; font-weight:600; font-variant-numeric:tabular-nums; }
+
+/* ══ MODO CLARO ══ */
+body.light-mode {
+  --navy:#f0f4f8; --blue:#e8eef4; --accent:#0099bb; --green:#00804d;
+  --bg:#dce3ea; --card:#f0f5f9; --text:#1a2a3a; --muted:#5a7a9a;
+  --border:#b0c4d8; --accent2:#5533aa; --warn:#cc4400; --red:#cc1133;
+}
+body.light-mode header        { box-shadow:0 2px 20px rgba(0,153,187,.12); }
+body.light-mode .htitle       { color:#1a2a3a; }
+body.light-mode .hsub         { color:#5a7a9a; }
+body.light-mode .hback        { color:#5a7a9a; border-color:#b0c4d8; }
+body.light-mode .hback:hover  { color:var(--accent); border-color:var(--accent); }
+body.light-mode .filter-sel   { background:#f0f5f9; color:#1a2a3a; border-color:#b0c4d8; }
+body.light-mode .filter-sel:focus { border-color:var(--accent); }
+body.light-mode .cls-item:hover   { background:rgba(0,153,187,.06); }
+body.light-mode .cls-count        { background:rgba(0,0,0,.07); color:#5a7a9a; }
+body.light-mode .cls-name         { color:#1a2a3a; }
+body.light-mode .cls-group-label  { color:var(--accent2); border-bottom-color:rgba(85,51,170,.2); }
+body.light-mode .cls-btn          { color:#5a7a9a; border-color:#b0c4d8; }
+body.light-mode .cls-btn:hover    { border-color:var(--accent); color:var(--accent); }
+body.light-mode .progress-label   { color:var(--accent); }
+body.light-mode .progress-bar-bg  { background:rgba(0,0,0,.1); }
+body.light-mode .progress-bar-fill{ background:linear-gradient(90deg,var(--accent),#0077aa); }
+body.light-mode .main-header      { background:rgba(240,244,248,.85); border-bottom-color:#b0c4d8; }
+body.light-mode .main-title       { color:#1a2a3a; }
+body.light-mode .stat-val         { color:var(--accent); }
+body.light-mode .stat-lbl         { color:#5a7a9a; }
+body.light-mode table             { background:rgba(255,255,255,.4); border-color:#b0c4d8; }
+body.light-mode th                { background:rgba(0,153,187,.07); color:var(--accent); border-bottom-color:#b0c4d8; }
+body.light-mode td                { color:#1a2a3a; border-bottom-color:#c8d8e8; }
+body.light-mode tr:hover td       { background:rgba(0,153,187,.04); }
+body.light-mode .tr-group td      { background:rgba(200,218,238,.7) !important; }
+body.light-mode .td-num           { color:#1a2a3a; }
+body.light-mode .btn-export       { color:var(--green); border-color:rgba(0,128,77,.35); }
+body.light-mode .btn-export:hover { background:rgba(0,128,77,.1); border-color:var(--green); }
+body.light-mode footer            { border-top-color:#b0c4d8; }
+body.light-mode .mt-name          { color:#1a2a3a; }
+body.light-mode .btn-cargar-ifc.cargado { background:rgba(0,128,77,.1); color:var(--green); border-color:rgba(0,128,77,.3); }
+/* Bit icon en modo claro: cambiar cyan por azul */
+body.light-mode .bit-wrap polygon,
+body.light-mode .bit-wrap line    { stroke:#0099bb !important; }
+body.light-mode .bit-wrap circle  { fill:#0099bb !important; }
+body.light-mode .bit-top          { animation:bit-pulse 2s ease-in-out infinite; }
+/* Botón tema */
+.btn-theme { padding:5px 10px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:4px; font:600 11px var(--mono); cursor:pointer; transition:all .15s; line-height:1; }
+.btn-theme:hover { border-color:var(--accent); color:var(--accent); }
+.btn-theme.active { border-color:var(--accent); color:var(--accent); background:rgba(0,153,187,.1); }
+
+/* EXPORT */
+.btn-export { padding:6px 14px; background:transparent; color:var(--green); border:1px solid rgba(0,200,83,.35); border-radius:4px; font:700 9px var(--mono); text-transform:uppercase; letter-spacing:.1em; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:6px; white-space:nowrap; }
+.btn-export:hover { background:rgba(0,200,83,.1); border-color:var(--green); box-shadow:0 0 14px rgba(0,200,83,.2); }
+.btn-export:disabled { opacity:.35; cursor:not-allowed; }
 
 /* FOOTER */
-footer { text-align:center; padding:6px; font:400 9px var(--mono); color:var(--muted); border-top:1px solid var(--border); letter-spacing:.08em; flex-shrink:0; }
+footer { text-align:center; padding:6px 24px; font:400 9px var(--mono); color:var(--muted); border-top:1px solid var(--border); letter-spacing:.08em; flex-shrink:0; }
 
 /* LOADING */
 .loading { position:absolute; inset:0; background:rgba(6,13,24,.8); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; z-index:10; }
-.spinner { width:24px; height:24px; border:2px solid rgba(0,212,255,.2); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; }
-@keyframes spin { to { transform:rotate(360deg); } }
+.spinner { width:24px; height:24px; border:2px solid rgba(0,212,255,.2); border-top-color:var(--accent); border-radius:50%; animation:spin-s .8s linear infinite; }
+@keyframes spin-s { to { transform:rotate(360deg); } }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="hicon">📥</div>
-  <div>
-    <div class="htitle">Inventario BIM</div>
-    <div class="hsub">C&aacute;lculo de cantidades &middot; Cuadros de superficie</div>
+  <div class="hicon">
+    <svg width="36" height="36" viewBox="0 0 90 105" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g class="bit-wrap">
+        <polygon class="bit-face" points="45,4 75,28 15,28" fill="rgba(0,212,255,0.22)" stroke="#00d4ff" stroke-width="1.4" stroke-linejoin="round"/>
+        <polygon points="75,28 45,4 82,52" fill="rgba(0,212,255,0.10)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+        <polygon points="15,28 45,4 8,52" fill="rgba(0,212,255,0.18)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+        <polygon points="15,28 75,28 82,52 45,68 8,52" fill="rgba(0,212,255,0.07)" stroke="#00d4ff" stroke-width="1.0" stroke-linejoin="round"/>
+        <polygon points="75,28 82,52 62,78" fill="rgba(0,212,255,0.15)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+        <polygon points="15,28 8,52 28,78" fill="rgba(0,212,255,0.20)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+        <polygon points="8,52 28,78 45,100 45,68" fill="rgba(0,212,255,0.07)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+        <polygon points="82,52 62,78 45,100 45,68" fill="rgba(0,212,255,0.12)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+        <polygon points="28,78 62,78 45,100" fill="rgba(0,212,255,0.14)" stroke="#00d4ff" stroke-width="1.2" stroke-linejoin="round"/>
+        <line class="bit-edge1" x1="15" y1="28" x2="45" y2="4" stroke="#00d4ff" stroke-width="2.4" stroke-linecap="round"/>
+        <line class="bit-edge2" x1="45" y1="4" x2="75" y2="28" stroke="#00d4ff" stroke-width="1.6" stroke-linecap="round"/>
+        <circle class="bit-top" cx="45" cy="4" r="3" fill="#00d4ff"/>
+        <circle class="bit-vtx-mid" cx="15" cy="28" r="1.8" fill="#00d4ff" opacity="0.5"/>
+        <circle class="bit-vtx-mid" cx="75" cy="28" r="1.8" fill="#00d4ff" opacity="0.5"/>
+        <circle class="bit-vtx-mid" cx="8" cy="52" r="1.4" fill="#00d4ff" opacity="0.35"/>
+        <circle class="bit-vtx-mid" cx="82" cy="52" r="1.4" fill="#00d4ff" opacity="0.35"/>
+        <circle class="bit-vtx-bot" cx="45" cy="100" r="2.2" fill="#00d4ff" opacity="0.65"/>
+      </g>
+    </svg>
   </div>
-  <a href="/index.html" class="hback">&larr; Volver</a>
+  <div>
+    <div class="htitle">VoxelBIM</div>
+    <div class="hsub">Inventario BIM &middot; C&aacute;lculo de Cantidades</div>
+  </div>
+  <button class="btn-theme" id="btnLightMode" title="Modo claro/oscuro">&#9681;</button>
+  <button class="hback" onclick="history.length > 1 ? history.back() : window.location.href='/'">&#8592; Volver</button>
 </header>
 
 <div class="workspace">
-  <!-- SIDEBAR FILTROS -->
   <aside class="sidebar">
     <div class="sb-header">
-      <div class="sb-title"><span>&#9660;</span> Filtros de Inventario</div>
+      <div class="sb-title">Inventario BIM</div>
+      <input type="file" id="fileInput" accept=".ifc" style="display:none;">
+      <button class="btn-cargar-ifc" id="btnCargarIfc" onclick="document.getElementById('fileInput').click()">
+        &#128194;&nbsp; Abrir archivo IFC
+      </button>
+      <div class="model-tag" id="modelTag">
+        <div class="mt-name" id="modelName">—</div>
+        <div class="mt-meta" id="modelMeta">—</div>
+      </div>
     </div>
     <div class="sb-body">
-      <div class="filter-sec">
-        <label class="filter-label">Cargar Proyecto</label>
-        <div class="dropzone" id="dropzone">
-          <div class="dz-icon">📥</div>
-          <div class="dz-label">Arrastra un IFC aquí</div>
-          <div class="dz-sub">o haz clic para buscar</div>
-        </div>
-        <input type="file" id="fileInput" accept=".ifc" style="display:none;">
-        
-        <!-- PROGRESO -->
-        <div class="progress-wrap" id="progressWrap">
-          <div class="progress-label" id="progressText">Procesando IFC... 0%</div>
-          <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
-        </div>
 
-        <!-- INFO MODELO -->
-        <div class="model-info" id="modelInfo">
-          <div class="mi-name" id="modelName">Sin modelo</div>
-          <div class="mi-meta" id="modelMeta">-</div>
-        </div>
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-label" id="progressText">Procesando IFC...</div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
+      </div>
+
+      <div class="filter-sec">
+        <label class="filter-label">Agrupar por</label>
+        <select class="filter-sel" id="selGrupo">
+          <option value="tipo_nivel">Tipo → Nivel</option>
+          <option value="tipo">Por Tipo</option>
+          <option value="nivel">Por Nivel</option>
+        </select>
       </div>
 
       <div class="filter-sec">
         <label class="filter-label">Nivel</label>
         <select class="filter-sel" id="selNivel">
-          <option>Todos los niveles</option>
+          <option value="all">Todos los niveles</option>
         </select>
       </div>
+
       <div class="filter-sec">
-        <label class="filter-label">Agrupar por</label>
-        <select class="filter-sel" id="selGrupo">
-          <option>IFC Class (Categor&iacute;a)</option>
-          <option>Tipo / Familia</option>
-          <option>Especialidad</option>
-        </select>
+        <label class="filter-label">Clases IFC</label>
+        <div class="cls-toolbar">
+          <button class="cls-btn" id="btnTodas">Todas</button>
+          <button class="cls-btn" id="btnNinguna">Ninguna</button>
+        </div>
+        <div id="classSelector"><div class="cls-empty">Carga un IFC para ver las clases disponibles</div></div>
       </div>
+
     </div>
   </aside>
 
-  <!-- MAIN TABLE -->
   <div class="main">
     <div class="main-header">
       <div class="main-title">Cuadro General de Cantidades</div>
+      <button class="btn-export" id="btnExport" onclick="exportToXLSX()" disabled>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar XLSX
+      </button>
       <div class="main-stats">
         <div class="stat-item">
-          <span class="stat-val" id="totalCount">0</span>
+          <span class="stat-val" id="totalCount">—</span>
           <span class="stat-lbl">Elementos</span>
         </div>
         <div class="stat-item">
-          <span class="stat-val" id="totalArea">0.00 m²</span>
-          <span class="stat-lbl">Superficie Total</span>
+          <span class="stat-val" id="totalClases">—</span>
+          <span class="stat-lbl">Clases</span>
         </div>
       </div>
     </div>
 
     <div class="table-wrap">
-      <table id="inventoryTable">
+      <table>
         <thead>
           <tr>
-            <th style="width:250px;">Descripci&oacute;n / Categor&iacute;a</th>
-            <th style="width:100px;">Nivel</th>
-            <th style="text-align:right;">Cantidad</th>
+            <th style="width:230px;">Categor&iacute;a / Clase IFC</th>
+            <th style="width:120px;">Nivel</th>
+            <th style="text-align:right;width:90px;">Cantidad</th>
             <th style="text-align:right;">Largo (m)</th>
-            <th style="text-align:right;">Superficie (m²)</th>
-            <th style="text-align:right;">Volumen (m³)</th>
+            <th style="text-align:right;">Superficie (m&sup2;)</th>
+            <th style="text-align:right;">Volumen (m&sup3;)</th>
           </tr>
         </thead>
         <tbody id="inventoryBody">
           <tr>
             <td colspan="6" style="padding:40px;text-align:center;color:var(--muted);font-style:italic;">
-              Utiliza el Explorador BIM para seleccionar un modelo y generar su inventario.
+              Carga un archivo IFC para generar el inventario.
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-
-    <!-- MOCK LOADING (Solo para demo) -->
-    <div class="loading" id="loader" style="display:none;">
-      <div class="spinner"></div>
-    </div>
   </div>
 </div>
 
 <footer>
-  &copy; 2026 VoxelBIM &mdash; Inventario BIM &mdash; MIT License
-  &nbsp;&middot;&nbsp; <span style="color:rgba(199,125,255,.4);">Claude AI v4.0</span>
+  &copy; 2026 VoxelBIM &mdash; Inventario BIM &mdash; MIT License &nbsp;&middot;&nbsp; <span style="color:rgba(199,125,255,.4);">Claude AI v4.6</span>
 </footer>
 
 <script>
-// Guard: redireccionar al portal si no hay sesión activa
+// Guard
 if (sessionStorage.getItem('ifc_auth') !== '1' && window.location.protocol !== 'file:') {
   window.location.href = '/';
 }
 
 // ============================================================
-// REAL IFC ENGINE: Web-IFC
+// IFC TEXT PARSER
 // ============================================================
-const ifcApi = new WebIFC.IfcAPI();
-let currentModel = -1;
-
-// Inicializar motor
-async function initEngine() {
-  await ifcApi.Init();
-  // Usamos el WASM desde un CDN estable
-  ifcApi.SetWasmPath("https://unpkg.com/web-ifc@0.0.66/");
-  console.log('[Inventario] Web-IFC listo');
-}
-initEngine();
-
-// ============================================================
-// UI LOGIC: Dropzone & Files
-// ============================================================
-const dropzone = document.getElementById('dropzone');
-const fileInput = document.getElementById('fileInput');
-
-// Prevenir comportamiento por defecto de la ventana para evitar abrir el archivo fuera de la zona
-window.addEventListener("dragover", (e) => e.preventDefault(), false);
-window.addEventListener("drop", (e) => e.preventDefault(), false);
-
-dropzone.addEventListener('click', () => {
-  console.log('[Inventario] Dropzone click');
-  fileInput.click();
-});
-
-dropzone.addEventListener('dragover', (e) => { 
-  e.preventDefault(); 
-  e.stopPropagation();
-  dropzone.classList.add('over'); 
-});
-
-dropzone.addEventListener('dragenter', (e) => { 
-  e.preventDefault(); 
-  e.stopPropagation();
-  dropzone.classList.add('over'); 
-});
-
-dropzone.addEventListener('dragleave', (e) => { 
-  e.preventDefault();
-  e.stopPropagation();
-  dropzone.classList.remove('over'); 
-});
-
-dropzone.addEventListener('drop', (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  dropzone.classList.remove('over');
-  const file = e.dataTransfer.files[0];
-  if (file && file.name.toLowerCase().endsWith('.ifc')) {
-    handleFile(file);
-  } else {
-    alert("Por favor, sube un archivo con extensión .ifc");
+function parseIFC(text) {
+  const entities = {};
+  text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  let i = 0;
+  while (i < text.length) {
+    const h = text.indexOf('#', i);
+    if (h === -1) break;
+    let j = h + 1;
+    let id = '';
+    while (j < text.length && text[j] >= '0' && text[j] <= '9') id += text[j++];
+    if (!id) { i = h + 1; continue; }
+    while (j < text.length && text[j] === ' ') j++;
+    if (text[j] !== '=') { i = h + 1; continue; }
+    j++;
+    while (j < text.length && text[j] === ' ') j++;
+    let type = '';
+    while (j < text.length && /[A-Z0-9_]/i.test(text[j])) type += text[j++];
+    type = type.toUpperCase();
+    if (!type.startsWith('IFC')) { i = h + 1; continue; }
+    while (j < text.length && text[j] === ' ') j++;
+    if (text[j] !== '(') { i = h + 1; continue; }
+    j++;
+    let depth = 1, raw = '', inStr = false;
+    while (j < text.length && depth > 0) {
+      const ch = text[j++];
+      if (ch === "'" && !inStr) { inStr = true; raw += ch; continue; }
+      if (ch === "'" && inStr) {
+        raw += ch;
+        if (text[j] === "'") { raw += text[j++]; }
+        else inStr = false;
+        continue;
+      }
+      if (!inStr) {
+        if (ch === '(') depth++;
+        else if (ch === ')') { depth--; if (depth === 0) break; }
+      }
+      raw += ch;
+    }
+    entities[id] = { type, raw };
+    i = j;
   }
+  return entities;
+}
+
+function splitAttrs(raw) {
+  const attrs = [];
+  let depth = 0, cur = '', inStr = false;
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw[i];
+    if (ch === "'" && !inStr) { inStr = true; cur += ch; continue; }
+    if (ch === "'" && inStr) {
+      cur += ch;
+      if (raw[i+1] === "'") { cur += raw[++i]; }
+      else inStr = false;
+      continue;
+    }
+    if (inStr) { cur += ch; continue; }
+    if (ch === '(') { depth++; cur += ch; continue; }
+    if (ch === ')') { depth--; cur += ch; continue; }
+    if (ch === ',' && depth === 0) { attrs.push(cur.trim()); cur = ''; continue; }
+    cur += ch;
+  }
+  attrs.push(cur.trim());
+  return attrs;
+}
+
+function getString(v) {
+  if (!v) return null;
+  const m = v.match(/^'(.*)'$/s);
+  return m ? m[1].replace(/''/g, "'") : null;
+}
+function getRef(v)  { const m = (v||'').match(/^#(\d+)$/); return m ? m[1] : null; }
+function getRefs(v) { const r=[], re=/#(\d+)/g; let m; while((m=re.exec(v||''))!==null) r.push(m[1]); return r; }
+// Normaliza a minúsculas sin tildes/diacríticos para comparación robusta
+function normStr(s) { return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
+function fmtN(v, dec=2) {
+  if (v === null || v === undefined || v === 0) return '—';
+  const s = v.toFixed(dec);
+  // thousands separator with dot
+  return s.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+// ============================================================
+// DETECCIÓN DE UNIDADES — length/area/volume son independientes en IFC
+// Revit exporta área en SQUARE_METRE y volumen en CUBIC_METRE incluso cuando
+// la longitud está en mm. NO se puede derivar area/volume de lf².
+// ============================================================
+function detectUnits(entities) {
+  let lf = 1.0, af = -1, vf = -1;
+  for (const [, ent] of Object.entries(entities)) {
+    if (ent.type !== 'IFCSIUNIT') continue;
+    const a      = splitAttrs(ent.raw);
+    const utype  = a[1] || '';
+    const prefix = a[2] || '';
+    let pf = 1.0;
+    if (prefix.includes('MILLI'))  pf = 0.001;
+    else if (prefix.includes('CENTI')) pf = 0.01;
+    if      (utype.includes('LENGTHUNIT'))  lf = pf;
+    else if (utype.includes('AREAUNIT'))    af = pf;
+    else if (utype.includes('VOLUMEUNIT'))  vf = pf;
+  }
+  // Fallback: si no se encontró definición explícita, derivar de longitud
+  if (af < 0) af = lf * lf;
+  if (vf < 0) vf = lf * lf * lf;
+  return { length: lf, area: af, volume: vf };
+}
+
+// ============================================================
+// EXTRACCIÓN DE CANTIDADES IFC
+// ============================================================
+// Prioridad de nombres de atributo para cada dimensión (inglés + español)
+const LENGTH_NAMES = ['length','grossfootprintlength','netfootprintlength','netlength','grosslength',
+                      'largo','longitud','lenght']; // lenght: typo común Revit
+const AREA_NAMES   = ['netarea','grossarea','netsidearea','grosssidearea','projectedarea',
+                      'netsurface','grosssurface','surfacearea','wallsurfacearea',
+                      'netsectionarea','grosssectionarea','area'];
+const VOLUME_NAMES = ['netvolume','grossvolume','volume','netbody','grossbody','volumen'];
+const HEIGHT_NAMES = ['height','overallheight','nominalheight','baseheight','elevationheight','wallheight',
+                      'unconnected height','alto','altura','alto libre',
+                      'alto sin conectar','altura sin conectar','altura total',
+                      'alto no restringido','h'];
+const WIDTH_NAMES  = ['width','thickness','nominalwidth','nominalthickness','wallthickness','structuraldepth','depth',
+                      'wall thickness','ancho','espesor','grosor','default thickness','total thickness'];
+
+function extractQuantities(entities, units) {
+  const elementQty = {}; // elementId -> { length, area, volume }
+
+  // Paso 1: Entidades de cantidad individuales IFCQUANTITY*
+  //   Atributos: Name[0], Description[1], Unit[2], Value[3]
+  const qtyById = {};
+  for (const [id, ent] of Object.entries(entities)) {
+    let dim = null;
+    if (ent.type === 'IFCQUANTITYLENGTH')  dim = 'length';
+    else if (ent.type === 'IFCQUANTITYAREA')   dim = 'area';
+    else if (ent.type === 'IFCQUANTITYVOLUME') dim = 'volume';
+    if (!dim) continue;
+    const a = splitAttrs(ent.raw);
+    const name = normStr(getString(a[0]) || '');
+    const val  = parseFloat(a[3]);
+    if (!isNaN(val)) qtyById[id] = { dim, name, val };
+  }
+
+  // Paso 2: IFCPROPERTYSINGLEVALUE — extrae TODOS los valores numéricos
+  //   No filtramos por tipo de medida: Revit exporta muchos como IFCREALMEASURE
+  //   La dimensión se infiere por nombre de propiedad en el paso siguiente
+  const propById = {};
+  for (const [id, ent] of Object.entries(entities)) {
+    if (ent.type !== 'IFCPROPERTYSINGLEVALUE') continue;
+    const a    = splitAttrs(ent.raw);
+    const name = normStr(getString(a[0]) || '');
+    if (!name) continue;
+    const rawV = a[2] || '';
+    // Valor numérico desde medida tipada: IFCLENGTHMEASURE(5.0), IFCAREAMEASURE(24.0), etc.
+    const measM = rawV.match(/\(\s*([\-\d.eE+]+)\s*\)/);
+    // O valor numérico plano: 5.0
+    const plainM = !measM ? rawV.match(/^\s*([\-\d.eE+]+)\s*$/) : null;
+    const numStr = measM ? measM[1] : plainM ? plainM[1] : null;
+    if (numStr === null) continue;
+    const val = parseFloat(numStr);
+    if (!isNaN(val) && val > 0) {
+      // Detectar tipo de medida para aplicar conversión correcta
+      let dim = 'real';
+      if (/AREAMEASURE/i.test(rawV))   dim = 'area';
+      else if (/VOLUMEMEASURE/i.test(rawV)) dim = 'volume';
+      else if (/LENGTHMEASURE/i.test(rawV)) dim = 'length';
+      propById[id] = { name, val, dim };
+    }
+  }
+
+  // Paso 3: Agrupar ítems por set → byName lookup { name -> { val, dim? } }
+  //   IFCELEMENTQUANTITY: Name[2], Quantities[5]
+  //   IFCPROPERTYSET:     Name[2], HasProperties[4]
+  const setItems = {}; // setId -> [{name, val, dim?}]
+  for (const [id, ent] of Object.entries(entities)) {
+    if (ent.type === 'IFCELEMENTQUANTITY') {
+      const a = splitAttrs(ent.raw);
+      setItems[id] = getRefs(a[5]).map(r => qtyById[r]).filter(Boolean);
+    } else if (ent.type === 'IFCPROPERTYSET') {
+      const a = splitAttrs(ent.raw);
+      setItems[id] = getRefs(a[4]).map(r => propById[r]).filter(Boolean);
+    }
+  }
+
+  // Paso 4: IFCRELDEFINESBYPROPERTIES → mapear elementos a sus sets
+  //   RelatedObjects[4], RelatingPropertyDefinition[5]
+  for (const [, ent] of Object.entries(entities)) {
+    if (ent.type !== 'IFCRELDEFINESBYPROPERTIES') continue;
+    const a      = splitAttrs(ent.raw);
+    const defRef = getRef(a[5]);
+    if (!defRef || !setItems[defRef] || setItems[defRef].length === 0) continue;
+
+    const byName = {};
+    for (const it of setItems[defRef]) byName[it.name] = it;
+
+    for (const elemRef of getRefs(a[4])) {
+      if (!elementQty[elemRef]) elementQty[elemRef] = {};
+      const eq = elementQty[elemRef];
+      // Para IFCQUANTITY* el dim es explícito; para IFCPROPERTYSINGLEVALUE usamos el tipo detectado.
+      // Revit exporta largo/alto/ancho en unidades de proyecto (mm) → aplicar units.length.
+      // Revit exporta área/volumen frecuentemente como IFCREALMEASURE ya en m²/m³ → NO convertir
+      // salvo que el tipo sea explícitamente IFCAREAMEASURE/IFCVOLUMEMEASURE.
+      for (const n of LENGTH_NAMES) {
+        const it = byName[n];
+        if (it && eq.length === undefined) { eq.length = it.val * units.length; break; }
+      }
+      for (const n of AREA_NAMES) {
+        const it = byName[n];
+        if (it && eq.area === undefined) {
+          eq.area = it.val * (it.dim === 'area' ? units.area : 1.0); break;
+        }
+      }
+      for (const n of VOLUME_NAMES) {
+        const it = byName[n];
+        if (it && eq.volume === undefined) {
+          eq.volume = it.val * (it.dim === 'volume' ? units.volume : 1.0); break;
+        }
+      }
+      for (const n of HEIGHT_NAMES) {
+        const it = byName[n];
+        if (it && eq.height === undefined) { eq.height = it.val * units.length; break; }
+      }
+      for (const n of WIDTH_NAMES) {
+        const it = byName[n];
+        if (it && eq.width  === undefined) { eq.width  = it.val * units.length; break; }
+      }
+    }
+  }
+
+  // Paso 5: Propiedades del tipo → copiar datos faltantes a instancias
+  //   IFCRELDEFINESBYTYPE: RelatedObjects[4], RelatingType[5]
+  //   El tipo (IFCWALLTYPE, etc.) tiene HasPropertySets en atributo [5]
+  for (const [, ent] of Object.entries(entities)) {
+    if (ent.type !== 'IFCRELDEFINESBYTYPE') continue;
+    const a       = splitAttrs(ent.raw);
+    const typeRef = getRef(a[5]);
+    if (!typeRef || !entities[typeRef]) continue;
+    const ta           = splitAttrs(entities[typeRef].raw);
+    const typePsRefs   = getRefs(ta[5]); // HasPropertySets del tipo
+    if (typePsRefs.length === 0) continue;
+    for (const elemRef of getRefs(a[4])) {
+      if (!elementQty[elemRef]) elementQty[elemRef] = {};
+      const eq = elementQty[elemRef];
+      for (const psRef of typePsRefs) {
+        if (!setItems[psRef]) continue;
+        const byName = {};
+        for (const it of setItems[psRef]) byName[it.name] = it;
+        // Solo completar lo que falta (no sobreescribir valores de instancia)
+        for (const n of WIDTH_NAMES) {
+          const it = byName[n];
+          if (it && eq.width === undefined) { eq.width = it.val * units.length; break; }
+        }
+        for (const n of HEIGHT_NAMES) {
+          const it = byName[n];
+          if (it && eq.height === undefined) { eq.height = it.val * units.length; break; }
+        }
+      }
+    }
+  }
+
+  // Calcular área y volumen derivados cuando faltan
+  for (const eq of Object.values(elementQty)) {
+    if (eq.area   === undefined && eq.length !== undefined && eq.height !== undefined) {
+      eq.area      = eq.length * eq.height;
+      eq.area_calc = true;
+    }
+    if (eq.volume === undefined && eq.area   !== undefined && eq.width  !== undefined) {
+      eq.volume    = eq.area   * eq.width;
+      eq.vol_calc  = true;
+    }
+  }
+
+  // Diagnóstico de cobertura
+  const vals = Object.values(elementQty);
+  const cov = {
+    total:  vals.length,
+    length: vals.filter(q => q.length  !== undefined).length,
+    area:   vals.filter(q => q.area    !== undefined).length,
+    volume: vals.filter(q => q.volume  !== undefined).length,
+    height: vals.filter(q => q.height  !== undefined).length,
+    width:  vals.filter(q => q.width   !== undefined).length,
+    areaCalc:  vals.filter(q => q.area_calc).length,
+    volCalc:   vals.filter(q => q.vol_calc ).length,
+  };
+  console.table(cov);
+  console.log('[Inventario] Nombres de propiedades encontrados (muestra):',
+    [...new Set(Object.values(qtyById).map(q=>q.name))].sort().join(', ') || '(ninguno en IFCQUANTITY*)',
+    '|',
+    [...new Set(Object.values(propById).map(q=>q.name))].sort().join(', ') || '(ninguno en IFCPROPERTYSINGLEVALUE)'
+  );
+
+  return { elementQty, cov };
+}
+
+// ============================================================
+// CATÁLOGO DE CLASES IFC
+// ============================================================
+const IFC_CATALOG = [
+  { key:'IFCWALL',                label:'Muros',                  group:'Estructura' },
+  { key:'IFCWALLSTANDARDCASE',    label:'Muros Standard',         group:'Estructura' },
+  { key:'IFCSLAB',                label:'Losas / Suelos',         group:'Estructura' },
+  { key:'IFCCOLUMN',              label:'Columnas',               group:'Estructura' },
+  { key:'IFCBEAM',                label:'Vigas',                  group:'Estructura' },
+  { key:'IFCFOOTING',             label:'Fundaciones',            group:'Estructura' },
+  { key:'IFCMEMBER',              label:'Perfiles / Miembros',    group:'Estructura' },
+  { key:'IFCPLATE',               label:'Planchas',               group:'Estructura' },
+  { key:'IFCDOOR',                label:'Puertas',                group:'Arquitectura' },
+  { key:'IFCWINDOW',              label:'Ventanas',               group:'Arquitectura' },
+  { key:'IFCSTAIR',               label:'Escaleras',              group:'Arquitectura' },
+  { key:'IFCSTAIRFLIGHT',         label:'Tramo de Escalera',      group:'Arquitectura' },
+  { key:'IFCRAMP',                label:'Rampas',                 group:'Arquitectura' },
+  { key:'IFCROOF',                label:'Techos',                 group:'Arquitectura' },
+  { key:'IFCCOVERING',            label:'Revestimientos',         group:'Arquitectura' },
+  { key:'IFCFURNITURE',           label:'Mobiliario',             group:'Arquitectura' },
+  { key:'IFCSPACE',               label:'Espacios',               group:'Arquitectura' },
+  { key:'IFCPIPESEGMENT',         label:'Tuberías',               group:'Instalaciones' },
+  { key:'IFCDUCTSEGMENT',         label:'Ductos',                 group:'Instalaciones' },
+  { key:'IFCPIPEFITTING',         label:'Accesorios tubería',     group:'Instalaciones' },
+  { key:'IFCDUCTFITTING',         label:'Accesorios ducto',       group:'Instalaciones' },
+  { key:'IFCFLOWSEGMENT',         label:'Segmentos de flujo',     group:'Instalaciones' },
+  { key:'IFCVALVE',               label:'Válvulas',               group:'Instalaciones' },
+  { key:'IFCPUMP',                label:'Bombas',                 group:'Instalaciones' },
+  { key:'IFCFAN',                 label:'Ventiladores',           group:'Instalaciones' },
+  { key:'IFCAIRTERMINAL',         label:'Terminales de aire',     group:'Instalaciones' },
+  { key:'IFCSANITARYTERMINAL',    label:'Artefactos sanitarios',  group:'Instalaciones' },
+  { key:'IFCWASTETERMINAL',       label:'Desagüe / Sumideros',    group:'Instalaciones' },
+  { key:'IFCLAMP',                label:'Luminarias',             group:'Eléctrico' },
+  { key:'IFCOUTLET',              label:'Enchufes',               group:'Eléctrico' },
+  { key:'IFCELECTRICAPPLIANCE',   label:'Electrodomésticos',      group:'Eléctrico' },
+  { key:'IFCCABLECARRIERSEGMENT', label:'Bandejas de cables',     group:'Eléctrico' },
+  { key:'IFCBUILDINGELEMENTPROXY',label:'Proxy / Genérico',       group:'Otros' },
+];
+const CATALOG_MAP  = Object.fromEntries(IFC_CATALOG.map(c => [c.key, c]));
+const CATALOG_KEYS = new Set(IFC_CATALOG.map(c => c.key));
+
+// Caché  { count, length, area, volume } por clase→nivel
+let cachedLevelNames     = {};
+let cachedElementToLevel = {};
+let cachedCounts         = {};
+
+// ============================================================
+// UI
+// ============================================================
+const fileInput    = document.getElementById('fileInput');
+const btnCargarIfc = document.getElementById('btnCargarIfc');
+
+window.addEventListener('dragover', e => e.preventDefault(), false);
+window.addEventListener('drop',     e => e.preventDefault(), false);
+
+fileInput.addEventListener('change', e => { const f = e.target.files[0]; if (f) handleFile(f); });
+document.getElementById('selNivel').addEventListener('change', renderTable);
+document.getElementById('selGrupo').addEventListener('change', renderTable);
+document.getElementById('btnTodas').addEventListener('click', () => {
+  document.querySelectorAll('#classSelector input[type=checkbox]').forEach(cb => cb.checked = true);
+  renderTable();
+});
+document.getElementById('btnNinguna').addEventListener('click', () => {
+  document.querySelectorAll('#classSelector input[type=checkbox]').forEach(cb => cb.checked = false);
+  renderTable();
 });
 
-fileInput.addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (file) handleFile(file);
-});
+(function(){
+  const anims = [
+    'bit-spin 4s cubic-bezier(.45,0,.55,1) infinite',
+    'bit-float 3s ease-in-out infinite',
+    'bit-warp 2s ease-in-out infinite',
+    'bit-bounce .9s cubic-bezier(.36,.07,.19,.97) infinite',
+    'bit-swing 2.5s ease-in-out infinite',
+    'bit-breathe 2.5s ease-in-out infinite',
+    'bit-spin 4s cubic-bezier(.45,0,.55,1) infinite, bit-float 3s ease-in-out infinite',
+  ];
+  document.querySelectorAll('.bit-wrap').forEach(el => {
+    el.style.animation = anims[Math.floor(Math.random() * anims.length)];
+    el.addEventListener('click', () => el.classList.toggle('bit-no-state'));
+  });
+})();
 
+// ============================================================
+// CARGA DE ARCHIVO
+// ============================================================
 async function handleFile(file) {
-  console.log('[Inventario] Analizando:', file.name);
-  
-  // UI Loading
-  document.getElementById('modelInfo').classList.add('show');
+  document.getElementById('modelTag').classList.add('show');
   document.getElementById('modelName').textContent = file.name;
   document.getElementById('modelMeta').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
-  
+  btnCargarIfc.classList.add('cargado');
+  btnCargarIfc.innerHTML = '&#10003;&nbsp;' + file.name.replace(/\.ifc$/i, '');
+
   const progressWrap = document.getElementById('progressWrap');
-  const progressBar = document.getElementById('progressBar');
+  const progressBar  = document.getElementById('progressBar');
   const progressText = document.getElementById('progressText');
-  
   progressWrap.classList.add('show');
-  progressBar.style.width = '10%';
-  progressText.textContent = 'Leyendo archivo... 10%';
+  progressBar.style.background = '';
+  progressBar.style.width = '5%';
+  progressText.textContent = 'Leyendo archivo...';
 
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    const data = new Uint8Array(e.target.result);
-    
-    progressBar.style.width = '30%';
-    progressText.textContent = 'Abriendo modelo... 30%';
+  try {
+    const text = await file.text();
+    progressBar.style.width = '20%';
+    progressText.textContent = 'Parseando entidades IFC...';
+    await tick();
 
-    try {
-      if (currentModel !== -1) ifcApi.CloseModel(currentModel);
-      currentModel = ifcApi.OpenModel(data);
-      
-      progressBar.style.width = '60%';
-      progressText.textContent = 'Extrayendo niveles (IfcBuildingStorey)... 60%';
+    const entities = parseIFC(text);
+    progressBar.style.width = '45%';
+    progressText.textContent = 'Detectando unidades y niveles...';
+    await tick();
 
-      await extraerDatosReales();
+    const units = detectUnits(entities);
+    extractLevels(entities);
+    progressBar.style.width = '65%';
+    progressText.textContent = 'Extrayendo cantidades (largo, área, volumen)...';
+    await tick();
 
-      progressBar.style.width = '100%';
-      progressText.textContent = '¡Completado!';
-      setTimeout(() => progressWrap.classList.remove('show'), 2000);
-    } catch (err) {
-      console.error('[Inventario] Error:', err);
-      progressText.textContent = 'Error al procesar el IFC';
-      progressBar.style.background = 'var(--red)';
-    }
-  };
-  reader.readAsArrayBuffer(file);
+    const { elementQty, cov } = extractQuantities(entities, units);
+    progressBar.style.width = '85%';
+    progressText.textContent = 'Construyendo inventario...';
+    await tick();
+
+    const elementType = extractTypes(entities);
+    buildCounts(entities, elementQty, elementType);
+    buildClassSelector(Object.keys(cachedCounts));
+    renderTable();
+    document.getElementById('btnExport').disabled = false;
+    progressBar.style.width = '100%';
+
+    const unitsLabel = units.length === 0.001 ? 'mm→m' : units.length === 0.01 ? 'cm→m' : 'm';
+    const covMsg = cov.total === 0
+      ? '⚠ IFC sin datos de cantidades (sin QTO sets)'
+      : `Largo:${cov.length} Área:${cov.area}${cov.areaCalc?'('+cov.areaCalc+'~)':''} Vol:${cov.volume}${cov.volCalc?'('+cov.volCalc+'~)':''} Alto:${cov.height} Grosor:${cov.width}`;
+    progressText.textContent = `✓ ${Object.keys(entities).length.toLocaleString()} entidades · ${unitsLabel} · ${covMsg}`;
+    setTimeout(() => progressWrap.classList.remove('show'), 6000);
+  } catch(err) {
+    console.error('[Inventario] Error:', err);
+    progressText.textContent = 'Error: ' + err.message;
+    progressBar.style.background = 'var(--red)';
+  }
 }
 
-async function extraerDatosReales() {
-  const statsCount = document.getElementById('totalCount');
-  const statsArea = document.getElementById('totalArea');
-  const selNivel = document.getElementById('selNivel');
-  const body = document.getElementById('inventoryBody');
+function tick() { return new Promise(r => setTimeout(r, 16)); }
 
-  // 1. Obtener Niveles (IfcBuildingStorey)
-  const storeys = ifcApi.GetLineIDsWithType(currentModel, WebIFC.IFCBUILDINGSTOREY);
+// ============================================================
+// EXTRACCIÓN DE TIPOS (IFCRELDEFINESBYTYPE)
+// ============================================================
+function extractTypes(entities) {
+  const elementType = {}; // elementId → type name string
+
+  for (const [, ent] of Object.entries(entities)) {
+    if (ent.type !== 'IFCRELDEFINESBYTYPE') continue;
+    const a       = splitAttrs(ent.raw);
+    const typeRef = getRef(a[5]);
+    if (!typeRef || !entities[typeRef]) continue;
+    const ta       = splitAttrs(entities[typeRef].raw);
+    const typeName = getString(ta[2]) || getString(ta[7]) || '(Sin tipo)';
+    getRefs(a[4]).forEach(ref => { elementType[ref] = typeName; });
+  }
+
+  // Fallback: si el elemento no tiene tipo por relación,
+  // intentar leerlo de ObjectType (attr[4]) o Name (attr[2])
+  for (const [id, ent] of Object.entries(entities)) {
+    if (!CATALOG_KEYS.has(ent.type)) continue;
+    if (elementType[id]) continue;
+    const a    = splitAttrs(ent.raw);
+    const name = getString(a[4]) || getString(a[2]);
+    elementType[id] = name || '(Sin tipo)';
+  }
+
+  return elementType;
+}
+
+// ============================================================
+// EXTRACCIÓN DE NIVELES
+// ============================================================
+function extractLevels(entities) {
+  cachedLevelNames     = {};
+  cachedElementToLevel = {};
+  const selNivel = document.getElementById('selNivel');
   selNivel.innerHTML = '<option value="all">Todos los niveles</option>';
-  
-  const levelNames = {};
-  for (let i = 0; i < storeys.size(); i++) {
-    const id = storeys.get(i);
-    const props = ifcApi.GetLine(currentModel, id);
-    const name = props.Name ? props.Name.value : 'Nivel Sin Nombre';
-    levelNames[id] = name;
-    
+
+  for (const [id, ent] of Object.entries(entities)) {
+    if (ent.type !== 'IFCBUILDINGSTOREY') continue;
+    const a    = splitAttrs(ent.raw);
+    const name = getString(a[2]) || getString(a[7]) || ('Nivel ' + id);
+    cachedLevelNames[id] = name;
     const opt = document.createElement('option');
-    opt.value = id;
-    opt.textContent = name;
+    opt.value = id; opt.textContent = name;
     selNivel.appendChild(opt);
   }
 
-  // 2. Mapear Elementos a Niveles (Simplificado para el inventario inicial)
-  // Buscamos todas las relaciones de contenido
-  const rels = ifcApi.GetLineIDsWithType(currentModel, WebIFC.IFCRELCONTAINEDINSPATIALSTRUCTURE);
-  const elementToLevel = {};
-  
-  for (let i = 0; i < rels.size(); i++) {
-    const id = rels.get(i);
-    const rel = ifcApi.GetLine(currentModel, id);
-    const levelId = rel.RelatingStructure.value;
-    if (levelNames[levelId]) {
-      rel.RelatedElements.forEach(elRef => {
-        elementToLevel[elRef.value] = levelNames[levelId];
-      });
+  for (const [, ent] of Object.entries(entities)) {
+    if (ent.type !== 'IFCRELCONTAINEDINSPATIALSTRUCTURE') continue;
+    const a        = splitAttrs(ent.raw);
+    const levelRef = getRef(a[5]);
+    if (levelRef && cachedLevelNames[levelRef]) {
+      getRefs(a[4]).forEach(ref => { cachedElementToLevel[ref] = cachedLevelNames[levelRef]; });
+    }
+  }
+}
+
+// ============================================================
+// ACUMULAR CONTEOS Y CANTIDADES  {class → type → level → bucket}
+// ============================================================
+function buildCounts(entities, elementQty, elementType) {
+  cachedCounts = {};
+  for (const [id, ent] of Object.entries(entities)) {
+    if (!CATALOG_KEYS.has(ent.type)) continue;
+    const lvl  = cachedElementToLevel[id] || 'Sin Nivel';
+    const tipo = (elementType && elementType[id]) || '(Sin tipo)';
+    if (!cachedCounts[ent.type])             cachedCounts[ent.type] = {};
+    if (!cachedCounts[ent.type][tipo])       cachedCounts[ent.type][tipo] = {};
+    if (!cachedCounts[ent.type][tipo][lvl])  cachedCounts[ent.type][tipo][lvl] = { count:0, length:null, area:null, volume:null };
+    const bucket = cachedCounts[ent.type][tipo][lvl];
+    bucket.count++;
+    const q = elementQty[id];
+    if (q) {
+      if (q.length  !== undefined) bucket.length    = (bucket.length    ?? 0) + q.length;
+      if (q.area    !== undefined) bucket.area      = (bucket.area      ?? 0) + q.area;
+      if (q.volume  !== undefined) bucket.volume    = (bucket.volume    ?? 0) + q.volume;
+      if (q.area_calc)             bucket.area_calc = true;
+      if (q.vol_calc)              bucket.vol_calc  = true;
+    }
+  }
+}
+
+// ============================================================
+// SELECTOR DE CLASES
+// ============================================================
+function buildClassSelector(presentKeys) {
+  const container = document.getElementById('classSelector');
+  container.innerHTML = '';
+  if (presentKeys.length === 0) {
+    container.innerHTML = '<div class="cls-empty">No se encontraron clases reconocidas.</div>';
+    return;
+  }
+  const groups = {};
+  for (const key of presentKeys) {
+    const cat = CATALOG_MAP[key];
+    if (!cat) continue;
+    if (!groups[cat.group]) groups[cat.group] = [];
+    groups[cat.group].push(cat);
+  }
+  for (const [groupName, cats] of Object.entries(groups)) {
+    const sec = document.createElement('div');
+    sec.className = 'cls-group';
+    sec.innerHTML = `<div class="cls-group-label">${groupName}</div>`;
+    for (const cat of cats) {
+      let total = 0;
+      for (const tipos of Object.values(cachedCounts[cat.key] || {}))
+        for (const b of Object.values(tipos)) total += b.count;
+      const item  = document.createElement('label');
+      item.className = 'cls-item';
+      item.innerHTML = `
+        <input type="checkbox" checked data-key="${cat.key}">
+        <span class="cls-name">${cat.label}</span>
+        <span class="cls-count">${total}</span>
+      `;
+      item.querySelector('input').addEventListener('change', renderTable);
+      sec.appendChild(item);
+    }
+    container.appendChild(sec);
+  }
+}
+
+// ============================================================
+// RENDER TABLA  — modos: tipo_nivel / tipo / nivel
+// ============================================================
+function renderTable() {
+  const body          = document.getElementById('inventoryBody');
+  const statsCount    = document.getElementById('totalCount');
+  const statsClases   = document.getElementById('totalClases');
+  const filterLevel   = document.getElementById('selNivel').value;
+  const groupMode     = document.getElementById('selGrupo').value;
+  const filterLvlName = filterLevel !== 'all' ? (cachedLevelNames[filterLevel] || null) : null;
+
+  const selectedKeys = Array.from(
+    document.querySelectorAll('#classSelector input[type=checkbox]:checked')
+  ).map(el => el.dataset.key);
+
+  body.innerHTML = '';
+  let totalElements = 0, totalClasses = 0;
+
+  const calcTip = 'title="Valor calculado: L × H (área) o A × e (volumen)"';
+  const calcSty = 'color:rgba(0,212,255,.6);font-style:italic;';
+
+  function emptyBucket() { return { count:0, length:null, area:null, volume:null }; }
+
+  function addBucket(src, dst) {
+    dst.count += src.count;
+    if (src.length !== null) dst.length = (dst.length ?? 0) + src.length;
+    if (src.area   !== null) dst.area   = (dst.area   ?? 0) + src.area;
+    if (src.volume !== null) dst.volume = (dst.volume ?? 0) + src.volume;
+    if (src.area_calc) dst.area_calc = true;
+    if (src.vol_calc)  dst.vol_calc  = true;
+  }
+
+  function classHeaderRow(cat, key, b) {
+    const ac = b.area_calc, vc = b.vol_calc;
+    const tr = document.createElement('tr');
+    tr.className = 'tr-group';
+    tr.innerHTML = `
+      <td style="color:var(--accent2);font-weight:700;">${cat.label}
+        <span style="font:400 9px var(--mono);color:rgba(124,77,255,.5);margin-left:8px;">${key}</span>
+      </td>
+      <td style="color:var(--accent2);font:600 9px var(--mono);">TOTAL</td>
+      <td class="td-num" style="color:var(--accent2);">${b.count}</td>
+      <td class="td-num" style="color:var(--accent2);">${fmtN(b.length)}</td>
+      <td class="td-num" style="color:var(--accent2);${ac?calcSty:''}" ${ac?calcTip:''}>${ac&&b.area?'~':''}${fmtN(b.area)}</td>
+      <td class="td-num" style="color:var(--accent2);${vc?calcSty:''}"  ${vc?calcTip:''}>${vc&&b.volume?'~':''}${fmtN(b.volume,3)}</td>
+    `;
+    return tr;
+  }
+
+  function detailRow(col1, col2, b, indent) {
+    const ac = b.area_calc, vc = b.vol_calc;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="padding-left:${indent}px;">${col1}</td>
+      <td style="color:var(--muted);">${col2}</td>
+      <td class="td-num" style="color:var(--accent);">${b.count}</td>
+      <td class="td-num">${fmtN(b.length)}</td>
+      <td class="td-num" style="${ac?calcSty:''}" ${ac?calcTip:''}>${ac&&b.area?'~':''}${fmtN(b.area)}</td>
+      <td class="td-num" style="${vc?calcSty:''}"  ${vc?calcTip:''}>${vc&&b.volume?'~':''}${fmtN(b.volume,3)}</td>
+    `;
+    return tr;
+  }
+
+  function typeSubRow(tipo, b) {
+    const ac = b.area_calc, vc = b.vol_calc;
+    const tr = document.createElement('tr');
+    tr.style.background = 'rgba(0,212,255,.025)';
+    tr.innerHTML = `
+      <td style="padding-left:16px;font-weight:600;color:var(--text);">${tipo}</td>
+      <td style="color:var(--muted);font:600 9px var(--mono);">subtotal</td>
+      <td class="td-num">${b.count}</td>
+      <td class="td-num">${fmtN(b.length)}</td>
+      <td class="td-num" style="${ac?calcSty:''}" ${ac?calcTip:''}>${ac&&b.area?'~':''}${fmtN(b.area)}</td>
+      <td class="td-num" style="${vc?calcSty:''}"  ${vc?calcTip:''}>${vc&&b.volume?'~':''}${fmtN(b.volume,3)}</td>
+    `;
+    return tr;
+  }
+
+  for (const key of selectedKeys) {
+    if (!cachedCounts[key]) continue;
+    const cat      = CATALOG_MAP[key];
+    const typesMap = cachedCounts[key]; // { type → { level → bucket } }
+    const classBucket = emptyBucket();
+
+    if (groupMode === 'tipo_nivel') {
+      // class header + per-type subheader + per-level detail rows
+      const typeRows = [];
+      for (const [tipo, levels] of Object.entries(typesMap)) {
+        const typeBucket = emptyBucket();
+        const levelRows  = [];
+        for (const [lvl, b] of Object.entries(levels)) {
+          if (filterLvlName && lvl !== filterLvlName) continue;
+          addBucket(b, typeBucket);
+          levelRows.push({ lvl, b });
+        }
+        if (typeBucket.count === 0) continue;
+        addBucket(typeBucket, classBucket);
+        typeRows.push({ tipo, typeBucket, levelRows });
+      }
+      if (classBucket.count === 0) continue;
+      totalElements += classBucket.count; totalClasses++;
+      body.appendChild(classHeaderRow(cat, key, classBucket));
+      const multiType = typeRows.length > 1;
+      for (const { tipo, typeBucket, levelRows } of typeRows) {
+        const multiLevel = levelRows.length > 1;
+        const showSub    = multiType || multiLevel;
+        if (showSub) body.appendChild(typeSubRow(tipo, typeBucket));
+        for (const { lvl, b } of levelRows) {
+          body.appendChild(detailRow(
+            showSub ? cat.label : tipo,
+            showSub ? lvl : lvl,
+            b,
+            showSub ? 32 : 22
+          ));
+        }
+      }
+
+    } else if (groupMode === 'tipo') {
+      // class header + per-type aggregate rows
+      const typeRows = [];
+      for (const [tipo, levels] of Object.entries(typesMap)) {
+        const typeBucket = emptyBucket();
+        for (const [lvl, b] of Object.entries(levels)) {
+          if (filterLvlName && lvl !== filterLvlName) continue;
+          addBucket(b, typeBucket);
+        }
+        if (typeBucket.count === 0) continue;
+        addBucket(typeBucket, classBucket);
+        typeRows.push({ tipo, typeBucket });
+      }
+      if (classBucket.count === 0) continue;
+      totalElements += classBucket.count; totalClasses++;
+      body.appendChild(classHeaderRow(cat, key, classBucket));
+      for (const { tipo, typeBucket } of typeRows) {
+        body.appendChild(detailRow(tipo, '—', typeBucket, 22));
+      }
+
+    } else { // nivel
+      // class header + per-level aggregate rows (all types merged)
+      const levelMap = {};
+      for (const [, levels] of Object.entries(typesMap)) {
+        for (const [lvl, b] of Object.entries(levels)) {
+          if (filterLvlName && lvl !== filterLvlName) continue;
+          if (!levelMap[lvl]) levelMap[lvl] = emptyBucket();
+          addBucket(b, levelMap[lvl]);
+          addBucket(b, classBucket);
+        }
+      }
+      if (classBucket.count === 0) continue;
+      totalElements += classBucket.count; totalClasses++;
+      body.appendChild(classHeaderRow(cat, key, classBucket));
+      for (const [lvl, b] of Object.entries(levelMap)) {
+        body.appendChild(detailRow(cat.label, lvl, b, 22));
+      }
     }
   }
 
-  // 3. Obtener todas las entidades base para el inventario (Wall, Slab, Column, etc)
-  const categories = [
-    { type: WebIFC.IFCWALLSTANDARDCASE, label: 'Muros (Standard)' },
-    { type: WebIFC.IFCWALL, label: 'Muros' },
-    { type: WebIFC.IFCSLAB, label: 'Suelos / Losas' },
-    { type: WebIFC.IFCCOLUMN, label: 'Columnas / Pilares' },
-    { type: WebIFC.IFCBEAM, label: 'Vigas' },
-    { type: WebIFC.IFCWINDOW, label: 'Ventanas' },
-    { type: WebIFC.IFCDOOR, label: 'Puertas' }
+  statsCount.textContent  = totalElements > 0 ? totalElements.toLocaleString() : '—';
+  statsClases.textContent = totalClasses  > 0 ? totalClasses : '—';
+
+  if (totalElements === 0 && Object.keys(cachedCounts).length > 0) {
+    body.innerHTML = `<tr><td colspan="6" style="padding:30px;text-align:center;color:var(--muted);">Sin resultados para los filtros seleccionados.</td></tr>`;
+  } else if (Object.keys(cachedCounts).length === 0) {
+    body.innerHTML = `<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--muted);font-style:italic;">Carga un archivo IFC para generar el inventario.</td></tr>`;
+  }
+}
+// ============================================================
+// MODO CLARO / OSCURO
+// ============================================================
+(function() {
+  const btn = document.getElementById('btnLightMode');
+  if (!btn) return;
+  if (localStorage.getItem('voxelbim_theme') === 'light') {
+    document.body.classList.add('light-mode');
+    btn.classList.add('active');
+  }
+  btn.addEventListener('click', function() {
+    const isLight = document.body.classList.toggle('light-mode');
+    btn.classList.toggle('active', isLight);
+    localStorage.setItem('voxelbim_theme', isLight ? 'light' : 'dark');
+  });
+})();
+
+// ============================================================
+// EXPORTAR XLSX
+// ============================================================
+function exportToXLSX() {
+  if (!window.XLSX || Object.keys(cachedCounts).length === 0) return;
+
+  const filterLevel   = document.getElementById('selNivel').value;
+  const filterLvlName = filterLevel !== 'all' ? (cachedLevelNames[filterLevel] || null) : null;
+  const selectedKeys  = Array.from(
+    document.querySelectorAll('#classSelector input[type=checkbox]:checked')
+  ).map(el => el.dataset.key);
+
+  const modelName = document.getElementById('modelName').textContent || 'inventario';
+
+  // ── Hoja 1: Resumen por clase ──────────────────────────────
+  const aoaRes = [
+    ['Clase IFC', 'Descripción', 'Cantidad', 'Largo (m)', 'Superficie (m²)', 'Volumen (m³)']
+  ];
+  // ── Hoja 2: Detalle clase × tipo × nivel ──────────────────
+  const aoaDet = [
+    ['Clase IFC', 'Descripción', 'Tipo', 'Nivel', 'Cantidad', 'Largo (m)', 'Superficie (m²)', 'Volumen (m³)']
   ];
 
-  body.innerHTML = '';
-  let totalElements = 0;
+  function num(v, dec) { return v !== null && v !== undefined ? +v.toFixed(dec) : ''; }
 
-  categories.forEach(cat => {
-    const ids = ifcApi.GetLineIDsWithType(currentModel, cat.type);
-    if (ids.size() > 0) {
-      totalElements += ids.size();
-      
-      // Agrupamos por nivel para la tabla
-      const countsByLevel = {};
-      for (let i = 0; i < ids.size(); i++) {
-        const id = ids.get(i);
-        const lvl = elementToLevel[id] || 'Sin Nivel';
-        countsByLevel[lvl] = (countsByLevel[lvl] || 0) + 1;
-      }
+  for (const key of selectedKeys) {
+    if (!cachedCounts[key]) continue;
+    const cat = CATALOG_MAP[key];
+    const cb  = { count:0, length:null, area:null, volume:null };
 
-      for (const [lvl, count] of Object.entries(countsByLevel)) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td style="font-weight:600;color:var(--accent);">${cat.label}</td>
-          <td>${lvl}</td>
-          <td class="td-num">${count}</td>
-          <td class="td-num">-</td>
-          <td class="td-num">-</td>
-          <td class="td-num">-</td>
-        `;
-        body.appendChild(tr);
+    for (const [tipo, levels] of Object.entries(cachedCounts[key])) {
+      for (const [lvl, b] of Object.entries(levels)) {
+        if (filterLvlName && lvl !== filterLvlName) continue;
+        cb.count  += b.count;
+        if (b.length !== null) cb.length = (cb.length ?? 0) + b.length;
+        if (b.area   !== null) cb.area   = (cb.area   ?? 0) + b.area;
+        if (b.volume !== null) cb.volume = (cb.volume ?? 0) + b.volume;
+        aoaDet.push([key, cat.label, tipo, lvl, b.count,
+          num(b.length,3), num(b.area,3), num(b.volume,4)]);
       }
     }
-  });
+    if (cb.count === 0) continue;
+    aoaRes.push([key, cat.label, cb.count,
+      num(cb.length,3), num(cb.area,3), num(cb.volume,4)]);
+  }
 
-  statsCount.textContent = totalElements;
-  statsArea.textContent = 'En proceso...';
+  // Crear libro
+  const wb = XLSX.utils.book_new();
+
+  const wsRes = XLSX.utils.aoa_to_sheet(aoaRes);
+  wsRes['!cols'] = [{wch:28},{wch:22},{wch:10},{wch:14},{wch:16},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, wsRes, 'Resumen');
+
+  const wsDet = XLSX.utils.aoa_to_sheet(aoaDet);
+  wsDet['!cols'] = [{wch:28},{wch:22},{wch:38},{wch:22},{wch:10},{wch:14},{wch:16},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, wsDet, 'Detalle');
+
+  const date = new Date().toISOString().slice(0,10);
+  const safeName = modelName.replace(/[^a-z0-9_\-]/gi,'_').slice(0,30);
+  XLSX.writeFile(wb, `inventario_${safeName}_${date}.xlsx`);
 }
 </script>
 </body>
