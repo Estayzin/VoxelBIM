@@ -4,6 +4,8 @@ import * as BUI from "@thatopen/ui";
 import * as BUIC from "@thatopen/ui-obc";
 import * as THREE from "three";
 
+const _base = window.location.origin;
+
 BUI.Manager.init();
 
 const components = new OBC.Components();
