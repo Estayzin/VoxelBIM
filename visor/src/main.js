@@ -150,7 +150,7 @@ const loadIfc = async (file) => {
   }
 };
 
-const dropzone = document.getElementById("dropzone");
+const dropzone = document.getElementById("dropzoneCentral");
 const fileInput = document.getElementById("fileInput");
 dropzone.addEventListener("click", () => fileInput.click());
 fileInput.addEventListener("change", () => { if (fileInput.files[0]) loadIfc(fileInput.files[0]); });
@@ -473,9 +473,9 @@ document.getElementById("btn3D").addEventListener("click", () => {
   document.getElementById("btn3D").classList.add("active");
   setTimeout(() => document.getElementById("btn3D").classList.remove("active"), 300);
 });
-document.getElementById("btnFitSb").addEventListener("click", () => world.camera.fitToItems());
-document.getElementById("btnOrbitSb").addEventListener("click", () => { world.camera.set("Orbit"); world.camera.projection.set("Perspective"); _planMode = false; document.getElementById("btnPlan").classList.remove("active"); });
-document.getElementById("btnPlanSb").addEventListener("click", () => { world.camera.set("Plan"); world.camera.projection.set("Orthographic"); _planMode = true; document.getElementById("btnPlan").classList.add("active"); });
+document.getElementById("btnFitSb")?.addEventListener("click", () => world.camera.fitToItems());
+document.getElementById("btnOrbitSb")?.addEventListener("click", () => { world.camera.set("Orbit"); world.camera.projection.set("Perspective"); _planMode = false; document.getElementById("btnPlan").classList.remove("active"); });
+document.getElementById("btnPlanSb")?.addEventListener("click", () => { world.camera.set("Plan"); world.camera.projection.set("Orthographic"); _planMode = true; document.getElementById("btnPlan").classList.add("active"); });
 
 // Zoom Selección — fit solo a los elementos seleccionados
 document.getElementById("btnFitSel").addEventListener("click", async () => {
@@ -507,8 +507,8 @@ document.getElementById("btnPlan").addEventListener("click", async () => {
   }
 });
 document.getElementById("btnProps").addEventListener("click", () => {
-  const visible = document.getElementById("rightPanel").style.display !== 'none';
-  document.getElementById("rightPanel").style.display = visible ? 'none' : '';
+  const visible = document.getElementById("rightPanels").style.display !== 'none';
+  document.getElementById("rightPanels").style.display = visible ? 'none' : '';
   document.getElementById("btnProps").classList.toggle("active", !visible);
 });
 document.getElementById("propsClose").addEventListener("click", () => {
