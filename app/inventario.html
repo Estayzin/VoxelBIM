@@ -494,7 +494,8 @@ function extractQuantities(entities, units) {
     const name = normStr(getString(a[0]) || '');
     if (!name) continue;
     const rawV = a[2] || '';
-    const strM = rawV.match(/^'(.*)'$/s);
+    // Captura IFCTEXT('valor'), IFCLABEL('valor'), IFCIDENTIFIER('valor') o 'valor' directo
+    const strM = rawV.match(/^(?:IFC\w+)?\('(.*)'\)$/s) || rawV.match(/^'(.*)'$/s);
     if (!strM) continue;
     const val = strM[1].replace(/''/g, "'").trim();
     if (val && val !== '$' && val !== '.') textPropById[id] = { name, val };
