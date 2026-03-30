@@ -230,6 +230,7 @@ footer { text-align:center; padding:6px 24px; font:400 9px var(--mono); color:va
           <option value="tipo_nivel">Tipo → Nivel</option>
           <option value="tipo">Por Tipo</option>
           <option value="nivel">Por Nivel</option>
+          <option value="keynote">Por Keynote</option>
         </select>
       </div>
 
@@ -1094,7 +1095,7 @@ function renderTable() {
         body.appendChild(detailRow(tipo, '—', typeBucket, 22));
       }
 
-    } else { // nivel
+    } else if (groupMode === 'nivel') {
       // class header + per-level aggregate rows (all types merged)
       const levelMap = {};
       for (const [, levels] of Object.entries(typesMap)) {
@@ -1111,6 +1112,27 @@ function renderTable() {
       body.appendChild(classHeaderRow(cat, key, classBucket));
       for (const [lvl, b] of Object.entries(levelMap)) {
         body.appendChild(detailRow(cat.label, lvl, b, 22));
+      }
+
+    } else { // keynote
+      // class header + per-keynote aggregate rows (todos los tipos y niveles agrupados por keynote)
+      const keynoteMap = {};
+      for (const [, levels] of Object.entries(typesMap)) {
+        for (const [lvl, b] of Object.entries(levels)) {
+          if (filterLvlName && lvl !== filterLvlName) continue;
+          for (const kn of (b.keynotes && b.keynotes.size > 0 ? b.keynotes : ['(Sin Keynote)'])) {
+            if (filterKeynote !== 'all' && kn !== filterKeynote) continue;
+            if (!keynoteMap[kn]) keynoteMap[kn] = emptyBucket();
+            addBucket(b, keynoteMap[kn]);
+            addBucket(b, classBucket);
+          }
+        }
+      }
+      if (classBucket.count === 0) continue;
+      totalElements += classBucket.count; totalClasses++;
+      body.appendChild(classHeaderRow(cat, key, classBucket));
+      for (const [kn, b] of Object.entries(keynoteMap).sort((a,b) => a[0].localeCompare(b[0]))) {
+        body.appendChild(detailRow(cat.label, kn, b, 22));
       }
     }
   }
