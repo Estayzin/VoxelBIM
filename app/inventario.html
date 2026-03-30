@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -241,6 +241,13 @@ footer { text-align:center; padding:6px 24px; font:400 9px var(--mono); color:va
       </div>
 
       <div class="filter-sec">
+        <label class="filter-label">Keynote</label>
+        <select class="filter-sel" id="selKeynote">
+          <option value="all">Todos los keynotes</option>
+        </select>
+      </div>
+
+      <div class="filter-sec">
         <label class="filter-label">Clases IFC</label>
         <div class="cls-toolbar">
           <button class="cls-btn" id="btnTodas">Todas</button>
@@ -278,6 +285,8 @@ footer { text-align:center; padding:6px 24px; font:400 9px var(--mono); color:va
             <th style="width:230px;">Categor&iacute;a / Clase IFC</th>
             <th style="width:120px;">Nivel</th>
             <th style="text-align:right;width:90px;">Cantidad</th>
+            <th style="width:130px;">Keynote</th>
+            <th style="width:130px;">MCG_EETT</th>
             <th style="text-align:right;">Largo (m)</th>
             <th style="text-align:right;">Superficie (m&sup2;)</th>
             <th style="text-align:right;">Volumen (m&sup3;)</th>
@@ -285,7 +294,7 @@ footer { text-align:center; padding:6px 24px; font:400 9px var(--mono); color:va
         </thead>
         <tbody id="inventoryBody">
           <tr>
-            <td colspan="6" style="padding:40px;text-align:center;color:var(--muted);font-style:italic;">
+            <td colspan="8" style="padding:40px;text-align:center;color:var(--muted);font-style:italic;">
               Carga un archivo IFC para generar el inventario.
             </td>
           </tr>
@@ -477,10 +486,24 @@ function extractQuantities(entities, units) {
     }
   }
 
+  // Paso 2b: Extraer propiedades de TEXTO (Keynote, MCG_EETT, etc.)
+  const textPropById = {};
+  for (const [id, ent] of Object.entries(entities)) {
+    if (ent.type !== 'IFCPROPERTYSINGLEVALUE') continue;
+    const a    = splitAttrs(ent.raw);
+    const name = normStr(getString(a[0]) || '');
+    if (!name) continue;
+    const rawV = a[2] || '';
+    const strM = rawV.match(/^'(.*)'$/s);
+    if (!strM) continue;
+    const val = strM[1].replace(/''/g, "'").trim();
+    if (val && val !== '$' && val !== '.') textPropById[id] = { name, val };
+  }
   // Paso 3: Agrupar ítems por set → byName lookup { name -> { val, dim? } }
   //   IFCELEMENTQUANTITY: Name[2], Quantities[5]
   //   IFCPROPERTYSET:     Name[2], HasProperties[4]
-  const setItems = {}; // setId -> [{name, val, dim?}]
+  const setItems     = {}; // setId -> [{name, val, dim?}]
+  const textSetItems  = {}; // setId -> [{name, val (string)}]
   for (const [id, ent] of Object.entries(entities)) {
     if (ent.type === 'IFCELEMENTQUANTITY') {
       const a = splitAttrs(ent.raw);
@@ -488,6 +511,8 @@ function extractQuantities(entities, units) {
     } else if (ent.type === 'IFCPROPERTYSET') {
       const a = splitAttrs(ent.raw);
       setItems[id] = getRefs(a[4]).map(r => propById[r]).filter(Boolean);
+      textSetItems[id] = getRefs(a[4]).map(r => textPropById[r]).filter(Boolean);
+
     }
   }
 
@@ -533,6 +558,16 @@ function extractQuantities(entities, units) {
         const it = byName[n];
         if (it && eq.width  === undefined) { eq.width  = it.val * units.length; break; }
       }
+
+      // Keynote y MCG_EETT desde propiedades de texto
+      const textByName = {};
+      if (textSetItems[defRef]) {
+        for (const it of textSetItems[defRef]) textByName[it.name] = it.val;
+      }
+      const kn = textByName['keynote'] ?? textByName['key note'] ?? null;
+      if (kn && !eq.keynote) eq.keynote = kn;
+      const mc = textByName['mcg_eett'] ?? textByName['mcgeett'] ?? textByName['mcg eett'] ?? null;
+      if (mc && !eq.mcgeett) eq.mcgeett = mc;
     }
   }
 
@@ -562,6 +597,15 @@ function extractQuantities(entities, units) {
         for (const n of HEIGHT_NAMES) {
           const it = byName[n];
           if (it && eq.height === undefined) { eq.height = it.val * units.length; break; }
+        }
+        // Heredar Keynote y MCG_EETT del tipo si el elemento no los tiene
+        if (textSetItems[psRef]) {
+          const textByNameT = {};
+          for (const it of textSetItems[psRef]) textByNameT[it.name] = it.val;
+          const knT = textByNameT['keynote'] ?? textByNameT['key note'] ?? null;
+          if (knT && !eq.keynote) eq.keynote = knT;
+          const mcT = textByNameT['mcg_eett'] ?? textByNameT['mcgeett'] ?? textByNameT['mcg eett'] ?? null;
+          if (mcT && !eq.mcgeett) eq.mcgeett = mcT;
         }
       }
     }
@@ -643,9 +687,12 @@ const CATALOG_MAP  = Object.fromEntries(IFC_CATALOG.map(c => [c.key, c]));
 const CATALOG_KEYS = new Set(IFC_CATALOG.map(c => c.key));
 
 // Caché  { count, length, area, volume } por clase→nivel
-let cachedLevelNames     = {};
-let cachedElementToLevel = {};
-let cachedCounts         = {};
+let cachedLevelNames      = {};
+let cachedElementToLevel  = {};
+let cachedCounts          = {};
+let cachedElementKeynote  = {};
+let cachedElementMCGEETT  = {};
+let cachedKeynoteNames    = [];
 
 // ============================================================
 // UI
@@ -659,6 +706,7 @@ window.addEventListener('drop',     e => e.preventDefault(), false);
 fileInput.addEventListener('change', e => { const f = e.target.files[0]; if (f) handleFile(f); });
 document.getElementById('selNivel').addEventListener('change', renderTable);
 document.getElementById('selGrupo').addEventListener('change', renderTable);
+document.getElementById('selKeynote').addEventListener('change', renderTable);
 document.getElementById('btnTodas').addEventListener('click', () => {
   document.querySelectorAll('#classSelector input[type=checkbox]').forEach(cb => cb.checked = true);
   renderTable();
@@ -727,6 +775,7 @@ async function handleFile(file) {
     const elementType = extractTypes(entities);
     buildCounts(entities, elementQty, elementType);
     buildClassSelector(Object.keys(cachedCounts));
+    buildKeynoteSelector();
     renderTable();
     document.getElementById('btnExport').disabled = false;
     progressBar.style.width = '100%';
@@ -815,9 +864,11 @@ function buildCounts(entities, elementQty, elementType) {
     const tipo = (elementType && elementType[id]) || '(Sin tipo)';
     if (!cachedCounts[ent.type])             cachedCounts[ent.type] = {};
     if (!cachedCounts[ent.type][tipo])       cachedCounts[ent.type][tipo] = {};
-    if (!cachedCounts[ent.type][tipo][lvl])  cachedCounts[ent.type][tipo][lvl] = { count:0, length:null, area:null, volume:null };
+    if (!cachedCounts[ent.type][tipo][lvl])  cachedCounts[ent.type][tipo][lvl] = { count:0, length:null, area:null, volume:null, keynotes:new Set(), mcgeettos:new Set() };
     const bucket = cachedCounts[ent.type][tipo][lvl];
     bucket.count++;
+    if (elementQty[id] && elementQty[id].keynote) bucket.keynotes.add(elementQty[id].keynote);
+    if (elementQty[id] && elementQty[id].mcgeett)  bucket.mcgeettos.add(elementQty[id].mcgeett);
     const q = elementQty[id];
     if (q) {
       if (q.length  !== undefined) bucket.length    = (bucket.length    ?? 0) + q.length;
@@ -826,6 +877,29 @@ function buildCounts(entities, elementQty, elementType) {
       if (q.area_calc)             bucket.area_calc = true;
       if (q.vol_calc)              bucket.vol_calc  = true;
     }
+  }
+}
+
+// ============================================================
+// SELECTOR DE KEYNOTES
+// ============================================================
+function buildKeynoteSelector() {
+  const sel = document.getElementById('selKeynote');
+  if (!sel) return;
+  sel.innerHTML = '<option value="all">Todos los keynotes</option>';
+  const allKeys = new Set();
+  for (const tipos of Object.values(cachedCounts)) {
+    for (const levels of Object.values(tipos)) {
+      for (const b of Object.values(levels)) {
+        for (const k of (b.keynotes || [])) if (k) allKeys.add(k);
+      }
+    }
+  }
+  const sorted = [...allKeys].sort();
+  for (const k of sorted) {
+    const opt = document.createElement('option');
+    opt.value = k; opt.textContent = k;
+    sel.appendChild(opt);
   }
 }
 
@@ -875,9 +949,10 @@ function renderTable() {
   const body          = document.getElementById('inventoryBody');
   const statsCount    = document.getElementById('totalCount');
   const statsClases   = document.getElementById('totalClases');
-  const filterLevel   = document.getElementById('selNivel').value;
-  const groupMode     = document.getElementById('selGrupo').value;
-  const filterLvlName = filterLevel !== 'all' ? (cachedLevelNames[filterLevel] || null) : null;
+  const filterLevel    = document.getElementById('selNivel').value;
+  const groupMode      = document.getElementById('selGrupo').value;
+  const filterKeynote  = document.getElementById('selKeynote') ? document.getElementById('selKeynote').value : 'all';
+  const filterLvlName  = filterLevel !== 'all' ? (cachedLevelNames[filterLevel] || null) : null;
 
   const selectedKeys = Array.from(
     document.querySelectorAll('#classSelector input[type=checkbox]:checked')
@@ -889,7 +964,8 @@ function renderTable() {
   const calcTip = 'title="Valor calculado: L × H (área) o A × e (volumen)"';
   const calcSty = 'color:rgba(0,212,255,.6);font-style:italic;';
 
-  function emptyBucket() { return { count:0, length:null, area:null, volume:null }; }
+  function emptyBucket() { return { count:0, length:null, area:null, volume:null, keynotes:new Set(), mcgeettos:new Set() }; }
+  function fmtSet(s) { if (!s || s.size===0) return '—'; const a=[...s].sort(); return a.length>2 ? a.slice(0,2).join(', ')+'…' : a.join(', '); }
 
   function addBucket(src, dst) {
     dst.count += src.count;
@@ -898,6 +974,10 @@ function renderTable() {
     if (src.volume !== null) dst.volume = (dst.volume ?? 0) + src.volume;
     if (src.area_calc) dst.area_calc = true;
     if (src.vol_calc)  dst.vol_calc  = true;
+    if (!dst.keynotes)  dst.keynotes  = new Set();
+    if (!dst.mcgeettos) dst.mcgeettos = new Set();
+    for (const k of (src.keynotes  || [])) dst.keynotes.add(k);
+    for (const k of (src.mcgeettos || [])) dst.mcgeettos.add(k);
   }
 
   function classHeaderRow(cat, key, b) {
@@ -910,6 +990,8 @@ function renderTable() {
       </td>
       <td style="color:var(--accent2);font:600 9px var(--mono);">TOTAL</td>
       <td class="td-num" style="color:var(--accent2);">${b.count}</td>
+      <td style="color:var(--accent2);font:400 9px var(--mono);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${[...( b.keynotes||[])].sort().join(', ')}">${fmtSet(b.keynotes)}</td>
+      <td style="color:var(--accent2);font:400 9px var(--mono);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${[...(b.mcgeettos||[])].sort().join(', ')}">${fmtSet(b.mcgeettos)}</td>
       <td class="td-num" style="color:var(--accent2);">${fmtN(b.length)}</td>
       <td class="td-num" style="color:var(--accent2);${ac?calcSty:''}" ${ac?calcTip:''}>${ac&&b.area?'~':''}${fmtN(b.area)}</td>
       <td class="td-num" style="color:var(--accent2);${vc?calcSty:''}"  ${vc?calcTip:''}>${vc&&b.volume?'~':''}${fmtN(b.volume,3)}</td>
@@ -924,9 +1006,11 @@ function renderTable() {
       <td style="padding-left:${indent}px;">${col1}</td>
       <td style="color:var(--muted);">${col2}</td>
       <td class="td-num" style="color:var(--accent);">${b.count}</td>
+      <td style="font:400 9px var(--mono);color:var(--text);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${[...(b.keynotes||[])].sort().join(', ')}">${fmtSet(b.keynotes)}</td>
+      <td style="font:400 9px var(--mono);color:var(--text);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${[...(b.mcgeettos||[])].sort().join(', ')}">${fmtSet(b.mcgeettos)}</td>
       <td class="td-num">${fmtN(b.length)}</td>
-      <td class="td-num" style="${ac?calcSty:''}" ${ac?calcTip:''}>${ac&&b.area?'~':''}${fmtN(b.area)}</td>
-      <td class="td-num" style="${vc?calcSty:''}"  ${vc?calcTip:''}>${vc&&b.volume?'~':''}${fmtN(b.volume,3)}</td>
+      <td class="td-num" style="${ac?calcSty:''}" ${ac?calcTip:''}>${ac&&b.area?'~':'''}${fmtN(b.area)}</td>
+      <td class="td-num" style="${vc?calcSty:''}"  ${vc?calcTip:''}>${vc&&b.volume?'~':'''}${fmtN(b.volume,3)}</td>
     `;
     return tr;
   }
@@ -939,9 +1023,11 @@ function renderTable() {
       <td style="padding-left:16px;font-weight:600;color:var(--text);">${tipo}</td>
       <td style="color:var(--muted);font:600 9px var(--mono);">subtotal</td>
       <td class="td-num">${b.count}</td>
+      <td style="font:400 9px var(--mono);color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${[...(b.keynotes||[])].sort().join(', ')}">${fmtSet(b.keynotes)}</td>
+      <td style="font:400 9px var(--mono);color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${[...(b.mcgeettos||[])].sort().join(', ')}">${fmtSet(b.mcgeettos)}</td>
       <td class="td-num">${fmtN(b.length)}</td>
-      <td class="td-num" style="${ac?calcSty:''}" ${ac?calcTip:''}>${ac&&b.area?'~':''}${fmtN(b.area)}</td>
-      <td class="td-num" style="${vc?calcSty:''}"  ${vc?calcTip:''}>${vc&&b.volume?'~':''}${fmtN(b.volume,3)}</td>
+      <td class="td-num" style="${ac?calcSty:''}" ${ac?calcTip:''}>${ac&&b.area?'~':'''}${fmtN(b.area)}</td>
+      <td class="td-num" style="${vc?calcSty:''}"  ${vc?calcTip:''}>${vc&&b.volume?'~':'''}${fmtN(b.volume,3)}</td>
     `;
     return tr;
   }
@@ -960,6 +1046,7 @@ function renderTable() {
         const levelRows  = [];
         for (const [lvl, b] of Object.entries(levels)) {
           if (filterLvlName && lvl !== filterLvlName) continue;
+          if (filterKeynote !== 'all' && !(b.keynotes && b.keynotes.has(filterKeynote))) continue;
           addBucket(b, typeBucket);
           levelRows.push({ lvl, b });
         }
@@ -992,6 +1079,7 @@ function renderTable() {
         const typeBucket = emptyBucket();
         for (const [lvl, b] of Object.entries(levels)) {
           if (filterLvlName && lvl !== filterLvlName) continue;
+          if (filterKeynote !== 'all' && !(b.keynotes && b.keynotes.has(filterKeynote))) continue;
           addBucket(b, typeBucket);
         }
         if (typeBucket.count === 0) continue;
@@ -1011,6 +1099,7 @@ function renderTable() {
       for (const [, levels] of Object.entries(typesMap)) {
         for (const [lvl, b] of Object.entries(levels)) {
           if (filterLvlName && lvl !== filterLvlName) continue;
+          if (filterKeynote !== 'all' && !(b.keynotes && b.keynotes.has(filterKeynote))) continue;
           if (!levelMap[lvl]) levelMap[lvl] = emptyBucket();
           addBucket(b, levelMap[lvl]);
           addBucket(b, classBucket);
@@ -1029,9 +1118,9 @@ function renderTable() {
   statsClases.textContent = totalClasses  > 0 ? totalClasses : '—';
 
   if (totalElements === 0 && Object.keys(cachedCounts).length > 0) {
-    body.innerHTML = `<tr><td colspan="6" style="padding:30px;text-align:center;color:var(--muted);">Sin resultados para los filtros seleccionados.</td></tr>`;
+    body.innerHTML = `<tr><td colspan="8" style="padding:30px;text-align:center;color:var(--muted);">Sin resultados para los filtros seleccionados.</td></tr>`;
   } else if (Object.keys(cachedCounts).length === 0) {
-    body.innerHTML = `<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--muted);font-style:italic;">Carga un archivo IFC para generar el inventario.</td></tr>`;
+    body.innerHTML = `<tr><td colspan="8" style="padding:40px;text-align:center;color:var(--muted);font-style:italic;">Carga un archivo IFC para generar el inventario.</td></tr>`;
   }
 }
 // ============================================================
@@ -1067,11 +1156,11 @@ function exportToXLSX() {
 
   // ── Hoja 1: Resumen por clase ──────────────────────────────
   const aoaRes = [
-    ['Clase IFC', 'Descripción', 'Cantidad', 'Largo (m)', 'Superficie (m²)', 'Volumen (m³)']
+    ['Clase IFC', 'Descripción', 'Cantidad', 'Largo (m)', 'Superficie (m²)', 'Volumen (m³)', 'Keynote', 'MCG_EETT']
   ];
   // ── Hoja 2: Detalle clase × tipo × nivel ──────────────────
   const aoaDet = [
-    ['Clase IFC', 'Descripción', 'Tipo', 'Nivel', 'Cantidad', 'Largo (m)', 'Superficie (m²)', 'Volumen (m³)']
+    ['Clase IFC', 'Descripción', 'Tipo', 'Nivel', 'Cantidad', 'Largo (m)', 'Superficie (m²)', 'Volumen (m³)', 'Keynote', 'MCG_EETT']
   ];
 
   function num(v, dec) { return v !== null && v !== undefined ? +v.toFixed(dec) : ''; }
@@ -1079,7 +1168,7 @@ function exportToXLSX() {
   for (const key of selectedKeys) {
     if (!cachedCounts[key]) continue;
     const cat = CATALOG_MAP[key];
-    const cb  = { count:0, length:null, area:null, volume:null };
+    const cb  = { count:0, length:null, area:null, volume:null, keynotes:new Set(), mcgeettos:new Set() };
 
     for (const [tipo, levels] of Object.entries(cachedCounts[key])) {
       for (const [lvl, b] of Object.entries(levels)) {
@@ -1088,24 +1177,30 @@ function exportToXLSX() {
         if (b.length !== null) cb.length = (cb.length ?? 0) + b.length;
         if (b.area   !== null) cb.area   = (cb.area   ?? 0) + b.area;
         if (b.volume !== null) cb.volume = (cb.volume ?? 0) + b.volume;
+        for (const k of (b.keynotes||[]))  cb.keynotes.add(k);
+        for (const k of (b.mcgeettos||[])) cb.mcgeettos.add(k);
+        const bKn  = [...(b.keynotes||[])].sort().join('; ');
+        const bMcg = [...(b.mcgeettos||[])].sort().join('; ');
         aoaDet.push([key, cat.label, tipo, lvl, b.count,
-          num(b.length,3), num(b.area,3), num(b.volume,4)]);
+          num(b.length,3), num(b.area,3), num(b.volume,4), bKn, bMcg]);
       }
     }
     if (cb.count === 0) continue;
+    const cbKn  = [...(cb.keynotes||[])].sort().join('; ');
+    const cbMcg = [...(cb.mcgeettos||[])].sort().join('; ');
     aoaRes.push([key, cat.label, cb.count,
-      num(cb.length,3), num(cb.area,3), num(cb.volume,4)]);
+      num(cb.length,3), num(cb.area,3), num(cb.volume,4), cbKn, cbMcg]);
   }
 
   // Crear libro
   const wb = XLSX.utils.book_new();
 
   const wsRes = XLSX.utils.aoa_to_sheet(aoaRes);
-  wsRes['!cols'] = [{wch:28},{wch:22},{wch:10},{wch:14},{wch:16},{wch:14}];
+  wsRes['!cols'] = [{wch:28},{wch:22},{wch:10},{wch:14},{wch:16},{wch:14},{wch:22},{wch:22}];
   XLSX.utils.book_append_sheet(wb, wsRes, 'Resumen');
 
   const wsDet = XLSX.utils.aoa_to_sheet(aoaDet);
-  wsDet['!cols'] = [{wch:28},{wch:22},{wch:38},{wch:22},{wch:10},{wch:14},{wch:16},{wch:14}];
+  wsDet['!cols'] = [{wch:28},{wch:22},{wch:38},{wch:22},{wch:10},{wch:14},{wch:16},{wch:14},{wch:22},{wch:22}];
   XLSX.utils.book_append_sheet(wb, wsDet, 'Detalle');
 
   const date = new Date().toISOString().slice(0,10);
