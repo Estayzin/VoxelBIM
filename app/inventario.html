@@ -284,7 +284,7 @@ footer { text-align:center; padding:6px 24px; font:400 9px var(--mono); color:va
         <thead>
           <tr>
             <th style="width:230px;">Categor&iacute;a / Clase IFC</th>
-            <th style="width:120px;">Nivel</th>
+            <th style="width:120px;" id="thAgrupacion">Nivel</th>
             <th style="text-align:right;width:90px;">Cantidad</th>
             <th style="width:130px;">Keynote</th>
             <th style="width:130px;">MCG_EETT</th>
@@ -972,6 +972,15 @@ function renderTable() {
   const body          = document.getElementById('inventoryBody');
   const statsCount    = document.getElementById('totalCount');
   const statsClases   = document.getElementById('totalClases');
+  // Actualizar header de columna de agrupacion segun modo
+  const thAg = document.getElementById('thAgrupacion');
+  if (thAg) {
+    if      (groupMode === 'keynote') thAg.textContent = 'Keynote';
+    else if (groupMode === 'nivel')   thAg.textContent = 'Nivel';
+    else if (groupMode === 'tipo')    thAg.textContent = 'Tipo';
+    else                              thAg.textContent = 'Nivel';
+  }
+
   const filterLevel    = document.getElementById('selNivel').value;
   const groupMode      = document.getElementById('selGrupo').value;
   const filterKeynote  = document.getElementById('selKeynote') ? document.getElementById('selKeynote').value : 'all';
@@ -1022,18 +1031,20 @@ function renderTable() {
     return tr;
   }
 
-  function detailRow(col1, col2, b, indent) {
+  function detailRow(col1, col2, b, indent, mode) {
     const ac = b.area_calc, vc = b.vol_calc;
     const tr = document.createElement('tr');
+    const knCell  = mode === 'keynote' ? '-' : fmtSet(b.keynotes);
+    const knTitle = mode === 'keynote' ? '' : [...(b.keynotes||[])].sort().join(', ');
     tr.innerHTML = `
       <td style="padding-left:${indent}px;">${col1}</td>
       <td style="color:var(--muted);">${col2}</td>
       <td class="td-num" style="color:var(--accent);">${b.count}</td>
-      <td style="font:400 9px var(--mono);color:var(--text);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${[...(b.keynotes||[])].sort().join(', ')}">${fmtSet(b.keynotes)}</td>
+      <td style="font:400 9px var(--mono);color:var(--text);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${knTitle}">${knCell}</td>
       <td style="font:400 9px var(--mono);color:var(--text);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${[...(b.mcgeettos||[])].sort().join(', ')}">${fmtSet(b.mcgeettos)}</td>
       <td class="td-num">${fmtN(b.length)}</td>
-      <td class="td-num" style="${ac?calcSty:''}" ${ac?calcTip:''}>${ac&&b.area?'~':''}${fmtN(b.area)}</td>
-      <td class="td-num" style="${vc?calcSty:''}"  ${vc?calcTip:''}>${vc&&b.volume?'~':''}${fmtN(b.volume,3)}</td>
+      <td class="td-num" style="${ac?calcSty:''}" ${ac?calcTip:''}>${ac&&b.area?'~':'''}${fmtN(b.area)}</td>
+      <td class="td-num" style="${vc?calcSty:''}"  ${vc?calcTip:''}>${vc&&b.volume?'~':'''}${fmtN(b.volume,3)}</td>
     `;
     return tr;
   }
@@ -1090,7 +1101,8 @@ function renderTable() {
             showSub ? cat.label : tipo,
             showSub ? lvl : lvl,
             b,
-            showSub ? 32 : 22
+            showSub ? 32 : 22,
+            groupMode
           ));
         }
       }
@@ -1113,7 +1125,7 @@ function renderTable() {
       totalElements += classBucket.count; totalClasses++;
       body.appendChild(classHeaderRow(cat, key, classBucket));
       for (const { tipo, typeBucket } of typeRows) {
-        body.appendChild(detailRow(tipo, '—', typeBucket, 22));
+        body.appendChild(detailRow(tipo, '—', typeBucket, 22, groupMode));
       }
 
     } else if (groupMode === 'nivel') {
@@ -1132,7 +1144,7 @@ function renderTable() {
       totalElements += classBucket.count; totalClasses++;
       body.appendChild(classHeaderRow(cat, key, classBucket));
       for (const [lvl, b] of Object.entries(levelMap)) {
-        body.appendChild(detailRow(cat.label, lvl, b, 22));
+        body.appendChild(detailRow(cat.label, lvl, b, 22, groupMode));
       }
 
     } else { // keynote
@@ -1147,7 +1159,7 @@ function renderTable() {
       body.appendChild(classHeaderRow(cat, key, classBucket));
       for (const [kn, b] of Object.entries(knMap).sort((a,b) => a[0].localeCompare(b[0]))) {
         if (filterKeynote !== 'all' && kn !== filterKeynote) continue;
-        body.appendChild(detailRow(cat.label, kn, b, 22));
+        body.appendChild(detailRow(cat.label, kn, b, 22, groupMode));
       }
     }
   }
