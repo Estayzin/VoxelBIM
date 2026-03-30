@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   ============================================================
   Plataforma BIM — Portal de acceso
   Autor:    Carlos Estay Ruggieri
@@ -300,7 +300,58 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
         </a>
       </div>
 
-      <!-- GRILLA PRO -->
+
+      <!-- GRILLA DEMO 3 (todos los modulos activos) -->
+      <div id="gridDemo3" class="modules-grid pro-grid" style="display:none;">
+        <a id="linkExplorerDemo3" href="#" class="module-card">
+          <div class="mc-icon" style="background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.2);">&#x1F5C2;&#xFE0F;</div>
+          <div>
+            <div class="mc-title">Explorador BIM</div>
+            <div class="mc-desc">Navegador de proyectos con visor 3D, planos y documentos integrados.</div>
+          </div>
+          <div class="mc-tags"><span class="mc-tag tag-live">Activo</span><span class="mc-tag" style="background:rgba(0,212,255,.06);color:var(--muted);border:1px solid var(--border);">3D Planos Docs</span></div>
+        </a>
+        <a id="linkAutodeskDemo3" href="/app/autodesk.html" class="module-card" onclick="abrirModulo('/app/autodesk.html'); return false;">
+          <div class="mc-icon" style="background:rgba(0,144,255,.1);border:1px solid rgba(0,144,255,.2);">&#x1F4BB;</div>
+          <div>
+            <div class="mc-title">Autodesk APS</div>
+            <div class="mc-desc">Revisi&#xF3;n de modelos Revit y acceso a proyectos BIM 360 / ACC via Autodesk Platform Services.</div>
+          </div>
+          <div class="mc-tags"><span class="mc-tag tag-live">Activo</span><span class="mc-tag" style="background:rgba(0,212,255,.06);color:var(--muted);border:1px solid var(--border);">RVT BIM 360</span></div>
+        </a>
+        <a id="linkReportesDemo3" href="/app/revisor.html" class="module-card" onclick="abrirModulo('/app/revisor.html'); return false;">
+          <div class="mc-icon" style="background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.2);">&#x1F4CA;</div>
+          <div>
+            <div class="mc-title">Generaci&#xF3;n de Reportes</div>
+            <div class="mc-desc">Reportes detallados por disciplina, fecha y proyecto en formato est&#xE1;ndar.</div>
+          </div>
+          <div class="mc-tags"><span class="mc-tag tag-live">Activo</span><span class="mc-tag" style="background:rgba(0,212,255,.06);color:var(--muted);border:1px solid var(--border);">IFC PDF</span></div>
+        </a>
+        <a id="linkInventarioDemo3" href="/app/inventario.html" class="module-card" onclick="abrirModulo('/app/inventario.html'); return false;">
+          <div class="mc-icon" style="background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.2);">&#x1F4C8;</div>
+          <div>
+            <div class="mc-title">Inventario y Tablas</div>
+            <div class="mc-desc">Exportaci&#xF3;n de inventarios y tablas de elementos BIM en PDF y XLS.</div>
+          </div>
+          <div class="mc-tags"><span class="mc-tag tag-beta">Beta / Desarrollo</span></div>
+        </a>
+        <div class="module-card disabled locked">
+          <div class="mc-icon" style="background:rgba(124,77,255,.1);border:1px solid rgba(124,77,255,.2);">&#x1F4DC;</div>
+          <div>
+            <div class="mc-title">Revisor IDS</div>
+            <div class="mc-desc">Validaci&#xF3;n de modelos IFC contra Information Delivery Specifications.</div>
+          </div>
+          <div class="mc-tags"><span class="mc-tag tag-soon">Pr&#xF3;ximamente</span></div>
+        </div>
+        <a href="mailto:c.estay@outlook.com" class="module-card">
+          <div class="mc-icon" style="background:rgba(124,77,255,.1);border:1px solid rgba(124,77,255,.2);">&#x1F4E7;</div>
+          <div>
+            <div class="mc-title">Contacto</div>
+            <div class="mc-desc">&#xBF;Consultas o sugerencias? Escr&#xED;beme directamente.</div>
+          </div>
+          <div class="mc-tags"><span class="mc-tag" style="background:rgba(124,77,255,.1);color:var(--accent2);border:1px solid rgba(124,77,255,.2);">c.estay@outlook.com</span></div>
+        </a>
+      </div>      <!-- GRILLA PRO -->
       <div id="gridPro" class="modules-grid pro-grid" style="display:none;">
         <a id="linkExplorerPro" href="#" onclick="abrirModulo(getVisorUrl());return false;" class="module-card">
           <div class="mc-icon" style="background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.2);">🗂️</div>
@@ -367,7 +418,9 @@ const HASHES = {
   // hash de "demo1:5167"
   '5417b77699089c0d0ad6085ae6fb3a8b5b49ec9cf2d2d35e97f9169d74156bef': 'demo_explorer',
   // hash de "demo2:1472"
-  '1794bf57ce0108bc9577d4ccf4ffebd0b76327d0c667659d9a85dcc13b8efef2': 'demo_autodesk'
+  '1794bf57ce0108bc9577d4ccf4ffebd0b76327d0c667659d9a85dcc13b8efef2': 'demo_autodesk',
+  // hash de "demo3:1234"
+  '0ca59ce08059db6187883ea0c62e9bf61f392cf08862a3f639ed3e434697310e': 'demo_all'
 };
 
 function getVisorUrl() {
@@ -408,7 +461,7 @@ function mostrarPortal(plan) {
   portal.style.display = 'flex';
   var isPro = plan === 'pro';
   // Subtítulo de usuario en header
-  var userLabels = { 'pro': 'admin', 'demo_explorer': 'demo1', 'demo_autodesk': 'demo2' };
+  var userLabels = { 'pro': 'admin', 'demo_explorer': 'demo1', 'demo_autodesk': 'demo2', 'demo_all': 'demo3' };
   document.getElementById('headerUserSub').textContent = userLabels[plan] || plan;
   // Badge en header
   var hb = document.getElementById('headerPlanBadge');
@@ -425,9 +478,14 @@ function mostrarPortal(plan) {
   }
 
   // Mostrar grilla correcta
-  document.getElementById('gridPro').style.display  = isPro ? 'grid' : 'none';
-  document.getElementById('gridDemo').style.display = isPro ? 'none' : 'grid';
+  document.getElementById('gridPro').style.display   = isPro ? 'grid' : 'none';
+  document.getElementById('gridDemo').style.display  = (!isPro && plan !== 'demo_all') ? 'grid' : 'none';
+  document.getElementById('gridDemo3').style.display = (plan === 'demo_all') ? 'grid' : 'none';
 
+  if (plan === 'demo_all') {
+    var d3exp = document.getElementById('linkExplorerDemo3');
+    if (d3exp) { d3exp.onclick = function() { abrirModulo(getVisorUrl()); return false; }; }
+  }
   if (!isPro) {
     var cardExp = document.getElementById('linkExplorerDemo');
     var cardAut = document.getElementById('linkAutodeskDemo');
