@@ -1009,8 +1009,8 @@ function renderTable() {
       <td style="font:400 9px var(--mono);color:var(--text);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${[...(b.keynotes||[])].sort().join(', ')}">${fmtSet(b.keynotes)}</td>
       <td style="font:400 9px var(--mono);color:var(--text);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${[...(b.mcgeettos||[])].sort().join(', ')}">${fmtSet(b.mcgeettos)}</td>
       <td class="td-num">${fmtN(b.length)}</td>
-      <td class="td-num" style="${ac?calcSty:''}" ${ac?calcTip:''}>${ac&&b.area?'~':'''}${fmtN(b.area)}</td>
-      <td class="td-num" style="${vc?calcSty:''}"  ${vc?calcTip:''}>${vc&&b.volume?'~':'''}${fmtN(b.volume,3)}</td>
+      <td class="td-num" style="${ac?calcSty:''}" ${ac?calcTip:''}>${ac&&b.area?'~':''}${fmtN(b.area)}</td>
+      <td class="td-num" style="${vc?calcSty:''}"  ${vc?calcTip:''}>${vc&&b.volume?'~':''}${fmtN(b.volume,3)}</td>
     `;
     return tr;
   }
@@ -1026,8 +1026,8 @@ function renderTable() {
       <td style="font:400 9px var(--mono);color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${[...(b.keynotes||[])].sort().join(', ')}">${fmtSet(b.keynotes)}</td>
       <td style="font:400 9px var(--mono);color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${[...(b.mcgeettos||[])].sort().join(', ')}">${fmtSet(b.mcgeettos)}</td>
       <td class="td-num">${fmtN(b.length)}</td>
-      <td class="td-num" style="${ac?calcSty:''}" ${ac?calcTip:''}>${ac&&b.area?'~':'''}${fmtN(b.area)}</td>
-      <td class="td-num" style="${vc?calcSty:''}"  ${vc?calcTip:''}>${vc&&b.volume?'~':'''}${fmtN(b.volume,3)}</td>
+      <td class="td-num" style="${ac?calcSty:''}" ${ac?calcTip:''}>${ac&&b.area?'~':''}${fmtN(b.area)}</td>
+      <td class="td-num" style="${vc?calcSty:''}"  ${vc?calcTip:''}>${vc&&b.volume?'~':''}${fmtN(b.volume,3)}</td>
     `;
     return tr;
   }
