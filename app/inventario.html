@@ -695,6 +695,7 @@ let cachedCounts          = {};
 let cachedElementKeynote  = {};
 let cachedElementMCGEETT  = {};
 let cachedKeynoteNames    = [];
+let cachedCountsByKeynote = {}; // clase -> keynote -> bucket
 
 // ============================================================
 // UI
@@ -860,24 +861,44 @@ function extractLevels(entities) {
 // ============================================================
 function buildCounts(entities, elementQty, elementType) {
   cachedCounts = {};
+  cachedCountsByKeynote = {};
   for (const [id, ent] of Object.entries(entities)) {
     if (!CATALOG_KEYS.has(ent.type)) continue;
     const lvl  = cachedElementToLevel[id] || 'Sin Nivel';
     const tipo = (elementType && elementType[id]) || '(Sin tipo)';
+    const q    = elementQty[id];
+    const kn   = (q && q.keynote)  || '(Sin Keynote)';
+    const mc   = (q && q.mcgeett)  || '';
+
+    // --- cachedCounts: clase -> tipo -> nivel ---
     if (!cachedCounts[ent.type])             cachedCounts[ent.type] = {};
     if (!cachedCounts[ent.type][tipo])       cachedCounts[ent.type][tipo] = {};
     if (!cachedCounts[ent.type][tipo][lvl])  cachedCounts[ent.type][tipo][lvl] = { count:0, length:null, area:null, volume:null, keynotes:new Set(), mcgeettos:new Set() };
     const bucket = cachedCounts[ent.type][tipo][lvl];
     bucket.count++;
-    if (elementQty[id] && elementQty[id].keynote) bucket.keynotes.add(elementQty[id].keynote);
-    if (elementQty[id] && elementQty[id].mcgeett)  bucket.mcgeettos.add(elementQty[id].mcgeett);
-    const q = elementQty[id];
+    if (q && q.keynote) bucket.keynotes.add(q.keynote);
+    if (q && q.mcgeett) bucket.mcgeettos.add(q.mcgeett);
     if (q) {
-      if (q.length  !== undefined) bucket.length    = (bucket.length    ?? 0) + q.length;
-      if (q.area    !== undefined) bucket.area      = (bucket.area      ?? 0) + q.area;
-      if (q.volume  !== undefined) bucket.volume    = (bucket.volume    ?? 0) + q.volume;
-      if (q.area_calc)             bucket.area_calc = true;
-      if (q.vol_calc)              bucket.vol_calc  = true;
+      if (q.length  !== undefined) bucket.length  = (bucket.length  ?? 0) + q.length;
+      if (q.area    !== undefined) bucket.area    = (bucket.area    ?? 0) + q.area;
+      if (q.volume  !== undefined) bucket.volume  = (bucket.volume  ?? 0) + q.volume;
+      if (q.area_calc) bucket.area_calc = true;
+      if (q.vol_calc)  bucket.vol_calc  = true;
+    }
+
+    // --- cachedCountsByKeynote: clase -> keynote -> bucket ---
+    if (!cachedCountsByKeynote[ent.type])      cachedCountsByKeynote[ent.type] = {};
+    if (!cachedCountsByKeynote[ent.type][kn])  cachedCountsByKeynote[ent.type][kn] = { count:0, length:null, area:null, volume:null, keynotes:new Set(), mcgeettos:new Set() };
+    const kbucket = cachedCountsByKeynote[ent.type][kn];
+    kbucket.count++;
+    if (q && q.keynote) kbucket.keynotes.add(q.keynote);
+    if (q && q.mcgeett) kbucket.mcgeettos.add(q.mcgeett);
+    if (q) {
+      if (q.length  !== undefined) kbucket.length  = (kbucket.length  ?? 0) + q.length;
+      if (q.area    !== undefined) kbucket.area    = (kbucket.area    ?? 0) + q.area;
+      if (q.volume  !== undefined) kbucket.volume  = (kbucket.volume  ?? 0) + q.volume;
+      if (q.area_calc) kbucket.area_calc = true;
+      if (q.vol_calc)  kbucket.vol_calc  = true;
     }
   }
 }
@@ -1115,23 +1136,17 @@ function renderTable() {
       }
 
     } else { // keynote
-      // class header + per-keynote aggregate rows (todos los tipos y niveles agrupados por keynote)
-      const keynoteMap = {};
-      for (const [, levels] of Object.entries(typesMap)) {
-        for (const [lvl, b] of Object.entries(levels)) {
-          if (filterLvlName && lvl !== filterLvlName) continue;
-          for (const kn of (b.keynotes && b.keynotes.size > 0 ? b.keynotes : ['(Sin Keynote)'])) {
-            if (filterKeynote !== 'all' && kn !== filterKeynote) continue;
-            if (!keynoteMap[kn]) keynoteMap[kn] = emptyBucket();
-            addBucket(b, keynoteMap[kn]);
-            addBucket(b, classBucket);
-          }
-        }
+      // Usar cachedCountsByKeynote: clase -> keynote -> bucket (agrupacion real por keynote)
+      const knMap = cachedCountsByKeynote[key] || {};
+      for (const [kn, b] of Object.entries(knMap)) {
+        if (filterKeynote !== 'all' && kn !== filterKeynote) continue;
+        addBucket(b, classBucket);
       }
       if (classBucket.count === 0) continue;
       totalElements += classBucket.count; totalClasses++;
       body.appendChild(classHeaderRow(cat, key, classBucket));
-      for (const [kn, b] of Object.entries(keynoteMap).sort((a,b) => a[0].localeCompare(b[0]))) {
+      for (const [kn, b] of Object.entries(knMap).sort((a,b) => a[0].localeCompare(b[0]))) {
+        if (filterKeynote !== 'all' && kn !== filterKeynote) continue;
         body.appendChild(detailRow(cat.label, kn, b, 22));
       }
     }
