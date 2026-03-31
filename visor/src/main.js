@@ -34,6 +34,7 @@ if (world.camera.threeOrtho) {
 // Permitir acercarse mucho más
 world.camera.controls.minDistance = 0.1;
 world.camera.controls.maxDistance = 50000;
+world.camera.controls.dollyToCursor = true;
 world.renderer.postproduction.enabled = true;
 
 const grid = components.get(OBC.Grids).create(world);
@@ -126,6 +127,7 @@ const setProgress = (v) => {
 
 const loadIfc = async (file) => {
   overlay.classList.add("hidden");
+  document.getElementById("dropzoneCentral").classList.add("hidden");
   progressWrap.classList.add("show");
   modelName.textContent = file.name;
   modelMeta.textContent = `${(file.size/1024/1024).toFixed(1)} MB`;
@@ -143,6 +145,7 @@ const loadIfc = async (file) => {
     setProgress(1);
     await renderNavegador(est);
     if (world.camera.fitToItems) await world.camera.fitToItems();
+    claudeUpdateCtx?.();
   } catch(err) {
     console.error('[VoxelBIM] Error cargando IFC:', err);
     progressLabel.textContent = `Error: ${err?.message || err}`;
@@ -506,14 +509,21 @@ document.getElementById("btnPlan").addEventListener("click", async () => {
     btn.querySelector(".hb-icon").textContent = "📐";
   }
 });
+const rightPanels = document.getElementById("rightPanels");
+const syncRightPanels = () => {
+  const anyOpen = propsPanel.classList.contains('show') || reportePanel.classList.contains('show') || document.getElementById('claudePanel')?.classList.contains('show');
+  rightPanels.style.display = anyOpen ? '' : 'none';
+};
 document.getElementById("btnProps").addEventListener("click", () => {
-  const visible = document.getElementById("rightPanels").style.display !== 'none';
-  document.getElementById("rightPanels").style.display = visible ? 'none' : '';
-  document.getElementById("btnProps").classList.toggle("active", !visible);
+  const isOpen = propsPanel.classList.contains('show');
+  propsPanel.classList.toggle('show', !isOpen);
+  document.getElementById("btnProps").classList.toggle("active", !isOpen);
+  syncRightPanels();
 });
 document.getElementById("propsClose").addEventListener("click", () => {
   propsPanel.classList.remove("show");
   document.getElementById("btnProps").classList.remove("active");
+  syncRightPanels();
 });
 document.getElementById("btnClip").addEventListener("click", () => {});
 
@@ -1560,11 +1570,13 @@ document.getElementById('btnReporte').addEventListener('click', () => {
   if (reportePanel.classList.contains('show')) {
     reportePanel.classList.remove('show');
     document.getElementById('btnReporte').classList.remove('active');
+    syncRightPanels();
     return;
   }
   if (!_estActual) {
     reportePanel.classList.add('show');
     document.getElementById('btnReporte').classList.add('active');
+    syncRightPanels();
     return;
   }
   // Precargar valores detectados
@@ -1599,11 +1611,430 @@ document.getElementById('mcfgOk').addEventListener('click', () => {
   renderReporte(_estActual);
   reportePanel.classList.add('show');
   document.getElementById('btnReporte').classList.add('active');
+  syncRightPanels();
 });
 
 document.getElementById('reporteClose').addEventListener('click', () => {
   reportePanel.classList.remove('show');
   document.getElementById('btnReporte').classList.remove('active');
+  syncRightPanels();
+});
+
+// ══════════════════════════════════════════════════════════════════
+// ✦ CLAUDE AI CHAT
+// ══════════════════════════════════════════════════════════════════
+
+const claudePanel   = document.getElementById('claudePanel');
+const claudeKeySetup= document.getElementById('claudeKeySetup');
+const claudeChat    = document.getElementById('claudeChat');
+const claudeMsgs    = document.getElementById('claudeMsgs');
+const claudeTextarea= document.getElementById('claudeTextarea');
+const claudeSendBtn = document.getElementById('claudeSendBtn');
+const claudeCtxPill = document.getElementById('claudeCtxPill');
+const claudeCtxText = document.getElementById('claudeCtxText');
+
+const CLAUDE_KEY_LS = 'voxelbim_claude_key';
+let _claudeHistory  = [];
+let _claudeBusy     = false;
+
+// ── Herramientas disponibles para Claude ──
+const CLAUDE_TOOLS = [
+  {
+    name: 'control_visibility',
+    description: 'Controla la visibilidad de elementos en el visor 3D. Puede ocultar o mostrar elementos por clase IFC (IFCWALL, IFCSLAB, etc.) o por nombre de nivel. Úsalo cuando el usuario pida ocultar, mostrar, aislar o activar elementos.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        action: {
+          type: 'string',
+          enum: ['hide', 'show', 'show_all'],
+          description: 'hide: oculta los elementos indicados. show: muestra elementos antes ocultos. show_all: muestra todos los elementos.'
+        },
+        classes: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Clases IFC a afectar. Ej: ["IFCWALL","IFCSLAB"]. Opcional.'
+        },
+        levels: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Nombres (o partes del nombre) de niveles a afectar. Ej: ["Nivel 1","Piso 2"]. Opcional.'
+        }
+      },
+      required: ['action']
+    }
+  }
+];
+
+// ── Funciones de visibilidad por clase ──
+async function claudeHideByClass(classNames) {
+  if (!_estActual) return 0;
+  const upper = classNames.map(c => c.toUpperCase());
+  let count = 0;
+  for (const [modelId] of fragments.list) {
+    if (!hiddenElements.has(modelId)) hiddenElements.set(modelId, new Set());
+    const hiddenSet = hiddenElements.get(modelId);
+    const toHide = new Set();
+    for (const [id, inst] of Object.entries(_estActual.instancias)) {
+      if (upper.includes(inst.cls)) {
+        const numId = Number(id);
+        if (!hiddenSet.has(numId)) { toHide.add(numId); hiddenSet.add(numId); count++; }
+      }
+    }
+    if (toHide.size) await hider.set(false, { [modelId]: toHide });
+  }
+  return count;
+}
+
+async function claudeShowByClass(classNames) {
+  if (!_estActual) return 0;
+  const upper = classNames.map(c => c.toUpperCase());
+  const toShowIds = new Set();
+  for (const [id, inst] of Object.entries(_estActual.instancias)) {
+    if (upper.includes(inst.cls)) toShowIds.add(Number(id));
+  }
+  let count = 0;
+  for (const [modelId, hiddenSet] of hiddenElements) {
+    const toShow = new Set();
+    for (const id of toShowIds) {
+      if (hiddenSet.has(id)) { toShow.add(id); hiddenSet.delete(id); count++; }
+    }
+    if (hiddenSet.size === 0) hiddenElements.delete(modelId);
+    if (toShow.size) await hider.set(true, { [modelId]: toShow });
+  }
+  return count;
+}
+
+// ── Funciones de visibilidad por nivel ──
+function getNivelIds(levelNames) {
+  if (!_estActual) return new Set();
+  const levelIds = new Set();
+  for (const [id, inst] of Object.entries(_estActual.instancias)) {
+    if (inst.cls !== 'IFCBUILDINGSTOREY') continue;
+    try {
+      const attrs = splitAttrs(extraerRaw(_estActual.texto, inst.pos));
+      const nombre = (strVal(attrs[2]) || strVal(attrs[1]) || '').toLowerCase();
+      if (levelNames.some(n => nombre.includes(n.toLowerCase()))) levelIds.add(id);
+    } catch {}
+  }
+  return levelIds;
+}
+
+async function claudeHideByLevel(levelNames) {
+  const levelIds = getNivelIds(levelNames);
+  const toHideIds = new Set();
+  for (const lid of levelIds) {
+    for (const id of (_estActual.elemsPorNivel[lid] || [])) toHideIds.add(Number(id));
+  }
+  let count = 0;
+  for (const [modelId] of fragments.list) {
+    if (!hiddenElements.has(modelId)) hiddenElements.set(modelId, new Set());
+    const hiddenSet = hiddenElements.get(modelId);
+    const toHide = new Set();
+    for (const id of toHideIds) {
+      if (!hiddenSet.has(id)) { toHide.add(id); hiddenSet.add(id); count++; }
+    }
+    if (toHide.size) await hider.set(false, { [modelId]: toHide });
+  }
+  return count;
+}
+
+async function claudeShowByLevel(levelNames) {
+  const levelIds = getNivelIds(levelNames);
+  const toShowIds = new Set();
+  for (const lid of levelIds) {
+    for (const id of (_estActual.elemsPorNivel[lid] || [])) toShowIds.add(Number(id));
+  }
+  let count = 0;
+  for (const [modelId, hiddenSet] of hiddenElements) {
+    const toShow = new Set();
+    for (const id of toShowIds) {
+      if (hiddenSet.has(id)) { toShow.add(id); hiddenSet.delete(id); count++; }
+    }
+    if (hiddenSet.size === 0) hiddenElements.delete(modelId);
+    if (toShow.size) await hider.set(true, { [modelId]: toShow });
+  }
+  return count;
+}
+
+// ── Ejecutar herramienta ──
+async function executeTool(name, input) {
+  if (name !== 'control_visibility') return 'Herramienta desconocida.';
+  const { action, classes = [], levels = [] } = input;
+
+  // Pill visual en el chat
+  const pill = document.createElement('div');
+  pill.style.cssText = 'align-self:flex-start;font:500 9px var(--mono);color:#c77dff;background:rgba(199,125,255,.1);border:1px solid rgba(199,125,255,.2);border-radius:4px;padding:4px 9px;margin:2px 0;letter-spacing:.04em;';
+  const icons = { hide:'👁‍🗨 Ocultando', show:'✦ Mostrando', show_all:'✦ Mostrando todo' };
+  const target = [...classes, ...levels].join(', ') || 'todos';
+  pill.textContent = `${icons[action] || action}: ${target}`;
+  claudeMsgs.appendChild(pill);
+  claudeMsgs.scrollTop = claudeMsgs.scrollHeight;
+
+  if (action === 'show_all') {
+    hiddenElements.clear();
+    await hider.set(true);
+    isolatedCategories.clear();
+    return 'Todos los elementos son ahora visibles.';
+  }
+
+  let count = 0;
+  if (action === 'hide') {
+    if (classes.length) count += await claudeHideByClass(classes);
+    if (levels.length)  count += await claudeHideByLevel(levels);
+    return count > 0 ? `Se ocultaron ${count} elementos.` : 'No se encontraron elementos para ocultar.';
+  }
+  if (action === 'show') {
+    if (classes.length) count += await claudeShowByClass(classes);
+    if (levels.length)  count += await claudeShowByLevel(levels);
+    return count > 0 ? `Se mostraron ${count} elementos.` : 'No había elementos ocultos de ese tipo.';
+  }
+  return 'Acción no reconocida.';
+}
+
+// ── Mostrar pantalla correcta según si hay key ──
+function claudeInitUI() {
+  const key = localStorage.getItem(CLAUDE_KEY_LS);
+  if (key) {
+    claudeKeySetup.style.display = 'none';
+    claudeChat.style.cssText = 'display:flex;flex-direction:column;flex:1;overflow:hidden;';
+  } else {
+    claudeKeySetup.style.cssText = 'display:flex;flex-direction:column;';
+    claudeChat.style.display = 'none';
+  }
+  claudeUpdateCtx();
+}
+
+// ── Pill de contexto ──
+function claudeUpdateCtx() {
+  if (_estActual) {
+    const total = Object.values(_estActual.conteo || {}).reduce((a,b)=>a+b,0);
+    const nNiv  = Object.values(_estActual.instancias||{}).filter(i=>i.cls==='IFCBUILDINGSTOREY').length;
+    claudeCtxText.textContent = `${_nombreArchivoActual} · ${total} elem · ${nNiv} niveles`;
+    claudeCtxPill.classList.add('has-model');
+  } else {
+    claudeCtxText.textContent = 'Sin modelo cargado';
+    claudeCtxPill.classList.remove('has-model');
+  }
+}
+
+// ── Construir system prompt con contexto del modelo ──
+function buildClaudeContext() {
+  let ctx = 'Eres un asistente experto en BIM (Building Information Modeling). ';
+  ctx += 'Responde siempre en español, de forma concisa y técnica. ';
+  ctx += 'Usa guiones para listas. Sé preciso con unidades. ';
+  ctx += 'Cuando el usuario pida ocultar, mostrar o aislar elementos, usa la herramienta control_visibility.\n\n';
+
+  if (!_estActual) {
+    ctx += 'No hay modelo IFC cargado actualmente.';
+    return ctx;
+  }
+
+  ctx += `MODELO: ${_nombreArchivoActual}\n`;
+  if (_estActual.schema) ctx += `Schema: ${_estActual.schema}\n`;
+  if (_estActual.proy)   ctx += `Proyecto: ${_estActual.proy}\n`;
+
+  // Niveles con conteo de elementos
+  const nivelesInfo = [];
+  for (const [nid, inst] of Object.entries(_estActual.instancias)) {
+    if (inst.cls !== 'IFCBUILDINGSTOREY') continue;
+    try {
+      const attrs = splitAttrs(extraerRaw(_estActual.texto, inst.pos));
+      const nombre = strVal(attrs[2]) || strVal(attrs[1]) || `#${nid}`;
+      const elemCount = (_estActual.elemsPorNivel[nid] || []).length;
+      // Conteo por clase en ese nivel
+      const clsCount = {};
+      for (const eid of (_estActual.elemsPorNivel[nid] || [])) {
+        const cls = _estActual.instancias[eid]?.cls;
+        if (cls) clsCount[cls] = (clsCount[cls] || 0) + 1;
+      }
+      const top = Object.entries(clsCount).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([c,n])=>`${c}:${n}`).join(', ');
+      nivelesInfo.push(`  - ${nombre}: ${elemCount} elementos (${top || 'sin elementos'})`);
+    } catch {}
+  }
+  if (nivelesInfo.length) ctx += `\nNIVELES:\n${nivelesInfo.join('\n')}\n`;
+
+  // Conteo total por clase
+  const conteo = _estActual.conteo || {};
+  const totalElems = Object.values(conteo).reduce((a,b)=>a+b,0);
+  ctx += `\nCONTEO TOTAL (${totalElems} elementos):\n`;
+  for (const [cls, n] of Object.entries(conteo).sort((a,b)=>b[1]-a[1])) ctx += `  - ${cls}: ${n}\n`;
+
+  ctx += '\nSi preguntan algo no disponible en los datos, indícalo claramente.';
+  return ctx;
+}
+
+// ── Renderizar markdown básico ──
+function renderMd(text) {
+  return text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/`([^`]+)`/g,'<code>$1</code>')
+    .replace(/^[-•] (.+)$/gm,'<li>$1</li>')
+    .replace(/(<li>[\s\S]*?<\/li>(?:\s*<li>[\s\S]*?<\/li>)*)/g,'<ul>$1</ul>')
+    .replace(/\n/g,'<br>');
+}
+
+// ── Agregar mensaje al chat ──
+function claudeAddMsg(role, content) {
+  const div = document.createElement('div');
+  div.className = `cm-msg ${role}`;
+  const label = document.createElement('div');
+  label.className = 'cm-label';
+  label.textContent = role === 'user' ? 'Tú' : 'Claude';
+  const bubble = document.createElement('div');
+  bubble.className = 'cm-bubble';
+  bubble.innerHTML = renderMd(content);
+  div.appendChild(label);
+  div.appendChild(bubble);
+  claudeMsgs.appendChild(div);
+  claudeMsgs.scrollTop = claudeMsgs.scrollHeight;
+}
+
+// ── Indicador "pensando" ──
+function claudeShowThinking() {
+  const div = document.createElement('div');
+  div.id = 'claudeThinking';
+  div.className = 'cm-msg assistant';
+  div.innerHTML = '<div class="cm-label">Claude</div><div class="cm-thinking"><span></span><span></span><span></span></div>';
+  claudeMsgs.appendChild(div);
+  claudeMsgs.scrollTop = claudeMsgs.scrollHeight;
+}
+function claudeHideThinking() { document.getElementById('claudeThinking')?.remove(); }
+
+// ── Llamada a la API (no-streaming, soporta tool use) ──
+async function callClaudeAPI(messages) {
+  const apiKey = localStorage.getItem(CLAUDE_KEY_LS);
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      system: buildClaudeContext(),
+      tools: CLAUDE_TOOLS,
+      messages
+    })
+  });
+  if (!res.ok) {
+    let msg = `Error ${res.status}`;
+    try { const e = await res.json(); msg = e.error?.message || msg; } catch {}
+    throw new Error(msg);
+  }
+  return res.json();
+}
+
+// ── Enviar mensaje (loop de herramientas) ──
+async function claudeSend() {
+  const text = claudeTextarea.value.trim();
+  if (!text || _claudeBusy) return;
+
+  _claudeBusy = true;
+  claudeSendBtn.disabled = true;
+  claudeTextarea.value = '';
+  claudeTextarea.style.height = 'auto';
+
+  claudeAddMsg('user', text);
+  _claudeHistory.push({ role: 'user', content: text });
+
+  claudeShowThinking();
+
+  try {
+    let messages = [..._claudeHistory];
+
+    // Loop: hasta que Claude responda con end_turn (puede usar herramientas entre medio)
+    while (true) {
+      const response = await callClaudeAPI(messages);
+      messages.push({ role: 'assistant', content: response.content });
+
+      if (response.stop_reason === 'tool_use') {
+        const toolResults = [];
+        for (const block of response.content) {
+          if (block.type !== 'tool_use') continue;
+          const result = await executeTool(block.name, block.input);
+          toolResults.push({ type: 'tool_result', tool_use_id: block.id, content: result });
+        }
+        messages.push({ role: 'user', content: toolResults });
+        // Continuar el loop para obtener la respuesta final de Claude
+      } else {
+        // end_turn: mostrar respuesta de texto
+        const textBlock = response.content.find(b => b.type === 'text');
+        if (textBlock?.text) claudeAddMsg('assistant', textBlock.text);
+        break;
+      }
+    }
+
+    _claudeHistory = messages;
+
+  } catch (err) {
+    claudeAddMsg('assistant', `⚠ Error: ${err.message}`);
+    if (err.message.includes('401') || err.message.includes('Invalid')) {
+      localStorage.removeItem(CLAUDE_KEY_LS);
+      setTimeout(claudeInitUI, 1500);
+    }
+  } finally {
+    claudeHideThinking();
+    _claudeBusy = false;
+    claudeSendBtn.disabled = false;
+    claudeTextarea.focus();
+  }
+}
+
+// ── Autosize textarea ──
+claudeTextarea.addEventListener('input', () => {
+  claudeTextarea.style.height = 'auto';
+  claudeTextarea.style.height = Math.min(claudeTextarea.scrollHeight, 100) + 'px';
+  claudeSendBtn.disabled = !claudeTextarea.value.trim() || _claudeBusy;
+});
+claudeTextarea.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); claudeSend(); }
+});
+claudeSendBtn.addEventListener('click', claudeSend);
+
+// ── Guardar API key ──
+document.getElementById('claudeKeySaveBtn').addEventListener('click', () => {
+  const k = document.getElementById('claudeKeyInput').value.trim();
+  if (!k.startsWith('sk-ant-')) {
+    document.getElementById('claudeKeyInput').style.borderColor = 'var(--red)';
+    return;
+  }
+  localStorage.setItem(CLAUDE_KEY_LS, k);
+  document.getElementById('claudeKeyInput').value = '';
+  claudeInitUI();
+});
+document.getElementById('claudeKeyInput').addEventListener('input', (e) => {
+  e.target.style.borderColor = '';
+});
+
+// ── Limpiar chat ──
+document.getElementById('claudeClearBtn').addEventListener('click', () => {
+  _claudeHistory = [];
+  claudeMsgs.innerHTML = '';
+});
+
+// ── Cambiar key ──
+document.getElementById('claudeChangeKeyBtn').addEventListener('click', () => {
+  localStorage.removeItem(CLAUDE_KEY_LS);
+  claudeInitUI();
+});
+
+// ── Abrir / cerrar panel Claude ──
+document.getElementById('btnClaude').addEventListener('click', () => {
+  const isOpen = claudePanel.classList.contains('show');
+  claudePanel.classList.toggle('show', !isOpen);
+  document.getElementById('btnClaude').classList.toggle('active', !isOpen);
+  if (!isOpen) claudeInitUI();
+  syncRightPanels();
+});
+document.getElementById('claudeClose').addEventListener('click', () => {
+  claudePanel.classList.remove('show');
+  document.getElementById('btnClaude').classList.remove('active');
+  syncRightPanels();
 });
 
 // ══════════════════════════════════════════════════════════════════

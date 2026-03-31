@@ -1,0 +1,249 @@
+<!--
+  ============================================================
+  Bit Demo — Visualizador de animaciones del ícono Bit
+  Autor:    Carlos Estay Ruggieri
+  Versión:  1.0 | 2026
+  ============================================================
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoxelBIM — Bit Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#060d18; --blue:#0a1628; --accent:#00d4ff; --green:#00c853;
+  --bg:#0a0f1e; --card:#0d1526; --text:#c8d8f0; --muted:#4a6080; --border:#1a2a40;
+  --mono:'JetBrains Mono',monospace; --sans:'Syne',sans-serif;
+  --accent2:#7c4dff; --warn:#ff6b35; --red:#ff3d57;
+}
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html,body { height:100%; }
+body { font-family:var(--sans); background:var(--bg); color:var(--text); display:flex; flex-direction:column; min-height:100vh; }
+
+/* HEADER */
+header { background:var(--navy); padding:16px 24px; min-height:72px; display:flex; align-items:center; gap:14px; border-bottom:2px solid var(--accent); flex-shrink:0; }
+.hicon { background:none; width:34px; height:34px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.htitle { font:700 13px var(--mono); color:#e0f0ff; letter-spacing:.05em; text-transform:uppercase; }
+.hsub   { font:400 10px var(--mono); color:var(--muted); margin-top:1px; }
+.hback  { margin-left:auto; padding:5px 12px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:4px; font:600 9px var(--mono); text-transform:uppercase; letter-spacing:.1em; text-decoration:none; transition:all .15s; cursor:pointer; }
+.hback:hover { border-color:var(--accent); color:var(--accent); }
+
+/* CONTENT */
+.content { flex:1; padding:40px 48px; overflow-y:auto; }
+.section-title { font:700 9px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.2em; margin-bottom:24px; display:flex; align-items:center; gap:12px; }
+.section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* GRID */
+.bit-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:16px; margin-bottom:48px; }
+.bit-cell { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:28px 16px 20px; display:flex; flex-direction:column; align-items:center; gap:14px; transition:border-color .15s; cursor:pointer; }
+.bit-cell:hover { border-color:rgba(0,212,255,.35); }
+.bit-cell.active { border-color:var(--red); }
+.bit-cell .anim-name { font:600 9px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.12em; text-align:center; }
+.bit-cell .anim-desc { font:400 8px var(--mono); color:rgba(74,96,128,.7); letter-spacing:.06em; text-align:center; margin-top:-6px; }
+
+/* BIT ANIMATIONS */
+@keyframes bit-spin       { 0%{transform:rotate(0deg) scaleX(1)} 25%{transform:rotate(90deg) scaleX(.45)} 50%{transform:rotate(180deg) scaleX(1)} 75%{transform:rotate(270deg) scaleX(.45)} 100%{transform:rotate(360deg) scaleX(1)} }
+@keyframes bit-float      { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-6px)} }
+@keyframes bit-warp       { 0%,100%{transform:scale(1,1)} 25%{transform:scale(1.25,.72)} 50%{transform:scale(.72,1.25)} 75%{transform:scale(1.1,.88)} }
+@keyframes bit-tremble    { 0%,100%{transform:translate(0,0) rotate(0deg)} 20%{transform:translate(-2px,1px) rotate(-4deg)} 40%{transform:translate(2px,-1px) rotate(4deg)} 60%{transform:translate(-1px,2px) rotate(-3deg)} 80%{transform:translate(1px,-2px) rotate(3deg)} }
+@keyframes bit-rainbow    { 0%{filter:hue-rotate(0deg)} 100%{filter:hue-rotate(360deg)} }
+@keyframes bit-no         { 0%,100%{transform:scale(1) rotate(0deg)} 50%{transform:scale(1.18) rotate(180deg)} }
+@keyframes bit-bounce     { 0%,100%{transform:translateY(0) scaleY(1) scaleX(1)} 40%{transform:translateY(-18px) scaleY(1.08) scaleX(.94)} 70%{transform:translateY(5px) scaleY(.88) scaleX(1.08)} 85%{transform:translateY(-5px) scaleY(1.03) scaleX(.98)} }
+@keyframes bit-swing      { 0%,100%{transform:rotate(0deg)} 25%{transform:rotate(18deg)} 75%{transform:rotate(-18deg)} }
+@keyframes bit-orbit      { 0%{transform:translate(0,0)} 25%{transform:translate(8px,-5px)} 50%{transform:translate(0,-10px)} 75%{transform:translate(-8px,-5px)} 100%{transform:translate(0,0)} }
+@keyframes bit-shake-x    { 0%,100%{transform:translateX(0)} 15%{transform:translateX(-5px)} 30%{transform:translateX(5px)} 45%{transform:translateX(-4px)} 60%{transform:translateX(4px)} 75%{transform:translateX(-2px)} 90%{transform:translateX(2px)} }
+@keyframes bit-breathe    { 0%,100%{transform:scale(1)} 50%{transform:scale(1.18)} }
+@keyframes bit-squish     { 0%,100%{transform:scale(1,1)} 30%{transform:scale(1.45,.62)} 60%{transform:scale(.7,1.4)} 80%{transform:scale(1.15,.88)} }
+@keyframes bit-morph      { 0%,100%{transform:skewX(0deg)} 25%{transform:skewX(18deg)} 75%{transform:skewX(-18deg)} }
+@keyframes bit-glitch     { 0%,89%,100%{transform:translate(0,0);filter:none} 90%{transform:translate(-4px,2px);filter:hue-rotate(90deg)} 91%{transform:translate(4px,-2px);filter:hue-rotate(200deg) brightness(1.4)} 92%{transform:translate(-2px,1px);filter:hue-rotate(280deg)} 93%{transform:translate(0,0);filter:none} 96%{transform:translate(3px,-1px);filter:brightness(1.6)} 97%{transform:translate(0,0);filter:none} }
+@keyframes bit-flicker    { 0%,19%,21%,54%,56%,79%,81%,100%{opacity:1} 20%{opacity:.12} 55%{opacity:.35} 80%{opacity:.04} }
+@keyframes bit-drunk      { 0%{transform:translate(0,0) rotate(0deg)} 20%{transform:translate(5px,-6px) rotate(9deg)} 40%{transform:translate(-4px,-9px) rotate(-6deg)} 60%{transform:translate(-6px,-3px) rotate(7deg)} 80%{transform:translate(4px,-7px) rotate(-9deg)} 100%{transform:translate(0,0) rotate(0deg)} }
+@keyframes bit-hyperspace { 0%,100%{transform:scaleX(1) scaleY(1);opacity:1} 35%{transform:scaleX(.03) scaleY(1.1);opacity:.8} 36%{transform:scaleX(.03) scaleY(1.1);opacity:.1} 37%{transform:scaleX(1.4) scaleY(.75);opacity:1} 65%{transform:scaleX(1) scaleY(1)} }
+@keyframes bit-explode    { 0%,100%{transform:scale(1);opacity:1} 25%{transform:scale(1.9);opacity:.5} 26%{transform:scale(.05);opacity:.1} 50%{transform:scale(1.1);opacity:.95} }
+@keyframes bit-nod        { 0%,100%{transform:rotate(0deg)} 20%{transform:rotate(-6deg)} 40%{transform:rotate(5deg)} 60%{transform:rotate(-3deg)} }
+@keyframes bit-scan       { 0%,100%{transform:translateY(-10px);opacity:.5} 50%{transform:translateY(10px);opacity:1} }
+@keyframes bit-pulse      { 0%,100%{opacity:.95} 50%{opacity:.15} }
+@keyframes bit-edge-a     { 0%,100%{opacity:1;stroke-width:2.4} 45%{opacity:.1;stroke-width:.4} 65%{opacity:.9;stroke-width:2.0} }
+@keyframes bit-edge-b     { 0%,100%{opacity:1;stroke-width:1.6} 45%{opacity:.1;stroke-width:.4} 65%{opacity:.8;stroke-width:1.4} }
+@keyframes bit-glow-f     { 0%,100%{opacity:.22} 50%{opacity:.55} }
+@keyframes bit-vtx-m      { 0%,100%{opacity:.5} 50%{opacity:.08} }
+@keyframes bit-vtx-b      { 0%,100%{opacity:.65} 50%{opacity:.15} }
+
+.bit-wrap    { transform-origin:45px 52px; cursor:pointer; }
+.bit-top     { animation:bit-pulse  2s ease-in-out infinite; }
+.bit-ea      { animation:bit-edge-a 2s ease-in-out infinite; }
+.bit-eb      { animation:bit-edge-b 2s ease-in-out infinite .15s; }
+.bit-face    { animation:bit-glow-f 2s ease-in-out infinite; }
+.bit-vtx-mid { animation:bit-vtx-m  2s ease-in-out infinite; }
+.bit-vtx-bot { animation:bit-vtx-b  2s ease-in-out infinite .3s; }
+.bit-wrap.bit-no-state polygon { stroke:#ff3d57 !important; transition:stroke .3s, fill .3s; }
+.bit-wrap.bit-no-state line    { stroke:#ff3d57 !important; transition:stroke .3s; }
+.bit-wrap.bit-no-state circle  { fill:#ff3d57 !important;   transition:fill .3s; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hicon">
+    <svg width="34" height="34" viewBox="0 0 90 105" fill="none">
+      <g class="bit-wrap" id="headerBit">
+        <polygon class="bit-face" points="45,4 75,28 15,28" fill="rgba(0,212,255,0.22)" stroke="#00d4ff" stroke-width="1.4" stroke-linejoin="round"/>
+        <polygon points="75,28 45,4 82,52" fill="rgba(0,212,255,0.10)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+        <polygon points="15,28 45,4 8,52"  fill="rgba(0,212,255,0.18)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+        <polygon points="15,28 75,28 82,52 45,68 8,52" fill="rgba(0,212,255,0.07)" stroke="#00d4ff" stroke-width="1.0" stroke-linejoin="round"/>
+        <polygon points="75,28 82,52 62,78" fill="rgba(0,212,255,0.15)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+        <polygon points="15,28 8,52 28,78"  fill="rgba(0,212,255,0.20)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+        <polygon points="8,52 28,78 45,100 45,68" fill="rgba(0,212,255,0.07)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+        <polygon points="82,52 62,78 45,100 45,68" fill="rgba(0,212,255,0.12)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+        <polygon points="28,78 62,78 45,100" fill="rgba(0,212,255,0.14)" stroke="#00d4ff" stroke-width="1.2" stroke-linejoin="round"/>
+        <line class="bit-ea" x1="15" y1="28" x2="45" y2="4" stroke="#00d4ff" stroke-width="2.4" stroke-linecap="round"/>
+        <line class="bit-eb" x1="45" y1="4" x2="75" y2="28" stroke="#00d4ff" stroke-width="1.6" stroke-linecap="round"/>
+        <circle class="bit-top"     cx="45" cy="4"   r="3"   fill="#00d4ff"/>
+        <circle class="bit-vtx-mid" cx="15" cy="28"  r="1.8" fill="#00d4ff" opacity="0.5"/>
+        <circle class="bit-vtx-mid" cx="75" cy="28"  r="1.8" fill="#00d4ff" opacity="0.5"/>
+        <circle class="bit-vtx-mid" cx="8"  cy="52"  r="1.4" fill="#00d4ff" opacity="0.35"/>
+        <circle class="bit-vtx-mid" cx="82" cy="52"  r="1.4" fill="#00d4ff" opacity="0.35"/>
+        <circle class="bit-vtx-bot" cx="45" cy="100" r="2.2" fill="#00d4ff" opacity="0.65"/>
+      </g>
+    </svg>
+  </div>
+  <div>
+    <div class="htitle">VoxelBIM</div>
+    <div class="hsub">Bit — Demo de animaciones</div>
+  </div>
+  <a class="hback" href="/" onclick="history.length>1?history.back():window.location.href='/';return false;">&#8592; Volver</a>
+</header>
+
+<div class="content">
+  <div class="section-title">Movimiento</div>
+  <div class="bit-grid" id="gridMovimiento"></div>
+
+  <div class="section-title">Deformación</div>
+  <div class="bit-grid" id="gridDeformacion"></div>
+
+  <div class="section-title">Luz &amp; Visual</div>
+  <div class="bit-grid" id="gridVisual"></div>
+
+  <div class="section-title">Combinadas &amp; Especiales</div>
+  <div class="bit-grid" id="gridEspeciales"></div>
+
+  <div class="section-title">Originales</div>
+  <div class="bit-grid" id="gridOriginales"></div>
+</div>
+
+<footer style="text-align:center;padding:6px 24px;font:400 9px var(--mono);color:var(--muted);border-top:1px solid var(--border);letter-spacing:.08em;display:flex;align-items:center;justify-content:center;gap:8px;">
+  &copy; 2026 VoxelBIM &mdash; Bit Demo &mdash; <span style="opacity:.4;">Carlos Estay Ruggieri</span>
+</footer>
+
+<script>
+var ANIMS = [
+  // Movimiento
+  { id:'gridMovimiento', name:'bounce',    desc:'Rebote con squash',       anim:'bit-bounce .9s cubic-bezier(.36,.07,.19,.97) infinite' },
+  { id:'gridMovimiento', name:'swing',     desc:'Péndulo eje Z',           anim:'bit-swing 2.5s ease-in-out infinite' },
+  { id:'gridMovimiento', name:'orbit',     desc:'Traslación circular',     anim:'bit-orbit 3s linear infinite' },
+  { id:'gridMovimiento', name:'shake-x',   desc:'Vibración horizontal',    anim:'bit-shake-x .5s ease-in-out infinite' },
+  { id:'gridMovimiento', name:'float',     desc:'Flota arriba/abajo',      anim:'bit-float 3s ease-in-out infinite' },
+  { id:'gridMovimiento', name:'scan',      desc:'Barrido vertical',        anim:'bit-scan 2s ease-in-out infinite' },
+  // Deformación
+  { id:'gridDeformacion', name:'warp',     desc:'Stretch X/Y alternado',   anim:'bit-warp 2s ease-in-out infinite' },
+  { id:'gridDeformacion', name:'squish',   desc:'Aplasta y estira extremo', anim:'bit-squish 1.8s ease-in-out infinite' },
+  { id:'gridDeformacion', name:'breathe',  desc:'Escala uniforme suave',   anim:'bit-breathe 2.5s ease-in-out infinite' },
+  { id:'gridDeformacion', name:'morph',    desc:'Skew X perspectiva',      anim:'bit-morph 2s ease-in-out infinite' },
+  // Luz & Visual
+  { id:'gridVisual',    name:'rainbow',    desc:'Cicla colores HSL',       anim:'bit-rainbow 3s linear infinite' },
+  { id:'gridVisual',    name:'glitch',     desc:'Saltos digitales',        anim:'bit-glitch 3s steps(1) infinite' },
+  { id:'gridVisual',    name:'flicker',    desc:'Luz intermitente',        anim:'bit-flicker 2.5s steps(1) infinite' },
+  { id:'gridVisual',    name:'tremble',    desc:'Tiembla/sacude',          anim:'bit-tremble .28s ease-in-out infinite' },
+  // Combinadas & Especiales
+  { id:'gridEspeciales', name:'drunk',     desc:'Float + swing irregular', anim:'bit-drunk 4s ease-in-out infinite' },
+  { id:'gridEspeciales', name:'hyperspace',desc:'Colapso y warp de nave',  anim:'bit-hyperspace 3s ease-in-out infinite' },
+  { id:'gridEspeciales', name:'explode',   desc:'Escala y reaparece',      anim:'bit-explode 2s ease-in-out infinite' },
+  { id:'gridEspeciales', name:'nod',       desc:'Asentir leve',            anim:'bit-nod 1.2s ease-in-out infinite' },
+  { id:'gridEspeciales', name:'spin',      desc:'Giro con squash',         anim:'bit-spin 4s cubic-bezier(.45,0,.55,1) infinite' },
+  { id:'gridEspeciales', name:'spin+float',desc:'Giro + flotación',        anim:'bit-spin 4s cubic-bezier(.45,0,.55,1) infinite, bit-float 3s ease-in-out infinite' },
+  // Originales (internas del Bit)
+  { id:'gridOriginales', name:'— estático —', desc:'Sin animación de wrap', anim:'none' },
+];
+
+function bitSVG(size) {
+  size = size || 64;
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 90 105" fill="none">'
+    +'<g class="bit-wrap">'
+    +'<polygon class="bit-face" points="45,4 75,28 15,28" fill="rgba(0,212,255,0.22)" stroke="#00d4ff" stroke-width="1.4" stroke-linejoin="round"/>'
+    +'<polygon points="75,28 45,4 82,52" fill="rgba(0,212,255,0.10)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>'
+    +'<polygon points="15,28 45,4 8,52" fill="rgba(0,212,255,0.18)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>'
+    +'<polygon points="15,28 75,28 82,52 45,68 8,52" fill="rgba(0,212,255,0.07)" stroke="#00d4ff" stroke-width="1.0" stroke-linejoin="round"/>'
+    +'<polygon points="75,28 82,52 62,78" fill="rgba(0,212,255,0.15)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>'
+    +'<polygon points="15,28 8,52 28,78" fill="rgba(0,212,255,0.20)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>'
+    +'<polygon points="8,52 28,78 45,100 45,68" fill="rgba(0,212,255,0.07)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>'
+    +'<polygon points="82,52 62,78 45,100 45,68" fill="rgba(0,212,255,0.12)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>'
+    +'<polygon points="28,78 62,78 45,100" fill="rgba(0,212,255,0.14)" stroke="#00d4ff" stroke-width="1.2" stroke-linejoin="round"/>'
+    +'<line class="bit-ea" x1="15" y1="28" x2="45" y2="4" stroke="#00d4ff" stroke-width="2.4" stroke-linecap="round"/>'
+    +'<line class="bit-eb" x1="45" y1="4" x2="75" y2="28" stroke="#00d4ff" stroke-width="1.6" stroke-linecap="round"/>'
+    +'<circle class="bit-top" cx="45" cy="4" r="3" fill="#00d4ff"/>'
+    +'<circle class="bit-vtx-mid" cx="15" cy="28" r="1.8" fill="#00d4ff" opacity="0.5"/>'
+    +'<circle class="bit-vtx-mid" cx="75" cy="28" r="1.8" fill="#00d4ff" opacity="0.5"/>'
+    +'<circle class="bit-vtx-mid" cx="8" cy="52" r="1.4" fill="#00d4ff" opacity="0.35"/>'
+    +'<circle class="bit-vtx-mid" cx="82" cy="52" r="1.4" fill="#00d4ff" opacity="0.35"/>'
+    +'<circle class="bit-vtx-bot" cx="45" cy="100" r="2.2" fill="#00d4ff" opacity="0.65"/>'
+    +'</g></svg>';
+}
+
+// Render grid
+ANIMS.forEach(function(a) {
+  var grid = document.getElementById(a.id);
+  if (!grid) return;
+  var cell = document.createElement('div');
+  cell.className = 'bit-cell';
+  cell.innerHTML = bitSVG(64)
+    + '<div class="anim-name">' + a.name + '</div>'
+    + '<div class="anim-desc">' + a.desc + '</div>';
+
+  // Aplicar animación al bit-wrap
+  var wrap = cell.querySelector('.bit-wrap');
+  wrap.style.animation = a.anim;
+  wrap.style.transformOrigin = '45px 52px';
+
+  // Click — toggle rojo
+  wrap.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var isNo = this.classList.contains('bit-no-state');
+    if (isNo) {
+      this.classList.remove('bit-no-state');
+      this.style.animation = a.anim;
+      cell.classList.remove('active');
+    } else {
+      this.classList.add('bit-no-state');
+      this.style.animation = 'bit-no 1.4s ease-in-out infinite';
+      cell.classList.add('active');
+    }
+  });
+
+  grid.appendChild(cell);
+});
+
+// Header bit — animación aleatoria
+(function() {
+  var all = [
+    'bit-spin 4s cubic-bezier(.45,0,.55,1) infinite',
+    'bit-float 3s ease-in-out infinite',
+    'bit-bounce .9s cubic-bezier(.36,.07,.19,.97) infinite',
+    'bit-rainbow 3s linear infinite',
+    'bit-drunk 4s ease-in-out infinite',
+  ];
+  var el = document.getElementById('headerBit');
+  var pick = all[Math.floor(Math.random() * all.length)];
+  el.style.animation = pick;
+  el.style.transformOrigin = '45px 52px';
+  el.addEventListener('click', function() {
+    var isNo = this.classList.contains('bit-no-state');
+    this.classList.toggle('bit-no-state');
+    this.style.animation = isNo ? pick : 'bit-no 1.4s ease-in-out infinite';
+  });
+})();
+</script>
+</body>
+</html>
