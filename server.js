@@ -284,15 +284,17 @@ http.createServer((req, res) => {
     const contentType = MIME[ext] || 'application/octet-stream';
 
     // Headers COOP/COEP para Autodesk Viewer y WASM
-    // voxelbim.html: COEP unsafe-none para que crossOriginIsolated=false
-    // y web-ifc use WASM single-thread (evita pthread workers con URL inválida)
-    const isVoxelBimPage = pathname.endsWith('voxelbim.html');
     const headers = {
       'Content-Type': contentType,
       'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': isVoxelBimPage ? 'unsafe-none' : 'credentialless',
+      'Cross-Origin-Embedder-Policy': 'credentialless',
       'Cross-Origin-Resource-Policy': 'cross-origin',
     };
+
+    // Para recursos remotos (CDN), necesitamos indicar que tienen CORP
+    if (contentType === 'application/javascript' || contentType === 'text/css') {
+      headers['Cross-Origin-Resource-Policy'] = 'cross-origin';
+    }
 
     res.writeHead(200, headers);
     res.end(data);
