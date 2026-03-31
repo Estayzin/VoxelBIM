@@ -109,6 +109,24 @@ tr:hover td { background:rgba(0,212,255,.02); }
 .tr-group td { background:rgba(26,42,64,.5) !important; font-weight:700; }
 .td-num { text-align:right; font-weight:600; font-variant-numeric:tabular-nums; }
 
+/* SECCIÓN ENTIDADES NO RECONOCIDAS */
+.unk-section { margin-top:24px; border:1px solid rgba(255,165,0,.25); border-radius:8px; overflow:hidden; }
+.unk-header { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; background:rgba(255,165,0,.06); cursor:pointer; user-select:none; }
+.unk-title { font:700 9px var(--mono); color:#ffaa00; text-transform:uppercase; letter-spacing:.15em; }
+.unk-subtitle { font:400 9px var(--mono); color:var(--muted); }
+.unk-toggle { font:700 11px var(--mono); color:#ffaa00; }
+.unk-body { padding:12px 16px 16px; display:none; }
+.unk-body.open { display:block; }
+.unk-table { width:100%; border-collapse:collapse; }
+.unk-table th { font:700 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.1em; padding:6px 10px; border-bottom:1px solid var(--border); text-align:left; }
+.unk-table td { font:400 10px var(--mono); color:var(--text); padding:5px 10px; border-bottom:1px dotted var(--border); }
+.unk-table td:last-child { text-align:right; color:#ffaa00; font-weight:600; }
+body.light-mode .unk-section { border-color:rgba(180,100,0,.3); }
+body.light-mode .unk-header { background:rgba(180,100,0,.06); }
+body.light-mode .unk-title  { color:#b46400; }
+body.light-mode .unk-toggle { color:#b46400; }
+body.light-mode .unk-table td:last-child { color:#b46400; }
+
 /* ══ MODO CLARO ══ */
 body.light-mode {
   --navy:#f0f4f8; --blue:#e8eef4; --accent:#0099bb; --green:#00804d;
@@ -281,7 +299,7 @@ footer { text-align:center; padding:6px 24px; font:400 9px var(--mono); color:va
     </div>
 
     <div class="table-wrap">
-      <table>
+      <table id="mainTable">
         <thead>
           <tr>
             <th style="width:230px;">Categor&iacute;a / Clase IFC</th>
@@ -302,6 +320,7 @@ footer { text-align:center; padding:6px 24px; font:400 9px var(--mono); color:va
           </tr>
         </tbody>
       </table>
+      <div id="unknownSection"></div>
     </div>
   </div>
 </div>
@@ -778,6 +797,7 @@ let cachedElementMCGEETT  = {};
 let cachedKeynoteNames    = [];
 let cachedCountsByKeynote = {}; // clase -> keynote -> bucket
 let cachedCountsByMCGEETT = {}; // clase -> mcgeett -> bucket
+let cachedUnknown         = {}; // tipo IFC no reconocido -> count
 
 // ============================================================
 // UI
@@ -862,6 +882,7 @@ async function handleFile(file) {
     buildClassSelector(Object.keys(cachedCounts));
     buildKeynoteSelector();
     renderTable();
+    renderUnknown();
     document.getElementById('btnExport').disabled = false;
     progressBar.style.width = '100%';
 
@@ -945,8 +966,12 @@ function buildCounts(entities, elementQty, elementType) {
   cachedCounts = {};
   cachedCountsByKeynote = {};
   cachedCountsByMCGEETT = {};
+  cachedUnknown = {};
   for (const [id, ent] of Object.entries(entities)) {
-    if (!CATALOG_KEYS.has(ent.type)) continue;
+    if (!CATALOG_KEYS.has(ent.type)) {
+      cachedUnknown[ent.type] = (cachedUnknown[ent.type] || 0) + 1;
+      continue;
+    }
     const lvl  = cachedElementToLevel[id] || 'Sin Nivel';
     const tipo = (elementType && elementType[id]) || '(Sin tipo)';
     const q    = elementQty[id];
@@ -1005,6 +1030,33 @@ function buildCounts(entities, elementQty, elementType) {
 // ============================================================
 // SELECTOR DE KEYNOTES
 // ============================================================
+function renderUnknown() {
+  const sec = document.getElementById('unknownSection');
+  const entries = Object.entries(cachedUnknown)
+    .filter(([, c]) => c > 0)
+    .sort((a, b) => b[1] - a[1]);
+  if (entries.length === 0) { sec.innerHTML = ''; return; }
+  const rows = entries.map(([cls, cnt]) =>
+    `<tr><td>${cls}</td><td>${cnt.toLocaleString()}</td></tr>`
+  ).join('');
+  sec.innerHTML = `
+    <div class="unk-section">
+      <div class="unk-header" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.unk-toggle').textContent=this.nextElementSibling.classList.contains('open')?'▲':'▼'">
+        <div>
+          <span class="unk-title">⚠ Entidades no reconocidas en el catálogo</span>
+          <span class="unk-subtitle" style="margin-left:12px;">${entries.length} tipo${entries.length>1?'s':''} · ${entries.reduce((s,[,c])=>s+c,0).toLocaleString()} elementos</span>
+        </div>
+        <span class="unk-toggle">▼</span>
+      </div>
+      <div class="unk-body">
+        <table class="unk-table">
+          <thead><tr><th>Tipo IFC</th><th style="text-align:right;">Cantidad</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
 function buildKeynoteSelector() {
   const sel = document.getElementById('selKeynote');
   if (!sel) return;
