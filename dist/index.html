@@ -1,0 +1,424 @@
+<!--
+  ============================================================
+  Plataforma BIM — Portal de acceso
+  Autor:    Carlos Estay Ruggieri
+  Contacto: c.estay@outlook.com
+  Rol:      Coordinación BIM
+  Versión:  3.0 | 2026
+  Repo:     https://github.com/Estayzin/VoxelBIM
+  Licencia: MIT — ver LICENSE en el repositorio
+  ============================================================
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Carlos Estay Ruggieri">
+<meta name="description" content="VoxelBIM — Plataforma para revisión y validación de modelos IFC y BIM, desarrollada por Carlos Estay Ruggieri.">
+<meta name="keywords" content="BIM, IFC, VoxelBIM, Revisor IFC, Coordinación BIM, Chile">
+<meta name="copyright" content="Carlos Estay Ruggieri, 2026">
+<title>VoxelBIM — Carlos Estay Ruggieri</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#060d18; --blue:#0a1628; --accent:#00d4ff; --green:#00c853;
+  --bg:#0a0f1e; --card:#0d1526; --text:#c8d8f0; --muted:#4a6080; --border:#1a2a40;
+  --mono:'JetBrains Mono',monospace; --sans:'Inter',sans-serif;
+  --accent2:#7c4dff; --warn:#ff6b35; --gold:#f5c518;
+}
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html,body { height:100%; }
+body { font-family:var(--sans); background:var(--bg); color:var(--text); display:flex; flex-direction:column; min-height:100vh; }
+/* LOGIN */
+#loginScreen { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:9999; padding:40px; }
+#loginScreen.hidden { display:none; }
+.login-card { display:flex; width:100%; max-width:920px; min-height:520px; background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden; box-shadow:0 0 80px rgba(0,212,255,.07); }
+.login-left { flex:2; padding:56px 52px; display:flex; flex-direction:column; justify-content:center; background:linear-gradient(140deg,var(--navy) 60%,rgba(0,212,255,.04)); border-right:1px solid var(--border); position:relative; overflow:hidden; }
+.login-left::before { content:''; position:absolute; top:-80px; left:-80px; width:300px; height:300px; background:radial-gradient(circle,rgba(0,212,255,.06),transparent 70%); pointer-events:none; }
+.login-badge { display:inline-flex; align-items:center; gap:8px; padding:5px 12px; background:rgba(0,212,255,.08); border:1px solid rgba(0,212,255,.2); border-radius:20px; margin-bottom:32px; }
+.login-badge span { font:600 9px var(--mono); color:var(--accent); text-transform:uppercase; letter-spacing:.15em; }
+.login-badge-dot { width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 6px var(--accent); }
+.login-headline { font:700 54px var(--sans); color:#e8f4ff; line-height:1.0; margin-bottom:14px; letter-spacing:-.03em; }
+.login-headline span { color:var(--accent); text-shadow:0 0 40px rgba(0,212,255,.4); }
+.login-desc { font:400 13px var(--sans); color:var(--muted); line-height:1.7; max-width:340px; margin-bottom:28px; }
+.login-tags { display:flex; flex-wrap:wrap; gap:8px; }
+.login-tag { padding:5px 11px; background:rgba(255,255,255,.04); border:1px solid var(--border); border-radius:4px; font:500 10px var(--mono); color:var(--muted); letter-spacing:.06em; display:inline-flex; align-items:center; }
+.login-tag--active { background:rgba(0,212,255,.1); border-color:rgba(0,212,255,.35); color:var(--accent); font-weight:700; font-size:11px; letter-spacing:.08em; box-shadow:0 0 10px rgba(0,212,255,.1); }
+.login-tag--soon { opacity:.5; font-size:9px; gap:5px; }
+.login-tag-soon-label { font:400 8px var(--mono); color:var(--muted); border:1px solid var(--border); border-radius:3px; padding:1px 5px; margin-left:4px; text-transform:uppercase; letter-spacing:.08em; }
+.login-author { margin-top:32px; padding-top:20px; border-top:1px solid var(--border); }
+.author-name { font:600 11px var(--mono); color:var(--text); letter-spacing:.05em; }
+.author-email { font:400 10px var(--mono); color:var(--accent); margin-top:3px; opacity:.7; }
+.author-role { font:400 9px var(--mono); color:var(--muted); margin-top:2px; text-transform:uppercase; letter-spacing:.06em; }
+.login-right { flex:3; padding:52px 48px; display:flex; flex-direction:column; justify-content:center; align-items:center; }
+.login-right-inner { width:100%; max-width:360px; }
+.login-logo { width:40px; height:40px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px; margin-bottom:24px; box-shadow:0 0 20px rgba(0,212,255,.25); }
+.login-form-title { font:700 18px var(--sans); color:var(--text); margin-bottom:6px; }
+.login-form-sub { font:400 11px var(--mono); color:var(--muted); letter-spacing:.05em; margin-bottom:28px; }
+.login-field { margin-bottom:16px; }
+.login-field label { display:block; font:600 9px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.15em; margin-bottom:7px; }
+.login-field input { width:100%; padding:10px 13px; background:var(--navy); border:1px solid var(--border); border-radius:5px; font:400 13px var(--mono); color:var(--text); outline:none; transition:all .15s; }
+.login-field input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,212,255,.08); }
+.login-btn { width:100%; padding:11px; margin-top:8px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#000; border:none; border-radius:5px; font:700 11px var(--mono); cursor:pointer; letter-spacing:.12em; text-transform:uppercase; transition:all .15s; box-shadow:0 0 20px rgba(0,212,255,.2); }
+.login-btn:hover { box-shadow:0 0 35px rgba(0,212,255,.45); transform:translateY(-1px); }
+.login-error { font:400 10px var(--mono); color:#ff3d57; text-align:center; margin-top:12px; letter-spacing:.05em; display:none; }
+.login-error.show { display:block; animation:shake .4s ease; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+/* PORTAL */
+#portal { display:none; flex-direction:column; min-height:100vh; }
+.portal-header { background:var(--navy); padding:11px 24px; display:flex; align-items:center; gap:14px; border-bottom:2px solid var(--accent); flex-shrink:0; }
+.portal-icon { width:34px; height:34px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:16px; }
+.portal-main { flex:1; display:flex; align-items:center; justify-content:center; padding:40px; }
+.portal-grid { width:100%; max-width:960px; }
+.portal-label { font:700 9px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.2em; margin-bottom:8px; text-align:center; }
+/* Badge de plan */
+.plan-badge { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:20px; font:600 9px var(--mono); text-transform:uppercase; letter-spacing:.12em; margin-bottom:24px; }
+.plan-badge.demo { background:rgba(255,107,53,.1); border:1px solid rgba(255,107,53,.3); color:var(--warn); }
+.plan-badge.pro  { background:rgba(245,197,24,.1); border:1px solid rgba(245,197,24,.3); color:var(--gold); }
+.plan-badge-dot { width:5px; height:5px; border-radius:50%; }
+.plan-badge.demo .plan-badge-dot { background:var(--warn); box-shadow:0 0 5px var(--warn); }
+.plan-badge.pro  .plan-badge-dot { background:var(--gold); box-shadow:0 0 5px var(--gold); }
+/* Grilla */
+.modules-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.modules-grid.pro-grid { grid-template-columns:1fr 1fr 1fr; }
+.module-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:32px 28px; text-decoration:none; display:flex; flex-direction:column; gap:16px; transition:all .18s; position:relative; }
+.module-card:hover:not(.disabled) { border-color:var(--accent); transform:translateY(-3px); box-shadow:0 10px 40px rgba(0,212,255,.12); }
+.module-card.disabled { opacity:.45; cursor:default; }
+.module-card.locked::after { content:'🔒'; position:absolute; top:14px; right:14px; font-size:13px; opacity:.6; }
+.mc-icon { width:50px; height:50px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:24px; }
+.mc-title { font:700 15px var(--sans); color:var(--text); margin-bottom:6px; }
+.mc-desc { font:400 11px var(--mono); color:var(--muted); line-height:1.7; }
+.mc-tags { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
+.mc-tag { font:600 9px var(--mono); padding:3px 8px; border-radius:3px; text-transform:uppercase; }
+.tag-live  { background:rgba(0,200,83,.1);  color:var(--green); border:1px solid rgba(0,200,83,.2); }
+.tag-dev   { background:rgba(124,77,255,.1); color:var(--accent2); border:1px solid rgba(124,77,255,.2); }
+.tag-beta  { background:rgba(255,107,53,.08); color:var(--warn); border:1px solid rgba(255,107,53,.2); }
+.tag-pro   { background:rgba(245,197,24,.1); color:var(--gold); border:1px solid rgba(245,197,24,.3); }
+.tag-lock  { background:rgba(255,255,255,.03); color:var(--muted); border:1px solid var(--border); }
+.btn-logout { padding:5px 12px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:4px; font:600 9px var(--mono); cursor:pointer; text-transform:uppercase; letter-spacing:.1em; transition:all .15s; margin-left:auto; }
+.btn-logout:hover { border-color:#ff3d57; color:#ff3d57; }
+.header-plan { font:600 9px var(--mono); padding:3px 10px; border-radius:10px; }
+.header-plan.demo { background:rgba(255,107,53,.1); color:var(--warn); border:1px solid rgba(255,107,53,.25); }
+.header-plan.pro  { background:rgba(245,197,24,.1); color:var(--gold); border:1px solid rgba(245,197,24,.25); }
+</style>
+</head>
+<body>
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-left">
+      <div class="login-badge"><div class="login-badge-dot"></div><span>VoxelBIM</span></div>
+      <div class="login-headline">
+        <div style="display:flex;align-items:center;gap:22px;line-height:1;">
+          <div style="flex-shrink:0;width:90px;height:90px;position:relative;">
+            <style>
+              @keyframes voxel-float { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-5px)} }
+              @keyframes voxel-glow  { 0%,100%{filter:drop-shadow(0 0 8px rgba(0,212,255,.4))} 50%{filter:drop-shadow(0 0 20px rgba(0,212,255,.8))} }
+              @keyframes voxel-edge  { 0%,100%{opacity:.5} 50%{opacity:1} }
+              .voxel-wrap { animation: voxel-float 3.5s ease-in-out infinite, voxel-glow 3.5s ease-in-out infinite; }
+              .voxel-edge-top { animation: voxel-edge 3.5s ease-in-out infinite; }
+            </style>
+            <svg class="voxel-wrap" width="90" height="90" viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- cara superior -->
+              <polygon points="45,8 80,27 45,46 10,27" fill="rgba(0,212,255,0.18)" stroke="rgba(0,212,255,0.6)" stroke-width="1.2"/>
+              <!-- cara izquierda -->
+              <polygon points="10,27 45,46 45,82 10,63" fill="rgba(0,212,255,0.07)" stroke="rgba(0,212,255,0.35)" stroke-width="1.2"/>
+              <!-- cara derecha -->
+              <polygon points="80,27 45,46 45,82 80,63" fill="rgba(0,212,255,0.13)" stroke="rgba(0,212,255,0.45)" stroke-width="1.2"/>
+              <!-- arista vertical central -->
+              <line x1="45" y1="46" x2="45" y2="82" stroke="rgba(0,212,255,0.25)" stroke-width="1"/>
+              <!-- aristas superiores con brillo -->
+              <line class="voxel-edge-top" x1="10" y1="27" x2="45" y2="8" stroke="rgba(0,212,255,0.9)" stroke-width="1.8"/>
+              <line class="voxel-edge-top" x1="45" y1="8" x2="80" y2="27" stroke="rgba(0,212,255,0.65)" stroke-width="1.4"/>
+            </svg>
+          </div>
+          <span>Voxel<br><span style="color:var(--accent);text-shadow:0 0 40px rgba(0,212,255,.4);">BIM</span></span>
+        </div>
+      </div>
+      <div class="login-desc">Sistema de revisión, validación y visualización de modelos BIM basado en IFC. Próximamente compatible con Autodesk Platform Services.</div>
+      <div class="login-tags">
+        <div class="login-tag login-tag--active">
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline-block;vertical-align:middle;margin-right:4px;"><polygon points="6,1 11,3.5 11,8.5 6,11 1,8.5 1,3.5" fill="rgba(0,212,255,0.2)" stroke="rgba(0,212,255,0.8)" stroke-width="1"/><polygon points="6,1 11,3.5 6,6 1,3.5" fill="rgba(0,212,255,0.35)" stroke="none"/></svg>IFC2x3
+        </div>
+        <div class="login-tag login-tag--active">
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline-block;vertical-align:middle;margin-right:4px;"><polygon points="6,1 11,3.5 11,8.5 6,11 1,8.5 1,3.5" fill="rgba(0,212,255,0.2)" stroke="rgba(0,212,255,0.8)" stroke-width="1"/><polygon points="6,1 11,3.5 6,6 1,3.5" fill="rgba(0,212,255,0.35)" stroke="none"/></svg>IFC4
+        </div>
+        <div class="login-tag login-tag--soon">🕐 RVT <span class="login-tag-soon-label">próximamente</span></div>
+        <div class="login-tag login-tag--soon">🕐 APS <span class="login-tag-soon-label">próximamente</span></div>
+      </div>
+      <div class="login-author">
+        <div class="author-name">Carlos Estay Ruggieri</div>
+        <div class="author-email">c.estay [at] outlook.com</div>
+        <div class="author-role">Coordinación BIM</div>
+      </div>
+    </div>
+    <div class="login-right">
+      <div class="login-right-inner">
+        <div class="login-logo">🧊</div>
+        <div class="login-form-title">Acceso al sistema</div>
+        <div class="login-form-sub">Ingresa tus credenciales para continuar</div>
+        <div class="login-field">
+          <label>Usuario</label>
+          <input type="text" id="loginUser" placeholder="usuario" autocomplete="username">
+        </div>
+        <div class="login-field">
+          <label>Contraseña</label>
+          <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <button class="login-btn" onclick="doLogin()">Acceder</button>
+        <div class="login-error" id="loginError">Usuario o contraseña incorrectos</div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- PORTAL -->
+<div id="portal">
+  <div class="portal-header">
+    <div class="portal-icon">🧊</div>
+    <div>
+      <div style="font:600 13px var(--mono);color:#e0f0ff;letter-spacing:.05em;text-transform:uppercase;">VoxelBIM</div>
+      <div style="font:400 10px var(--mono);color:var(--muted);margin-top:1px;">Carlos Estay Ruggieri</div>
+    </div>
+    <span id="headerPlanBadge" class="header-plan"></span>
+    <button class="btn-logout" onclick="cerrarSesion()">Cerrar sesión</button>
+  </div>
+  <div class="portal-main">
+    <div class="portal-grid" style="text-align:center;">
+      <div class="portal-label">Selecciona un módulo</div>
+      <div id="planBadgeWrap" style="display:flex;justify-content:center;"></div>
+
+      <!-- GRILLA DEMO -->
+      <div id="gridDemo" class="modules-grid pro-grid" style="display:none;">
+        <a id="linkExplorerDemo" href="#" class="module-card">
+          <div class="mc-icon" style="background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.2);">🗂️</div>
+          <div>
+            <div class="mc-title">Explorador BIM</div>
+            <div class="mc-desc">Navegador de proyectos con visor 3D, planos y documentos integrados.</div>
+          </div>
+          <div class="mc-tags"><span class="mc-tag">Estado</span><span class="mc-tag" style="background:rgba(0,212,255,.06);color:var(--muted);border:1px solid var(--border);">3D · Planos · Docs</span></div>
+        </a>
+        <a id="linkAutodeskDemo" href="#" class="module-card">
+          <div class="mc-icon" style="background:rgba(0,144,255,.1);border:1px solid rgba(0,144,255,.2);">🔗</div>
+          <div>
+            <div class="mc-title">Autodesk APS</div>
+            <div class="mc-desc">Revisión de modelos Revit y acceso a proyectos BIM 360 / ACC via Autodesk Platform Services.</div>
+          </div>
+          <div class="mc-tags"><span class="mc-tag">Estado</span><span class="mc-tag tag-beta">Próximamente</span></div>
+        </a>
+        <div class="module-card disabled locked">
+          <div class="mc-icon" style="background:rgba(245,197,24,.06);border:1px solid var(--border);">📊</div>
+          <div>
+            <div class="mc-title">Generación de Reportes</div>
+            <div class="mc-desc">Reportes detallados por disciplina, fecha y proyecto en formato estándar.</div>
+          </div>
+          <div class="mc-tags"><span class="mc-tag tag-lock">Solo Pro</span></div>
+        </div>
+        <div class="module-card disabled locked">
+          <div class="mc-icon" style="background:rgba(245,197,24,.06);border:1px solid var(--border);">📤</div>
+          <div>
+            <div class="mc-title">Inventario y Tablas</div>
+            <div class="mc-desc">Exportación de inventarios y tablas de elementos BIM en PDF y XLS.</div>
+          </div>
+          <div class="mc-tags"><span class="mc-tag tag-lock">Solo Pro</span></div>
+        </div>
+        <div class="module-card disabled locked">
+          <div class="mc-icon" style="background:rgba(124,77,255,.06);border:1px solid var(--border);">📋</div>
+          <div>
+            <div class="mc-title">Revisor IDS</div>
+            <div class="mc-desc">Validación de modelos IFC contra Information Delivery Specifications.</div>
+          </div>
+          <div class="mc-tags"><span class="mc-tag tag-lock">Solo Pro</span></div>
+        </div>
+        <a href="mailto:c.estay@outlook.com" class="module-card">
+          <div class="mc-icon" style="background:rgba(124,77,255,.1);border:1px solid rgba(124,77,255,.2);">✉️</div>
+          <div>
+            <div class="mc-title">Contacto</div>
+            <div class="mc-desc">¿Consultas o sugerencias? Escríbeme directamente.</div>
+          </div>
+          <div class="mc-tags"><span class="mc-tag" style="background:rgba(124,77,255,.1);color:var(--accent2);border:1px solid rgba(124,77,255,.2);">c.estay@outlook.com</span></div>
+        </a>
+      </div>
+
+      <!-- GRILLA PRO -->
+      <div id="gridPro" class="modules-grid pro-grid" style="display:none;">
+        <a id="linkExplorerPro" href="#" onclick="abrirModulo(getVisorUrl());return false;" class="module-card">
+          <div class="mc-icon" style="background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.2);">🗂️</div>
+          <div>
+            <div class="mc-title">Explorador BIM</div>
+            <div class="mc-desc">Navegador de proyectos con visor 3D, planos y documentos integrados.</div>
+          </div>
+          <div class="mc-tags"><span class="mc-tag tag-live">Activo</span><span class="mc-tag" style="background:rgba(0,212,255,.06);color:var(--muted);border:1px solid var(--border);">3D · Planos · Docs</span></div>
+        </a>
+        <a id="linkAutodesk" href="/app/autodesk.html" class="module-card" onclick="abrirModulo('/app/autodesk.html'); return false;">
+          <div class="mc-icon" style="background:rgba(0,144,255,.1);border:1px solid rgba(0,144,255,.2);">🔗</div>
+          <div>
+            <div class="mc-title">Autodesk APS</div>
+            <div class="mc-desc">Revisión de modelos Revit y acceso a proyectos BIM 360 / ACC via Autodesk Platform Services.</div>
+          </div>
+          <div class="mc-tags"><span class="mc-tag tag-live">Activo</span><span class="mc-tag" style="background:rgba(0,212,255,.06);color:var(--muted);border:1px solid var(--border);">RVT · BIM 360</span></div>
+        </a>
+        <div class="module-card disabled locked">
+          <div class="mc-icon" style="background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.2);">📊</div>
+          <div>
+            <div class="mc-title">Generación de Reportes</div>
+            <div class="mc-desc">Reportes detallados por disciplina, fecha y proyecto en formato estándar.</div>
+          </div>
+          <div class="mc-tags"><span class="mc-tag tag-soon">Próximamente</span></div>
+        </div>
+        <a id="linkInventario" href="/app/inventario.html" class="module-card" onclick="abrirModulo('/app/inventario.html'); return false;">
+          <div class="mc-icon" style="background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.2);">📤</div>
+          <div>
+            <div class="mc-title">Inventario y Tablas</div>
+            <div class="mc-desc">Exportación de inventarios y tablas de elementos BIM en PDF y XLS.</div>
+          </div>
+          <div class="mc-tags"><span class="mc-tag tag-beta">Beta / Desarrollo</span></div>
+        </a>
+        <div class="module-card disabled locked">
+          <div class="mc-icon" style="background:rgba(124,77,255,.1);border:1px solid rgba(124,77,255,.2);">📋</div>
+          <div>
+            <div class="mc-title">Revisor IDS</div>
+            <div class="mc-desc">Validación de modelos IFC contra Information Delivery Specifications.</div>
+          </div>
+          <div class="mc-tags"><span class="mc-tag tag-soon">Próximamente</span></div>
+        </div>
+        <a href="mailto:c.estay@outlook.com" class="module-card">
+          <div class="mc-icon" style="background:rgba(124,77,255,.1);border:1px solid rgba(124,77,255,.2);">✉️</div>
+          <div>
+            <div class="mc-title">Contacto</div>
+            <div class="mc-desc">¿Consultas o sugerencias? Escríbeme directamente.</div>
+          </div>
+          <div class="mc-tags"><span class="mc-tag" style="background:rgba(124,77,255,.1);color:var(--accent2);border:1px solid rgba(124,77,255,.2);">c.estay@outlook.com</span></div>
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// Hash SHA-256 de las credenciales
+// Pro:    usuario "admin"  + contraseña "221472"
+// Demo 1: usuario "demo1"  + contraseña "5167" (Explorador BIM)
+// Demo 2: usuario "demo2"  + contraseña "1472" (Autodesk APS)
+const HASHES = {
+  // hash de "admin:221472"
+  'd231f71a9d546eb5fb328f99bb495fcd50ff32a4dc7226519131b5f9fa695fce': 'pro',
+  // hash de "demo1:5167"
+  '5417b77699089c0d0ad6085ae6fb3a8b5b49ec9cf2d2d35e97f9169d74156bef': 'demo_explorer',
+  // hash de "demo2:1472"
+  '1794bf57ce0108bc9577d4ccf4ffebd0b76327d0c667659d9a85dcc13b8efef2': 'demo_autodesk'
+};
+
+function getVisorUrl() {
+  // En localhost (con server.js en el puerto 3000) sirve desde la raíz del repo 
+  // En Cloudflare Pages (o wrangler) el build output es visor/dist/ → raíz /
+  var h = window.location.hostname;
+  var p = window.location.port;
+  return ((h === 'localhost' || h === '127.0.0.1') && p === '3000') ? '/visor/dist/voxelbim.html' : '/voxelbim.html';
+}
+
+function abrirModulo(url) {
+  sessionStorage.setItem('ifc_auth', '1');
+  window.location.href = url;
+}
+
+async function doLogin() {
+  var user = document.getElementById('loginUser').value.trim();
+  var pass = document.getElementById('loginPass').value;
+  var buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(user+':'+pass));
+  var hex  = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  var plan = HASHES[hex];
+  if (plan) {
+    sessionStorage.setItem('ifc_auth', '1');
+    sessionStorage.setItem('ifc_plan', plan);
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('loginError').classList.remove('show');
+    mostrarPortal(plan);
+  } else {
+    var e = document.getElementById('loginError');
+    e.classList.remove('show'); void e.offsetWidth; e.classList.add('show');
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginPass').focus();
+  }
+}
+
+function mostrarPortal(plan) {
+  var portal = document.getElementById('portal');
+  portal.style.display = 'flex';
+  var isPro = plan === 'pro';
+  // Badge en header
+  var hb = document.getElementById('headerPlanBadge');
+  hb.textContent = isPro ? '★ Pro' : 'Demo';
+  hb.className = 'header-plan ' + (isPro ? 'pro' : 'demo');
+  // Badge en portal
+  var wrap = document.getElementById('planBadgeWrap');
+  if (isPro) {
+    wrap.innerHTML = '<div class="plan-badge pro"><div class="plan-badge-dot"></div>Plan Pro — acceso completo</div>';
+  } else if (plan === 'demo_explorer') {
+    wrap.innerHTML = '<div class="plan-badge demo"><div class="plan-badge-dot"></div>Plan Demo — Explorador BIM</div>';
+  } else {
+    wrap.innerHTML = '<div class="plan-badge demo"><div class="plan-badge-dot"></div>Plan Demo — Autodesk APS</div>';
+  }
+
+  // Mostrar grilla correcta
+  document.getElementById('gridPro').style.display  = isPro ? 'grid' : 'none';
+  document.getElementById('gridDemo').style.display = isPro ? 'none' : 'grid';
+
+  if (!isPro) {
+    var cardExp = document.getElementById('linkExplorerDemo');
+    var cardAut = document.getElementById('linkAutodeskDemo');
+    
+    if (plan === 'demo_explorer') {
+      activarCard(cardExp, getVisorUrl(), 'Activo');
+      bloquearCard(cardAut, 'Solo Pro');
+    } else {
+      bloquearCard(cardExp, 'Solo Pro');
+      activarCard(cardAut, '/app/autodesk.html', 'Activo');
+    }
+  }
+}
+
+function activarCard(el, url, label) {
+  el.classList.remove('disabled', 'locked');
+  el.onclick = function() { abrirModulo(url); return false; };
+  var tags = el.querySelector('.mc-tags');
+  if (tags) {
+    // Limpiamos tags previos si hay varios
+    tags.innerHTML = '<span class="mc-tag tag-live">' + label + '</span>';
+  }
+}
+
+function bloquearCard(el, label) {
+  el.classList.add('disabled', 'locked');
+  el.onclick = function() { return false; };
+  var tags = el.querySelector('.mc-tags');
+  if (tags) {
+    tags.innerHTML = '<span class="mc-tag tag-lock">' + label + '</span>';
+  }
+}
+
+function cerrarSesion() {
+  sessionStorage.removeItem('ifc_auth');
+  sessionStorage.removeItem('ifc_plan');
+  document.getElementById('portal').style.display = 'none';
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+}
+
+(function(){
+  if (sessionStorage.getItem('ifc_auth') === '1') {
+    document.getElementById('loginScreen').classList.add('hidden');
+    mostrarPortal(sessionStorage.getItem('ifc_plan') || 'demo');
+  }
+  ['loginUser','loginPass'].forEach(function(id){
+    document.getElementById(id).addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+  });
+})();
+</script>
+<footer style="text-align:center;padding:10px;font:400 9px var(--mono);color:var(--muted);border-top:1px solid var(--border);letter-spacing:.08em;">
+  &copy; 2026 Carlos Estay Ruggieri &mdash; Coordinaci&oacute;n BIM &mdash; c.estay@outlook.com &mdash; MIT License
+</footer>
+</body>
+</html>

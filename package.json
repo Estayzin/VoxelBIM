@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "jszip": "^3.10.1",
+    "three": "^0.149.0",
+    "web-ifc-three": "^0.0.126"
+  }
+}
