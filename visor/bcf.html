@@ -1,0 +1,1046 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<script>
+  if (sessionStorage.getItem('ifc_auth') !== '1' && window.location.protocol !== 'file:') {
+    window.location.href = '/';
+  }
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoxelBIM — BCF Topics</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="/node_modules/jszip/dist/jszip.min.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "/node_modules/three/build/three.module.js",
+    "three/": "/node_modules/three/",
+    "three/examples/jsm/utils/BufferGeometryUtils": "/node_modules/three/examples/jsm/utils/BufferGeometryUtils.js",
+    "three/examples/jsm/": "/node_modules/three/examples/jsm/",
+    "web-ifc-three": "/node_modules/web-ifc-three/IFCLoader.js",
+    "web-ifc": "/node_modules/web-ifc/web-ifc-api.js"
+  }
+}
+</script>
+<style>
+:root {
+  --navy:#060d18; --blue:#0a1628; --accent:#00d4ff; --green:#00c853;
+  --bg:#0a0f1e; --card:#0d1526; --text:#c8d8f0; --muted:#4a6080;
+  --border:#1a2a40; --mono:'JetBrains Mono',monospace; --sans:'Syne',sans-serif;
+  --accent2:#7c4dff; --warn:#ff6b35; --red:#ff3d57;
+  --bcf:#a855f7; --bcf2:#c084fc; --bcf-dim:rgba(168,85,247,.12);
+}
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html,body { height:100%; overflow:hidden; }
+body { font-family:var(--sans); background:var(--bg); color:var(--text); display:flex; flex-direction:column; height:100vh; }
+/* LIGHT MODE */
+body.light-mode {
+  --navy:#f0f4f8; --blue:#e4eaf0; --accent:#0077aa; --green:#00804d;
+  --bg:#dce3ea; --card:#f5f8fb; --text:#1a2a3a; --muted:#6a8aaa;
+  --border:#b0c4d8; --accent2:#5533aa; --warn:#cc4400; --red:#cc0022;
+  --bcf:#7c3aed; --bcf2:#9d5cf5; --bcf-dim:rgba(124,58,237,.08);
+}
+body.light-mode header { box-shadow:0 2px 20px rgba(0,119,170,.1); }
+</style>
+<style>
+/* HEADER */
+header { background:var(--navy); padding:16px 24px; min-height:72px; display:flex; align-items:center; gap:14px; border-bottom:2px solid var(--bcf); flex-shrink:0; box-shadow:0 2px 20px rgba(168,85,247,.1); }
+.hicon { background:none; overflow:visible; width:34px; height:34px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.htitle { font:700 13px var(--mono); color:#e0f0ff; letter-spacing:.05em; text-transform:uppercase; }
+.hsub   { font:400 10px var(--mono); color:var(--muted); margin-top:1px; }
+.hback  { padding:5px 12px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:4px; font:600 9px var(--mono); text-transform:uppercase; letter-spacing:.1em; text-decoration:none; transition:all .15s; cursor:pointer; white-space:nowrap; }
+.hback:hover { border-color:var(--bcf); color:var(--bcf); }
+.conn-dot { width:7px; height:7px; border-radius:50%; background:var(--muted); flex-shrink:0; transition:background .3s; }
+.conn-dot.active { background:var(--green); animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+/* BIT */
+@keyframes bit-spin    { 0%{transform:rotate(0deg) scaleX(1)} 25%{transform:rotate(90deg) scaleX(.45)} 50%{transform:rotate(180deg) scaleX(1)} 75%{transform:rotate(270deg) scaleX(.45)} 100%{transform:rotate(360deg) scaleX(1)} }
+@keyframes bit-float   { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-6px)} }
+@keyframes bit-warp    { 0%,100%{transform:scale(1,1)} 25%{transform:scale(1.25,.72)} 50%{transform:scale(.72,1.25)} 75%{transform:scale(1.1,.88)} }
+@keyframes bit-tremble { 0%,100%{transform:translate(0,0) rotate(0deg)} 20%{transform:translate(-2px,1px) rotate(-4deg)} 40%{transform:translate(2px,-1px) rotate(4deg)} 60%{transform:translate(-1px,2px) rotate(-3deg)} 80%{transform:translate(1px,-2px) rotate(3deg)} }
+@keyframes bit-rainbow { 0%{filter:hue-rotate(0deg)} 100%{filter:hue-rotate(360deg)} }
+@keyframes bit-no      { 0%,100%{transform:scale(1) rotate(0deg)} 50%{transform:scale(1.18) rotate(180deg)} }
+@keyframes bit-pulse   { 0%,100%{opacity:.95} 50%{opacity:.15} }
+@keyframes bit-edge-a  { 0%,100%{opacity:1;stroke-width:2.4} 45%{opacity:.1;stroke-width:.4} 65%{opacity:.9;stroke-width:2.0} }
+@keyframes bit-edge-b  { 0%,100%{opacity:1;stroke-width:1.6} 45%{opacity:.1;stroke-width:.4} 65%{opacity:.8;stroke-width:1.4} }
+@keyframes bit-glow    { 0%,100%{opacity:.22} 50%{opacity:.55} }
+@keyframes bit-vtx     { 0%,100%{opacity:.5} 50%{opacity:.08} }
+@keyframes bit-vtx2    { 0%,100%{opacity:.65} 50%{opacity:.15} }
+.bit-wrap    { transform-origin:45px 52px; cursor:pointer; }
+.bit-top     { animation: bit-pulse 2s ease-in-out infinite; }
+.bit-edge1   { animation: bit-edge-a 2s ease-in-out infinite; }
+.bit-edge2   { animation: bit-edge-b 2s ease-in-out infinite .15s; }
+.bit-face    { animation: bit-glow  2s ease-in-out infinite; }
+.bit-vtx-mid { animation: bit-vtx   2s ease-in-out infinite; }
+.bit-vtx-bot { animation: bit-vtx2  2s ease-in-out infinite .3s; }
+.bit-wrap.bit-no-state polygon { stroke:#ff3d57 !important; transition:stroke .3s,fill .3s; }
+.bit-wrap.bit-no-state line    { stroke:#ff3d57 !important; transition:stroke .3s; }
+.bit-wrap.bit-no-state circle  { fill:#ff3d57 !important;   transition:fill .3s; }
+/* TOOLBAR */
+.header-toolbar { display:flex; align-items:center; gap:4px; }
+.header-toolbar-sep { width:1px; height:20px; background:var(--border); margin:0 6px; flex-shrink:0; }
+.hbar-btn { padding:5px 13px; background:transparent; color:var(--muted); border:1px solid transparent; border-radius:5px; font:600 9px var(--mono); cursor:pointer; transition:all .15s; text-transform:uppercase; letter-spacing:.08em; display:flex; align-items:center; gap:6px; white-space:nowrap; }
+.hbar-btn:hover { border-color:var(--border); color:var(--text); background:rgba(255,255,255,.04); }
+.hbar-btn.active { border-color:var(--bcf); color:var(--bcf); background:var(--bcf-dim); }
+.hbar-btn.disabled { opacity:.3; cursor:not-allowed; }
+.hb-icon { font-size:14px; opacity:.8; }
+.hbar-tag { font:700 7px var(--mono); padding:1px 4px; border-radius:2px; background:rgba(255,107,53,.1); color:var(--warn); letter-spacing:.08em; margin-left:3px; }
+</style>
+<style>
+/* LAYOUT */
+.main { display:flex; flex:1; overflow:hidden; }
+/* SIDEBAR */
+.sidebar { width:300px; flex-shrink:0; background:var(--blue); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+.sb-header { padding:12px 16px; border-bottom:1px solid var(--border); flex-shrink:0; display:flex; flex-direction:column; gap:8px; }
+.sb-title { font:700 9px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.2em; }
+.sb-section { padding:10px 16px; border-bottom:1px solid var(--border); flex-shrink:0; }
+.sb-section-title { font:700 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.2em; margin-bottom:8px; }
+.sb-input { width:100%; padding:7px 10px; background:var(--navy); color:var(--text); border:1px solid var(--border); border-radius:5px; font:400 10px var(--mono); outline:none; transition:border-color .15s; }
+.sb-input:focus { border-color:var(--bcf); }
+.sb-input::placeholder { color:var(--muted); opacity:.6; }
+.sb-btn { width:100%; padding:9px; border:none; border-radius:5px; font:700 10px var(--mono); cursor:pointer; letter-spacing:.08em; text-transform:uppercase; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:7px; margin-top:6px; }
+.sb-btn-primary   { background:var(--bcf); color:#fff; }
+.sb-btn-primary:hover { background:var(--bcf2); box-shadow:0 0 18px rgba(168,85,247,.3); }
+.sb-btn-secondary { background:transparent; color:var(--muted); border:1px solid var(--border); }
+.sb-btn-secondary:hover { border-color:var(--bcf); color:var(--bcf); }
+.sb-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 7px; border-radius:3px; font:700 8px var(--mono); letter-spacing:.1em; text-transform:uppercase; }
+.sb-badge-ok  { background:rgba(0,200,83,.1);  color:var(--green); border:1px solid rgba(0,200,83,.2); }
+.sb-badge-err { background:rgba(255,61,87,.1); color:var(--red);   border:1px solid rgba(255,61,87,.2); }
+.sb-badge-off { background:rgba(74,96,128,.1); color:var(--muted); border:1px solid var(--border); }
+.conn-row  { display:flex; align-items:center; justify-content:space-between; margin-top:4px; }
+.conn-label { font:400 9px var(--mono); color:var(--muted); }
+/* FILTER CHIPS */
+.chip-row { display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
+.chip { padding:3px 9px; border-radius:12px; font:600 8px var(--mono); cursor:pointer; border:1px solid var(--border); color:var(--muted); transition:all .15s; text-transform:uppercase; letter-spacing:.08em; background:transparent; }
+.chip:hover  { border-color:var(--bcf); color:var(--bcf); }
+.chip.active { background:var(--bcf-dim); border-color:var(--bcf); color:var(--bcf); }
+/* NAV PANEL */
+#navPanel { width:0; flex-shrink:0; background:var(--blue); border-right:1px solid transparent; display:flex; flex-direction:column; overflow:hidden; transition:width .22s ease, border-color .22s ease; }
+#navPanel.open { width:260px; border-right-color:var(--border); }
+.nav-header { padding:10px 14px; border-bottom:1px solid var(--border); flex-shrink:0; display:flex; align-items:center; gap:8px; }
+.nav-title { font:700 9px var(--mono); color:var(--bcf); text-transform:uppercase; letter-spacing:.18em; flex:1; }
+.nav-close  { background:transparent; border:none; color:var(--muted); cursor:pointer; font-size:15px; padding:2px 5px; border-radius:3px; transition:color .12s; line-height:1; }
+.nav-close:hover { color:var(--bcf); }
+.nav-body { flex:1; overflow-y:auto; padding:6px 0; }
+.nav-body::-webkit-scrollbar { width:3px; }
+.nav-body::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+.nav-empty { padding:24px 14px; font:400 10px var(--mono); color:var(--muted); text-align:center; line-height:1.8; text-transform:uppercase; letter-spacing:.08em; opacity:.6; }
+.nav-item { display:flex; align-items:center; gap:8px; padding:7px 14px; cursor:pointer; transition:background .12s; border-left:2px solid transparent; }
+.nav-item:hover  { background:var(--bcf-dim); border-left-color:rgba(168,85,247,.3); }
+.nav-item.active { background:var(--bcf-dim); border-left-color:var(--bcf); }
+.nav-item-dot  { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+.nav-item-dot.open    { background:var(--warn); }
+.nav-item-dot.closed  { background:var(--green); }
+.nav-item-dot.in-progress { background:var(--accent); }
+.nav-item-dot.reopened    { background:var(--red); }
+.nav-item-label { font:500 10px var(--mono); color:var(--text); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.nav-item-id    { font:400 8px var(--mono); color:var(--muted); flex-shrink:0; }
+</style>
+<style>
+/* CUERPO PRINCIPAL */
+.bcf-wrap { flex:1; overflow:hidden; display:flex; flex-direction:column; background:var(--bg); }
+.bcf-toolbar { padding:10px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; flex-shrink:0; background:var(--blue); }
+.bcf-toolbar-title { font:700 10px var(--mono); color:var(--bcf); text-transform:uppercase; letter-spacing:.15em; flex:1; }
+/* TABS */
+.bcf-tabs { display:flex; gap:2px; }
+.bcf-tab  { padding:5px 14px; background:transparent; color:var(--muted); border:1px solid transparent; border-radius:4px; font:600 9px var(--mono); cursor:pointer; transition:all .15s; text-transform:uppercase; letter-spacing:.08em; }
+.bcf-tab:hover  { color:var(--text); border-color:var(--border); }
+.bcf-tab.active { color:var(--bcf); border-color:var(--bcf); background:var(--bcf-dim); }
+/* PANEL DE TOPICS */
+#tabTopics { flex:1; display:flex; flex-direction:row; overflow:hidden; }
+.topics-list { width:340px; flex-shrink:0; border-right:1px solid var(--border); overflow-y:auto; display:flex; flex-direction:column; }
+.topics-list::-webkit-scrollbar { width:4px; }
+.topics-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+.topics-empty { padding:40px 20px; text-align:center; font:400 10px var(--mono); color:var(--muted); line-height:1.8; text-transform:uppercase; letter-spacing:.08em; opacity:.6; }
+/* TOPIC CARD */
+.topic-card { padding:12px 14px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .12s; border-left:3px solid transparent; }
+.topic-card:hover  { background:rgba(168,85,247,.04); }
+.topic-card.active { background:var(--bcf-dim); border-left-color:var(--bcf); }
+.tc-top { display:flex; align-items:center; gap:7px; margin-bottom:5px; }
+.tc-guid { font:400 8px var(--mono); color:var(--muted); flex-shrink:0; }
+.tc-status { font:700 7px var(--mono); padding:2px 6px; border-radius:3px; text-transform:uppercase; letter-spacing:.08em; flex-shrink:0; }
+.tc-status.open        { background:rgba(255,107,53,.1);  color:var(--warn); }
+.tc-status.closed      { background:rgba(0,200,83,.1);    color:var(--green); }
+.tc-status.in_progress { background:rgba(0,212,255,.1);   color:var(--accent); }
+.tc-status.reopened    { background:rgba(255,61,87,.1);   color:var(--red); }
+.tc-title  { font:600 11px var(--mono); color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tc-meta   { display:flex; align-items:center; gap:10px; margin-top:5px; }
+.tc-meta-item { font:400 8px var(--mono); color:var(--muted); display:flex; align-items:center; gap:3px; }
+.tc-priority { font:700 7px var(--mono); padding:1px 5px; border-radius:2px; text-transform:uppercase; }
+.tc-priority.high   { background:rgba(255,61,87,.1);  color:var(--red); }
+.tc-priority.medium { background:rgba(255,107,53,.1); color:var(--warn); }
+.tc-priority.low    { background:rgba(0,212,255,.08); color:var(--accent); }
+/* DETALLE DE TOPIC */
+.topic-detail { flex:1; overflow-y:auto; display:flex; flex-direction:column; }
+.topic-detail::-webkit-scrollbar { width:5px; }
+.topic-detail::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+.td-empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; opacity:.5; }
+.td-empty-icon  { font-size:32px; }
+.td-empty-label { font:400 10px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.1em; }
+.td-header { padding:16px 20px; border-bottom:1px solid var(--border); }
+.td-h-guid { font:400 8px var(--mono); color:var(--muted); margin-bottom:6px; }
+.td-h-title { font:700 15px var(--mono); color:#e0f0ff; margin-bottom:8px; }
+.td-h-badges { display:flex; gap:6px; flex-wrap:wrap; }
+.td-section { padding:14px 20px; border-bottom:1px solid var(--border); }
+.td-sec-title { font:700 8px var(--mono); color:var(--bcf); text-transform:uppercase; letter-spacing:.15em; margin-bottom:10px; }
+.td-row { display:flex; gap:8px; margin-bottom:6px; align-items:baseline; }
+.td-key { font:400 9px var(--mono); color:var(--muted); flex:0 0 120px; }
+.td-val { font:500 10px var(--mono); color:var(--text); flex:1; word-break:break-word; }
+/* COMMENTS */
+.comment-list { display:flex; flex-direction:column; gap:8px; padding:14px 20px; }
+.comment-item { background:var(--card); border:1px solid var(--border); border-radius:6px; padding:10px 12px; }
+.comment-meta { display:flex; align-items:center; gap:8px; margin-bottom:5px; }
+.comment-author { font:700 9px var(--mono); color:var(--bcf); }
+.comment-date   { font:400 8px var(--mono); color:var(--muted); }
+.comment-text   { font:400 10px var(--mono); color:var(--text); line-height:1.6; }
+.comment-input-row { padding:10px 20px 14px; display:flex; gap:8px; flex-shrink:0; border-top:1px solid var(--border); }
+.comment-input { flex:1; padding:8px 10px; background:var(--navy); color:var(--text); border:1px solid var(--border); border-radius:5px; font:400 10px var(--mono); outline:none; transition:border-color .15s; resize:none; height:36px; }
+.comment-input:focus { border-color:var(--bcf); height:60px; }
+.comment-send { padding:8px 14px; background:var(--bcf); color:#fff; border:none; border-radius:5px; font:700 9px var(--mono); cursor:pointer; transition:all .15s; text-transform:uppercase; }
+.comment-send:hover { background:var(--bcf2); }
+</style>
+<style>
+/* TAB NUEVO TOPIC */
+#tabNewTopic { flex:1; overflow-y:auto; padding:24px; display:none; flex-direction:column; gap:14px; max-width:640px; }
+.nt-group { display:flex; flex-direction:column; gap:5px; }
+.nt-label { font:700 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.15em; }
+.nt-input { padding:8px 11px; background:var(--navy); color:var(--text); border:1px solid var(--border); border-radius:5px; font:400 11px var(--mono); outline:none; transition:border-color .15s; }
+.nt-input:focus { border-color:var(--bcf); }
+.nt-input::placeholder { color:var(--muted); opacity:.5; }
+.nt-row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+textarea.nt-input { resize:vertical; min-height:80px; }
+.nt-submit { padding:11px; background:var(--bcf); color:#fff; border:none; border-radius:6px; font:700 10px var(--mono); cursor:pointer; text-transform:uppercase; letter-spacing:.1em; transition:all .15s; align-self:flex-start; }
+.nt-submit:hover { background:var(--bcf2); box-shadow:0 0 20px rgba(168,85,247,.3); }
+/* TAB DASHBOARD */
+#tabDashboard { flex:1; overflow-y:auto; padding:24px; display:none; flex-direction:column; gap:16px; }
+.stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.stat-card { background:var(--card); border:1px solid var(--border); border-radius:7px; padding:14px 16px; display:flex; flex-direction:column; gap:4px; transition:border-color .2s; }
+.stat-card:hover { border-color:var(--bcf); }
+.stat-label { font:700 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.15em; }
+.stat-value { font:700 22px var(--mono); color:var(--text); }
+.stat-sub   { font:400 9px var(--mono); color:var(--muted); }
+.stat-card.s-open   .stat-value { color:var(--warn); }
+.stat-card.s-closed .stat-value { color:var(--green); }
+.stat-card.s-high   .stat-value { color:var(--red); }
+/* STATUS BAR CHART */
+.bar-wrap { background:var(--card); border:1px solid var(--border); border-radius:7px; padding:14px 16px; }
+.bar-title { font:700 9px var(--mono); color:var(--text); text-transform:uppercase; letter-spacing:.12em; margin-bottom:12px; }
+.bar-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.bar-label { font:400 9px var(--mono); color:var(--muted); width:90px; flex-shrink:0; text-transform:uppercase; }
+.bar-track { flex:1; height:6px; background:rgba(255,255,255,.06); border-radius:3px; overflow:hidden; }
+.bar-fill  { height:100%; border-radius:3px; transition:width .5s ease; }
+.bar-count { font:700 9px var(--mono); color:var(--text); width:24px; text-align:right; flex-shrink:0; }
+/* IMPORT/EXPORT */
+#tabFiles { flex:1; overflow-y:auto; padding:24px; display:none; flex-direction:column; gap:16px; }
+.file-zone { border:1.5px dashed rgba(168,85,247,.3); border-radius:10px; padding:40px 30px; display:flex; flex-direction:column; align-items:center; gap:12px; cursor:pointer; transition:all .2s; background:rgba(168,85,247,.03); }
+.file-zone:hover { border-color:var(--bcf); background:var(--bcf-dim); }
+.file-zone.over  { border-color:var(--bcf); background:var(--bcf-dim); transform:scale(1.01); }
+.file-zone-icon  { font-size:30px; opacity:.5; }
+.file-zone-title { font:700 12px var(--mono); color:var(--text); text-transform:uppercase; letter-spacing:.1em; }
+.file-zone-sub   { font:400 9px var(--mono); color:var(--muted); letter-spacing:.08em; }
+.file-actions { display:flex; gap:10px; }
+.file-btn { flex:1; padding:10px; border-radius:6px; font:700 9px var(--mono); cursor:pointer; text-transform:uppercase; letter-spacing:.08em; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:7px; }
+.file-btn-import { background:var(--bcf); color:#fff; border:none; }
+.file-btn-import:hover { background:var(--bcf2); box-shadow:0 0 16px rgba(168,85,247,.3); }
+.file-btn-export { background:transparent; color:var(--bcf); border:1px solid var(--bcf); }
+.file-btn-export:hover { background:var(--bcf-dim); }
+/* VISOR 3D */
+#tabVisor3D { flex:1; display:none; flex-direction:column; overflow:hidden; position:relative; background:#050b14; }
+#visor3DContainer { flex:1; position:relative; overflow:hidden; }
+#visor3DCanvas { position:absolute; inset:0; width:100% !important; height:100% !important; }
+.visor3D-toolbar { padding:8px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; flex-shrink:0; background:var(--blue); }
+.visor3D-toolbar-title { font:700 9px var(--mono); color:var(--accent); text-transform:uppercase; letter-spacing:.15em; flex:1; }
+.visor3D-status { font:400 9px var(--mono); color:var(--muted); }
+.visor3D-overlay { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; z-index:10; pointer-events:none; }
+.visor3D-overlay.hidden { display:none; }
+.visor3D-overlay-icon { font-size:36px; opacity:.15; }
+.visor3D-overlay-text { font:400 10px var(--mono); color:var(--muted); letter-spacing:.1em; text-transform:uppercase; opacity:.5; }
+/* Topic card — botón Ver 3D */
+.btn-ver3d { display:inline-flex; align-items:center; gap:5px; padding:4px 11px; background:rgba(0,212,255,.08); color:var(--accent); border:1px solid rgba(0,212,255,.25); border-radius:4px; font:600 8px var(--mono); cursor:pointer; transition:all .15s; text-transform:uppercase; letter-spacing:.08em; margin-top:8px; }
+.btn-ver3d:hover { background:rgba(0,212,255,.15); border-color:var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="hicon">
+    <svg width="34" height="40" viewBox="0 0 90 105" fill="none">
+      <g class="bit-wrap">
+        <polygon class="bit-face" points="45,4 75,28 15,28" fill="rgba(0,212,255,0.22)" stroke="#00d4ff" stroke-width="1.4" stroke-linejoin="round"/>
+        <polygon points="75,28 45,4 82,52" fill="rgba(0,212,255,0.10)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+        <polygon points="15,28 45,4 8,52"  fill="rgba(0,212,255,0.18)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+        <polygon points="15,28 75,28 82,52 45,68 8,52" fill="rgba(0,212,255,0.07)" stroke="#00d4ff" stroke-width="1.0" stroke-linejoin="round"/>
+        <polygon points="75,28 82,52 62,78" fill="rgba(0,212,255,0.15)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+        <polygon points="15,28 8,52 28,78"  fill="rgba(0,212,255,0.20)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+        <polygon points="8,52 28,78 45,100 45,68" fill="rgba(0,212,255,0.07)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+        <polygon points="82,52 62,78 45,100 45,68" fill="rgba(0,212,255,0.12)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+        <polygon points="28,78 62,78 45,100" fill="rgba(0,212,255,0.14)" stroke="#00d4ff" stroke-width="1.2" stroke-linejoin="round"/>
+        <line class="bit-edge1" x1="15" y1="28" x2="45" y2="4" stroke="#00d4ff" stroke-width="2.4" stroke-linecap="round"/>
+        <line class="bit-edge2" x1="45" y1="4" x2="75" y2="28" stroke="#00d4ff" stroke-width="1.6" stroke-linecap="round"/>
+        <circle class="bit-top"     cx="45" cy="4"   r="3"   fill="#00d4ff"/>
+        <circle class="bit-vtx-mid" cx="15" cy="28"  r="1.8" fill="#00d4ff" opacity="0.5"/>
+        <circle class="bit-vtx-mid" cx="75" cy="28"  r="1.8" fill="#00d4ff" opacity="0.5"/>
+        <circle class="bit-vtx-mid" cx="8"  cy="52"  r="1.4" fill="#00d4ff" opacity="0.35"/>
+        <circle class="bit-vtx-mid" cx="82" cy="52"  r="1.4" fill="#00d4ff" opacity="0.35"/>
+        <circle class="bit-vtx-bot" cx="45" cy="100" r="2.2" fill="#00d4ff" opacity="0.65"/>
+      </g>
+    </svg>
+  </div>
+  <div>
+    <div class="htitle">VoxelBIM</div>
+    <div class="hsub">BCF Topics &middot; <span style="color:var(--bcf);opacity:.8;">BIM Collaboration Format 3.0</span></div>
+  </div>
+
+  <div class="header-toolbar">
+    <button class="hbar-btn" id="btnArbol" onclick="window.toggleNav()"><span class="hb-icon">&#9646;</span> Topics</button>
+  </div>
+  <div class="header-toolbar-sep"></div>
+
+  <div class="header-toolbar">
+    <button class="hbar-btn active" id="btnTabTopics"    onclick="switchTab('Topics')">   <span class="hb-icon">&#9888;</span> Topics</button>
+    <button class="hbar-btn"        id="btnTabNewTopic"  onclick="switchTab('NewTopic')"> <span class="hb-icon">&#43;</span> Nuevo</button>
+    <button class="hbar-btn"        id="btnTabDashboard" onclick="switchTab('Dashboard')"><span class="hb-icon">⬚</span> Dashboard</button>
+    <button class="hbar-btn"        id="btnTabFiles"     onclick="switchTab('Files')">    <span class="hb-icon">&#128196;</span> BCF File</button>
+    <button class="hbar-btn"        id="btnTabVisor3D"   onclick="switchTab('Visor3D')">  <span class="hb-icon">&#11042;</span> Visor 3D</button>
+  </div>
+  <div class="header-toolbar-sep"></div>
+
+  <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+    <div class="header-toolbar">
+      <button class="hbar-btn" onclick="toggleLight()"><span class="hb-icon">&#9681;</span></button>
+    </div>
+    <div class="header-toolbar-sep"></div>
+    <div style="display:inline-flex;align-items:center;gap:6px;padding-right:10px;border-right:1px solid var(--border);">
+      <span class="conn-dot" id="connDot"></span>
+      <span id="connStatus" style="font:400 9px var(--mono);color:var(--muted);white-space:nowrap;">Desconectado</span>
+    </div>
+    <button class="hback" onclick="history.length>1?history.back():window.location.href='/'">&#8592; Volver</button>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- SIDEBAR: conexión BCF API -->
+  <div class="sidebar">
+    <div class="sb-header">
+      <div class="sb-title">Servidor BCF</div>
+      <input class="sb-input" id="bcfUrl"   type="text"     placeholder="https://server.com/bcf/3.0" />
+      <input class="sb-input" id="bcfToken" type="password" placeholder="Bearer Token" style="margin-top:4px;" />
+      <button class="sb-btn sb-btn-primary" onclick="connectBCF()">&#9654; Conectar</button>
+      <div class="conn-row">
+        <span class="conn-label">Estado:</span>
+        <span class="sb-badge sb-badge-off" id="bcfStatus">Offline</span>
+      </div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-section-title">Proyecto</div>
+      <select class="sb-input" id="bcfProject" onchange="loadTopics()">
+        <option value="">— Seleccionar proyecto —</option>
+      </select>
+    </div>
+
+    <div class="sb-section" style="flex:1;">
+      <div class="sb-section-title">Filtrar Topics</div>
+      <input class="sb-input" id="filterSearch" type="text" placeholder="Buscar título..." oninput="renderTopics()" />
+      <div class="chip-row" id="statusChips">
+        <button class="chip active" data-val="all"         onclick="setChip(this,'status')">Todos</button>
+        <button class="chip"        data-val="open"        onclick="setChip(this,'status')">Open</button>
+        <button class="chip"        data-val="closed"      onclick="setChip(this,'status')">Closed</button>
+        <button class="chip"        data-val="in_progress" onclick="setChip(this,'status')">En curso</button>
+        <button class="chip"        data-val="reopened"    onclick="setChip(this,'status')">Reabierto</button>
+      </div>
+      <div style="margin-top:8px;font:700 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.2em;margin-bottom:5px;">Prioridad</div>
+      <div class="chip-row" id="prioChips">
+        <button class="chip active" data-val="all"    onclick="setChip(this,'prio')">Todas</button>
+        <button class="chip"        data-val="high"   onclick="setChip(this,'prio')">Alta</button>
+        <button class="chip"        data-val="medium" onclick="setChip(this,'prio')">Media</button>
+        <button class="chip"        data-val="low"    onclick="setChip(this,'prio')">Baja</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL ÁRBOL / índice de topics -->
+  <div id="navPanel">
+    <div class="nav-header">
+      <div class="nav-title">&#9646; Topics</div>
+      <button class="nav-close" onclick="window.toggleNav()">&#10005;</button>
+    </div>
+    <div class="nav-body" id="navBody">
+      <div class="nav-empty">Conecta para ver topics</div>
+    </div>
+  </div>
+
+  <!-- CUERPO PRINCIPAL -->
+  <div class="bcf-wrap">
+    <div class="bcf-toolbar">
+      <span class="bcf-toolbar-title">&#9888; BCF Topics</span>
+      <span id="bcfProjectLabel" style="font:400 9px var(--mono);color:var(--muted);">Sin proyecto</span>
+      <button class="hbar-btn" style="font-size:8px;" onclick="loadTopics()"><span class="hb-icon">&#8635;</span> Refrescar</button>
+    </div>
+
+    <!-- TAB: TOPICS -->
+    <div id="tabTopics" style="flex:1;display:flex;flex-direction:row;overflow:hidden;">
+      <!-- Lista -->
+      <div class="topics-list" id="topicsList">
+        <div class="topics-empty">Conecta a un servidor BCF<br>para ver los topics</div>
+      </div>
+      <!-- Detalle -->
+      <div class="topic-detail" id="topicDetail">
+        <div class="td-empty">
+          <div class="td-empty-icon">&#9888;</div>
+          <div class="td-empty-label">Selecciona un topic</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: NUEVO TOPIC -->
+    <div id="tabNewTopic" style="flex:1;overflow-y:auto;padding:24px;display:none;flex-direction:column;gap:14px;max-width:640px;">
+      <div style="font:700 10px var(--mono);color:var(--bcf);text-transform:uppercase;letter-spacing:.15em;margin-bottom:4px;">Crear nuevo Topic BCF</div>
+      <div class="nt-group">
+        <label class="nt-label">Título *</label>
+        <input class="nt-input" id="ntTitle" type="text" placeholder="Describe el issue brevemente..." />
+      </div>
+      <div class="nt-group">
+        <label class="nt-label">Descripción</label>
+        <textarea class="nt-input" id="ntDesc" placeholder="Detalle del problema, ubicación, elementos afectados..."></textarea>
+      </div>
+      <div class="nt-row2">
+        <div class="nt-group">
+          <label class="nt-label">Tipo</label>
+          <select class="nt-input" id="ntType">
+            <option value="Clash">Clash</option>
+            <option value="Issue">Issue</option>
+            <option value="Fault">Fault</option>
+            <option value="Warning">Warning</option>
+            <option value="Request">Request</option>
+            <option value="Information">Information</option>
+          </select>
+        </div>
+        <div class="nt-group">
+          <label class="nt-label">Prioridad</label>
+          <select class="nt-input" id="ntPriority">
+            <option value="High">High</option>
+            <option value="Medium" selected>Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+      </div>
+      <div class="nt-row2">
+        <div class="nt-group">
+          <label class="nt-label">Estado</label>
+          <select class="nt-input" id="ntStatus">
+            <option value="Open">Open</option>
+            <option value="In Progress">In Progress</option>
+          </select>
+        </div>
+        <div class="nt-group">
+          <label class="nt-label">Asignado a</label>
+          <input class="nt-input" id="ntAssigned" type="email" placeholder="usuario@ejemplo.com" />
+        </div>
+      </div>
+      <div class="nt-group">
+        <label class="nt-label">Etiquetas (separadas por coma)</label>
+        <input class="nt-input" id="ntLabels" type="text" placeholder="Arquitectura, Clash, MEP..." />
+      </div>
+      <button class="nt-submit" onclick="createTopic()">&#9654; Crear Topic</button>
+      <div id="ntMsg" style="font:400 9px var(--mono);color:var(--muted);min-height:16px;"></div>
+    </div>
+
+    <!-- TAB: DASHBOARD -->
+    <div id="tabDashboard" style="flex:1;overflow-y:auto;padding:24px;display:none;flex-direction:column;gap:16px;">
+      <div class="stat-grid">
+        <div class="stat-card s-open">
+          <div class="stat-label">Open</div>
+          <div class="stat-value" id="stOpen">—</div>
+          <div class="stat-sub">Topics abiertos</div>
+        </div>
+        <div class="stat-card s-closed">
+          <div class="stat-label">Closed</div>
+          <div class="stat-value" id="stClosed">—</div>
+          <div class="stat-sub">Topics cerrados</div>
+        </div>
+        <div class="stat-card s-high">
+          <div class="stat-label">Alta prioridad</div>
+          <div class="stat-value" id="stHigh">—</div>
+          <div class="stat-sub">Requieren atención</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total</div>
+          <div class="stat-value" id="stTotal">—</div>
+          <div class="stat-sub">Topics en proyecto</div>
+        </div>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar-title">Estado por tipo</div>
+        <div id="barsByType"></div>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar-title">Estado por etiqueta</div>
+        <div id="barsByLabel"></div>
+      </div>
+    </div>
+
+    <!-- TAB: BCF FILE + IFC -->
+    <div id="tabFiles" style="flex:1;overflow-y:auto;padding:24px;display:none;flex-direction:column;gap:16px;">
+
+      <!-- Inputs ocultos -->
+      <input type="file" id="bcfFileInput" accept=".bcf,.bcfzip,.zip" style="display:none;" onchange="importBCF(event)">
+      <input type="file" id="ifcFileInput" accept=".ifc"              style="display:none;" onchange="importIFC(event)">
+
+      <!-- Dos zonas de carga lado a lado -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+
+        <!-- ZONA BCF -->
+        <div id="zoneBCF" class="file-zone"
+             onclick="document.getElementById('bcfFileInput').click()"
+             ondragover="dzOver(event,'zoneBCF')" ondragleave="dzLeave('zoneBCF')" ondrop="dzDrop(event,'bcf')">
+          <div class="file-zone-icon">&#128196;</div>
+          <div class="file-zone-title">Archivo BCF</div>
+          <div class="file-zone-sub">Haz clic o arrastra un .bcfzip</div>
+          <div style="font:400 9px var(--mono);color:var(--muted);opacity:.5;">BCF-XML 2.1 / 3.0</div>
+          <div id="bcfLoadedBadge" style="display:none;margin-top:6px;padding:3px 10px;border-radius:12px;background:rgba(0,200,83,.12);color:var(--green);border:1px solid rgba(0,200,83,.25);font:700 8px var(--mono);text-transform:uppercase;letter-spacing:.1em;">&#10003; Cargado</div>
+        </div>
+
+        <!-- ZONA IFC -->
+        <div id="zoneIFC" class="file-zone"
+             onclick="document.getElementById('ifcFileInput').click()"
+             ondragover="dzOver(event,'zoneIFC')" ondragleave="dzLeave('zoneIFC')" ondrop="dzDrop(event,'ifc')">
+          <div class="file-zone-icon">&#11042;</div>
+          <div class="file-zone-title">Modelo IFC</div>
+          <div class="file-zone-sub">Haz clic o arrastra un .ifc</div>
+          <div style="font:400 9px var(--mono);color:var(--muted);opacity:.5;">IFC 2x3 / IFC4</div>
+          <div id="ifcLoadedBadge" style="display:none;margin-top:6px;padding:3px 10px;border-radius:12px;background:rgba(0,212,255,.12);color:var(--accent);border:1px solid rgba(0,212,255,.25);font:700 8px var(--mono);text-transform:uppercase;letter-spacing:.1em;">&#10003; Cargado</div>
+        </div>
+      </div>
+
+      <!-- Acciones -->
+      <div class="file-actions">
+        <button class="file-btn file-btn-import" onclick="document.getElementById('bcfFileInput').click()">&#8679; Importar .bcfzip</button>
+        <button class="file-btn file-btn-import" style="background:var(--accent);color:#000;" onclick="document.getElementById('ifcFileInput').click()">&#8679; Cargar .ifc</button>
+        <button class="file-btn file-btn-export" onclick="exportBCF()">&#8681; Exportar .bcfzip</button>
+      </div>
+
+      <!-- Info archivos cargados -->
+      <div id="filesInfo" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:7px;padding:12px 16px;display:none;flex-direction:column;gap:6px;">
+        <div style="font:700 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.15em;margin-bottom:4px;">Archivos cargados</div>
+        <div id="fiBCF" style="font:400 10px var(--mono);color:var(--text);">—</div>
+        <div id="fiIFC" style="font:400 10px var(--mono);color:var(--text);">—</div>
+      </div>
+
+      <!-- Log -->
+      <div id="importLog" style="background:var(--navy);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font:400 9px var(--mono);color:var(--muted);min-height:80px;max-height:260px;overflow-y:auto;line-height:1.8;white-space:pre-wrap;">Arrastra o selecciona archivos para comenzar...</div>
+    </div>
+
+    </div>
+
+    <!-- TAB: VISOR 3D — iframe sobre voxelbim.html -->
+    <div id="tabVisor3D">
+      <div class="visor3D-toolbar">
+        <span class="visor3D-toolbar-title">&#11042; Visor 3D — IFC</span>
+        <span class="visor3D-status" id="visor3DStatus">Sin modelo cargado</span>
+        <button class="hbar-btn" style="font-size:8px;" id="btnVisorFit"   onclick="visorCmd('fit')"          title="Zoom Extents">&#10022; Fit</button>
+        <button class="hbar-btn" style="font-size:8px;" id="btnVisorReset" onclick="visorCmd('resetCam')"    title="Restablecer cámara">&#8635; Reset</button>
+        <button class="hbar-btn" style="font-size:8px;color:var(--accent);border-color:rgba(0,212,255,.3);" onclick="document.getElementById('ifcFileInput').click()">&#8679; Cargar IFC</button>
+      </div>
+      <div id="visor3DContainer">
+        <iframe id="visor3DIframe"
+          src="/visor/voxelbim.html"
+          style="width:100%;height:100%;border:none;display:block;"
+          allow="cross-origin-isolated"
+          title="VoxelBIM Visor IFC">
+        </iframe>
+        <div class="visor3D-overlay" id="visor3DOverlay">
+          <div class="visor3D-overlay-icon">&#11042;</div>
+          <div class="visor3D-overlay-text">Carga un archivo IFC para visualizar</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- .bcf-wrap -->
+</div><!-- .main -->
+
+<footer style="text-align:center;padding:6px 24px;font:400 9px var(--mono);color:var(--muted);border-top:1px solid var(--border);letter-spacing:.08em;flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:8px;">
+  &copy; 2026 VoxelBIM &mdash; BCF Integration &mdash; MIT License
+  &nbsp;&middot;&nbsp; <span style="color:var(--bcf);opacity:.5;">buildingSMART BCF 3.0</span>
+  &nbsp;&middot;&nbsp; <span style="opacity:.4;">Carlos Estay Ruggieri</span>
+</footer>
+
+<script>
+/* ══ BIT ══ */
+(function(){
+  const anims=['bit-spin 4s cubic-bezier(.45,0,.55,1) infinite','bit-float 3s ease-in-out infinite','bit-warp 2s ease-in-out infinite','bit-tremble .28s ease-in-out infinite','bit-rainbow 3s linear infinite'];
+  document.querySelectorAll('.bit-wrap').forEach(el=>{
+    const p=anims[Math.floor(Math.random()*anims.length)];
+    el._bitAnim=p; el.style.animation=p; el.style.transformOrigin='45px 52px';
+    el.addEventListener('click',function(){
+      const no=this.classList.contains('bit-no-state');
+      this.classList.toggle('bit-no-state',!no);
+      this.style.animation=no?this._bitAnim:'bit-no 1.4s ease-in-out infinite';
+    });
+  });
+})();
+/* ══ LIGHT MODE ══ */
+(function(){ if(localStorage.getItem('voxelbim_theme')==='light') document.body.classList.add('light-mode'); })();
+function toggleLight(){ document.body.classList.toggle('light-mode'); localStorage.setItem('voxelbim_theme',document.body.classList.contains('light-mode')?'light':'dark'); }
+/* ══ NAV TOGGLE ══ */
+window.toggleNav=function(){ const p=document.getElementById('navPanel'),b=document.getElementById('btnArbol'),o=p.classList.contains('open'); p.classList.toggle('open'); if(b)b.classList.toggle('active',!o); };
+/* ══ TAB SWITCH ══ */
+function switchTab(tab){
+  ['Topics','NewTopic','Dashboard','Files','Visor3D'].forEach(t=>{ const el=document.getElementById('tab'+t); if(el)el.style.display='none'; const b=document.getElementById('btnTab'+t); if(b)b.classList.remove('active'); });
+  const el=document.getElementById('tab'+tab); if(el)el.style.display='flex';
+  const b=document.getElementById('btnTab'+tab); if(b)b.classList.add('active');
+}
+/* ══ CHIPS ══ */
+let activeStatus='all', activePrio='all';
+function setChip(chip,group){
+  const row=document.getElementById(group==='status'?'statusChips':'prioChips');
+  row.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  chip.classList.add('active');
+  if(group==='status') activeStatus=chip.dataset.val;
+  else activePrio=chip.dataset.val;
+  renderTopics();
+}
+/* ══ ESTADO CONEXIÓN ══ */
+let bcfConnected=false, bcfBase='', bcfHeaders={};
+function setConn(ok,label){
+  bcfConnected=ok;
+  document.getElementById('connDot').classList.toggle('active',ok);
+  document.getElementById('connStatus').textContent=label;
+  const badge=document.getElementById('bcfStatus');
+  badge.className='sb-badge '+(ok?'sb-badge-ok':'sb-badge-off');
+  badge.textContent=ok?'Online':'Offline';
+}
+</script>
+<script>
+/* ══ DATOS MOCK (reemplazar con fetch real) ══ */
+const MOCK_TOPICS = [
+  { guid:'A1B2C3D4-0001-0000-0000-000000000001', title:'Interferencia viga/ducto nivel 3', topic_type:'Clash',   topic_status:'open',        priority:'High',   assigned_to:'juan.perez@bim.cl',   creation_date:'2026-03-20T10:12:00Z', description:'El ducto de HVAC eje C-D nivel 3 interfiere con la viga estructural V3-12.', labels:['MEP','Estructura'] },
+  { guid:'A1B2C3D4-0002-0000-0000-000000000002', title:'Cota de nivel incorrecta NPT',    topic_type:'Issue',   topic_status:'in_progress', priority:'High',   assigned_to:'ana.rojas@bim.cl',    creation_date:'2026-03-21T09:00:00Z', description:'NPT piso 2 difiere 5cm entre especialidades ARQ y EST.', labels:['Arquitectura'] },
+  { guid:'A1B2C3D4-0003-0000-0000-000000000003', title:'Falta hoja de datos ventana V-05', topic_type:'Request', topic_status:'open',        priority:'Medium', assigned_to:'pedro.mora@bim.cl',   creation_date:'2026-03-22T14:30:00Z', description:'La ventana tipo V-05 no tiene hoja de datos asociada al modelo.', labels:['Arquitectura','Documentación'] },
+  { guid:'A1B2C3D4-0004-0000-0000-000000000004', title:'Ducto sin soporte eje A/2-3',     topic_type:'Fault',   topic_status:'open',        priority:'Medium', assigned_to:'juan.perez@bim.cl',   creation_date:'2026-03-23T08:15:00Z', description:'Tramo de ducto rectangular 600x400 sin soporte en 3.2 m.', labels:['MEP'] },
+  { guid:'A1B2C3D4-0005-0000-0000-000000000005', title:'Pilares sin armadura modelada',   topic_type:'Warning', topic_status:'in_progress', priority:'High',   assigned_to:'carlos.est@bim.cl',   creation_date:'2026-03-24T11:00:00Z', description:'Pilares P-22 al P-30 no tienen armadura definida en modelo EST.', labels:['Estructura'] },
+  { guid:'A1B2C3D4-0006-0000-0000-000000000006', title:'Revisión completada piso 1',      topic_type:'Information', topic_status:'closed',  priority:'Low',    assigned_to:'bim.manager@bim.cl', creation_date:'2026-03-15T16:00:00Z', description:'Piso 1 revisado y aprobado por coordinador BIM.', labels:['Coordinación'] },
+  { guid:'A1B2C3D4-0007-0000-0000-000000000007', title:'Tuberías PVC solapadas',          topic_type:'Clash',   topic_status:'reopened',    priority:'High',   assigned_to:'ana.rojas@bim.cl',    creation_date:'2026-03-25T09:30:00Z', description:'Dos tuberías PVC 110mm se solapan en shaft sanitario eje B.', labels:['MEP','Coordinación'] },
+];
+const MOCK_COMMENTS = {
+  'A1B2C3D4-0001-0000-0000-000000000001': [
+    { guid:'c001', author:'juan.perez@bim.cl', date:'2026-03-20T10:30:00Z', comment:'Detectado con Navisworks. Requiere ajuste de trayectoria.' },
+    { guid:'c002', author:'ana.rojas@bim.cl',  date:'2026-03-20T14:00:00Z', comment:'Confirmado. Coordinando con especialidad MEP.' },
+  ],
+  'A1B2C3D4-0007-0000-0000-000000000007': [
+    { guid:'c003', author:'bim.manager@bim.cl', date:'2026-03-25T10:00:00Z', comment:'Reabierto porque la solución anterior no fue implementada.' },
+  ],
+};
+let allTopics = [], selectedGuid = null;
+</script>
+<script>
+/* ══ CONEXIÓN BCF API REST ══ */
+async function connectBCF(){
+  const url=document.getElementById('bcfUrl').value.trim();
+  const token=document.getElementById('bcfToken').value.trim();
+  if(!url){ alert('Ingresa la URL del servidor BCF'); return; }
+  bcfBase=url.replace(/\/$/,'');
+  bcfHeaders={'Authorization':'Bearer '+token,'Content-Type':'application/json'};
+  setConn(false,'Conectando…');
+  try {
+    // GET /bcf/3.0/projects — endpoint estándar BCF API
+    const r=await fetch(bcfBase+'/projects',{headers:bcfHeaders});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const data=await r.json();
+    setConn(true,'BCF Online');
+    const sel=document.getElementById('bcfProject');
+    sel.innerHTML='<option value="">— Seleccionar proyecto —</option>';
+    (data.projects||data||[]).forEach(p=>{
+      const o=document.createElement('option'); o.value=p.project_id||p.guid; o.textContent=p.name; sel.appendChild(o);
+    });
+  } catch(e) {
+    // Si el servidor no está disponible, cargamos datos mock para demo
+    setConn(true,'BCF Demo (mock)');
+    const sel=document.getElementById('bcfProject');
+    sel.innerHTML='<option value="demo">Proyecto Demo — VoxelBIM</option>';
+    loadTopics();
+  }
+}
+async function loadTopics(){
+  const proj=document.getElementById('bcfProject').value;
+  if(!proj) return;
+  document.getElementById('bcfProjectLabel').textContent='📁 '+document.getElementById('bcfProject').selectedOptions[0]?.textContent;
+  if(proj==='demo'||!bcfConnected){ allTopics=[...MOCK_TOPICS]; renderTopics(); updateDashboard(); updateNavTree(); return; }
+  try {
+    const r=await fetch(`${bcfBase}/projects/${proj}/topics`,{headers:bcfHeaders});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    allTopics=await r.json();
+    renderTopics(); updateDashboard(); updateNavTree();
+  } catch(e){ allTopics=[...MOCK_TOPICS]; renderTopics(); updateDashboard(); updateNavTree(); }
+}
+</script>
+<script>
+/* ══ RENDER LISTA DE TOPICS ══ */
+function filtered(){
+  const q=document.getElementById('filterSearch').value.toLowerCase();
+  return allTopics.filter(t=>{
+    const matchQ=!q||t.title.toLowerCase().includes(q)||(t.description||'').toLowerCase().includes(q);
+    const matchS=activeStatus==='all'||t.topic_status===activeStatus;
+    const matchP=activePrio==='all'||t.priority?.toLowerCase()===activePrio;
+    return matchQ&&matchS&&matchP;
+  });
+}
+function statusClass(s){ return s==='open'?'open':s==='closed'?'closed':s==='in_progress'?'in_progress':s==='reopened'?'reopened':'open'; }
+function prioClass(p){   return (p||'').toLowerCase(); }
+function shortGuid(g){ return g?g.split('-')[0].toUpperCase():'—'; }
+function fmtDate(d){ try{ return new Date(d).toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'}); }catch{ return d||'—'; } }
+
+function renderTopics(){
+  const list=document.getElementById('topicsList');
+  const data=filtered();
+  if(!data.length){ list.innerHTML='<div class="topics-empty">Sin topics que coincidan<br>con los filtros seleccionados</div>'; return; }
+  list.innerHTML=data.map(t=>`
+    <div class="topic-card${t.guid===selectedGuid?' active':''}" onclick="selectTopic('${t.guid}')">
+      <div class="tc-top">
+        <span class="tc-guid">${shortGuid(t.guid)}</span>
+        <span class="tc-status ${statusClass(t.topic_status)}">${t.topic_status||'open'}</span>
+        <span class="tc-priority ${prioClass(t.priority)}">${t.priority||'—'}</span>
+      </div>
+      <div class="tc-title">${t.title}</div>
+      <div class="tc-meta">
+        <span class="tc-meta-item">&#9632; ${t.topic_type||'—'}</span>
+        <span class="tc-meta-item">&#9786; ${(t.assigned_to||'—').split('@')[0]}</span>
+        <span class="tc-meta-item">&#128197; ${fmtDate(t.creation_date)}</span>
+      </div>
+    </div>`).join('');
+}
+
+function selectTopic(guid){
+  selectedGuid=guid;
+  renderTopics();
+  const t=allTopics.find(x=>x.guid===guid);
+  if(!t) return;
+  const comments=(MOCK_COMMENTS[guid]||[]);
+  const labels=(t.labels||[]).map(l=>`<span style="padding:2px 7px;border-radius:3px;background:var(--bcf-dim);color:var(--bcf);font:700 7px var(--mono);text-transform:uppercase;letter-spacing:.08em;">${l}</span>`).join('');
+  document.getElementById('topicDetail').innerHTML=`
+    <div class="td-header">
+      <div class="td-h-guid">GUID: ${t.guid}</div>
+      <div class="td-h-title">${t.title}</div>
+      <div class="td-h-badges">
+        <span class="tc-status ${statusClass(t.topic_status)}">${t.topic_status}</span>
+        <span class="tc-priority ${prioClass(t.priority)}">${t.priority||'—'}</span>
+        ${labels}
+      </div>
+      <button class="btn-ver3d" onclick="verTopicEn3D('${t.guid}')">&#11042; Ver en 3D</button>
+    </div>
+    <div class="td-section">
+      <div class="td-sec-title">Detalles</div>
+      ${[['Tipo',t.topic_type],['Estado',t.topic_status],['Prioridad',t.priority],['Asignado a',t.assigned_to],['Autor',t.creation_author||'—'],['Creado',fmtDate(t.creation_date)],['Modificado',fmtDate(t.modified_date)]].map(([k,v])=>`<div class="td-row"><span class="td-key">${k}</span><span class="td-val">${v||'—'}</span></div>`).join('')}
+    </div>
+    <div class="td-section">
+      <div class="td-sec-title">Descripción</div>
+      <div style="font:400 10px var(--mono);color:var(--text);line-height:1.7;">${t.description||'Sin descripción.'}</div>
+    </div>
+    <div class="td-section">
+      <div class="td-sec-title">Comentarios (${comments.length})</div>
+      <div class="comment-list">${comments.length?comments.map(c=>`<div class="comment-item"><div class="comment-meta"><span class="comment-author">${c.author}</span><span class="comment-date">${fmtDate(c.date)}</span></div><div class="comment-text">${c.comment}</div></div>`).join(''):'<div style="font:400 9px var(--mono);color:var(--muted);">Sin comentarios.</div>'}</div>
+    </div>
+    <div class="comment-input-row">
+      <textarea class="comment-input" id="commentInput" placeholder="Añade un comentario..."></textarea>
+      <button class="comment-send" onclick="addComment('${t.guid}')">Enviar</button>
+    </div>`;
+}
+</script>
+<script>
+/* ══ ACCIONES TOPICS ══ */
+async function addComment(guid){
+  const input=document.getElementById('commentInput');
+  const text=input.value.trim();
+  if(!text) return;
+  const comment={guid:'c-'+Date.now(),author:'usuario@voxelbim.cl',date:new Date().toISOString(),comment:text};
+  if(!MOCK_COMMENTS[guid]) MOCK_COMMENTS[guid]=[];
+  MOCK_COMMENTS[guid].push(comment);
+  // POST real: await fetch(`${bcfBase}/projects/{proj}/topics/${guid}/comments`,{method:'POST',headers:bcfHeaders,body:JSON.stringify({comment:text})});
+  selectTopic(guid);
+}
+
+async function createTopic(){
+  const title=document.getElementById('ntTitle').value.trim();
+  if(!title){ document.getElementById('ntMsg').textContent='El título es obligatorio.'; return; }
+  const topic={
+    guid:'NT-'+Date.now()+'-0000-0000-000000000099',
+    title, description:document.getElementById('ntDesc').value,
+    topic_type:document.getElementById('ntType').value,
+    priority:document.getElementById('ntPriority').value,
+    topic_status:document.getElementById('ntStatus').value.replace(' ','_').toLowerCase(),
+    assigned_to:document.getElementById('ntAssigned').value,
+    labels:document.getElementById('ntLabels').value.split(',').map(l=>l.trim()).filter(Boolean),
+    creation_date:new Date().toISOString(), creation_author:'usuario@voxelbim.cl'
+  };
+  // POST real: await fetch(`${bcfBase}/projects/{proj}/topics`,{method:'POST',headers:bcfHeaders,body:JSON.stringify(topic)});
+  allTopics.unshift(topic);
+  document.getElementById('ntMsg').style.color='var(--green)';
+  document.getElementById('ntMsg').textContent='✓ Topic creado correctamente.';
+  renderTopics(); updateDashboard(); updateNavTree();
+  setTimeout(()=>{ switchTab('Topics'); selectedGuid=topic.guid; renderTopics(); selectTopic(topic.guid); },800);
+}
+
+/* ══ DASHBOARD ══ */
+function updateDashboard(){
+  const open=allTopics.filter(t=>t.topic_status==='open').length;
+  const closed=allTopics.filter(t=>t.topic_status==='closed').length;
+  const high=allTopics.filter(t=>(t.priority||'').toLowerCase()==='high').length;
+  document.getElementById('stOpen').textContent=open;
+  document.getElementById('stClosed').textContent=closed;
+  document.getElementById('stHigh').textContent=high;
+  document.getElementById('stTotal').textContent=allTopics.length;
+  // Barras por tipo
+  const types=[...new Set(allTopics.map(t=>t.topic_type||'Other'))];
+  document.getElementById('barsByType').innerHTML=types.map(tp=>{
+    const n=allTopics.filter(t=>t.topic_type===tp).length;
+    const pct=Math.round(n/allTopics.length*100);
+    return `<div class="bar-row"><span class="bar-label">${tp}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:var(--bcf);"></div></div><span class="bar-count">${n}</span></div>`;
+  }).join('');
+  // Barras por etiqueta
+  const lblMap={}; allTopics.forEach(t=>(t.labels||[]).forEach(l=>{ lblMap[l]=(lblMap[l]||0)+1; }));
+  document.getElementById('barsByLabel').innerHTML=Object.entries(lblMap).sort((a,b)=>b[1]-a[1]).map(([l,n])=>{
+    const pct=Math.round(n/allTopics.length*100);
+    return `<div class="bar-row"><span class="bar-label">${l}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:var(--accent2);"></div></div><span class="bar-count">${n}</span></div>`;
+  }).join('');
+}
+
+/* ══ NAV TREE ══ */
+function updateNavTree(){
+  const body=document.getElementById('navBody');
+  const dotColor=s=>s==='open'?'var(--warn)':s==='closed'?'var(--green)':s==='in_progress'?'var(--accent)':'var(--red)';
+  body.innerHTML=allTopics.map(t=>`
+    <div class="nav-item${t.guid===selectedGuid?' active':''}" onclick="selectTopic('${t.guid}');switchTab('Topics')">
+      <span class="nav-item-dot" style="background:${dotColor(t.topic_status)};"></span>
+      <span class="nav-item-label">${t.title}</span>
+      <span class="nav-item-id">${shortGuid(t.guid)}</span>
+    </div>`).join('');
+}
+
+/* ══ DRAG & DROP ══ */
+function dzOver(e,id){ e.preventDefault(); document.getElementById(id).classList.add('over'); }
+function dzLeave(id){ document.getElementById(id).classList.remove('over'); }
+function dzDrop(e,type){ e.preventDefault(); dzLeave(type==='bcf'?'zoneBCF':'zoneIFC'); const f=e.dataTransfer.files[0]; if(!f) return; type==='bcf'?processBCFFile(f):processIFCFile(f); }
+
+/* ══ LOG ══ */
+let logLines=[];
+function log(msg,color=''){
+  const ts=new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  logLines.push(`[${ts}] ${msg}`);
+  const el=document.getElementById('importLog');
+  el.style.color=color||'var(--muted)';
+  el.textContent=logLines.slice(-30).join('\n');
+  el.scrollTop=el.scrollHeight;
+}
+function logOk(m){ log('✓ '+m,'var(--green)'); }
+function logErr(m){ log('✗ '+m,'var(--red)'); }
+function logInfo(m){ log('→ '+m); }
+
+/* ══ IMPORT BCF (.bcfzip) — real JSZip + XML parser ══ */
+function importBCF(evt){ const f=evt.target.files[0]; if(f) processBCFFile(f); }
+async function processBCFFile(file){
+  logLines=[];
+  logInfo('Leyendo '+file.name+' ('+Math.round(file.size/1024)+' KB)…');
+  try {
+    const zip = await JSZip.loadAsync(file);
+    const topics=[];
+    const topicGuids=[];
+
+    // Detectar carpetas de topics (cada carpeta guid = un topic)
+    zip.forEach((path,entry)=>{ const m=path.match(/^([^\/]+)\/markup\.bcf$/i); if(m) topicGuids.push(m[1]); });
+    logInfo('Topics encontrados: '+topicGuids.length);
+
+    for(const guid of topicGuids){
+      const xmlStr=await zip.file(guid+'/markup.bcf').async('string');
+      const doc=new DOMParser().parseFromString(xmlStr,'application/xml');
+      const get=(tag)=>doc.querySelector(tag)?.textContent?.trim()||'';
+      const labels=[...doc.querySelectorAll('Labels Label')].map(l=>l.textContent.trim());
+      const comments=[...doc.querySelectorAll('Comment')].map(c=>({
+        guid:c.querySelector('Guid')?.textContent||'',
+        author:c.querySelector('Author')?.textContent||'',
+        date:c.querySelector('Date')?.textContent||'',
+        comment:c.querySelector('Comment')?.textContent||c.querySelector('CommentText')?.textContent||''
+      }));
+      if(comments.length) MOCK_COMMENTS[guid]=comments;
+      topics.push({
+        guid,
+        title:       get('Title'),
+        description: get('Description'),
+        topic_type:  get('TopicType')||'Issue',
+        topic_status:get('TopicStatus')||'Open',
+        priority:    get('Priority')||'Medium',
+        assigned_to: get('AssignedTo'),
+        creation_author: get('CreationAuthor'),
+        creation_date:   get('CreationDate'),
+        modified_date:   get('ModifiedDate'),
+        labels,
+      });
+    }
+
+    if(!topics.length){ logErr('No se encontraron topics en el archivo.'); return; }
+    allTopics=topics;
+    renderTopics(); updateDashboard(); updateNavTree();
+    document.getElementById('bcfLoadedBadge').style.display='inline-flex';
+    document.getElementById('fiBCF').textContent='📄 BCF: '+file.name+' — '+topics.length+' topics';
+    document.getElementById('filesInfo').style.display='flex';
+    logOk('Importados '+topics.length+' topics desde '+file.name);
+
+    // Cambiar a tab Topics para ver resultado
+    setTimeout(()=>switchTab('Topics'),600);
+  } catch(e){ logErr('Error al leer BCF: '+e.message); }
+}
+
+/* ══ IMPORT IFC ══ */
+let ifcFile=null;
+function importIFC(evt){ const f=evt.target.files[0]; if(f) processIFCFile(f); }
+function processIFCFile(file){
+  ifcFile=file;
+  logInfo('IFC cargado: '+file.name+' ('+Math.round(file.size/1024/1024*10)/10+' MB)');
+  document.getElementById('ifcLoadedBadge').style.display='inline-flex';
+  document.getElementById('fiIFC').textContent='🧊 IFC: '+file.name;
+  document.getElementById('filesInfo').style.display='flex';
+  logOk('Modelo IFC listo. Puedes vincular topics con GUIDs de elementos.');
+  // Aquí se conectaría con web-ifc o IFC.js para parsear el modelo
+  // y cruzar los component GUIDs de los topics con los elementos del IFC
+}
+
+/* ══ EXPORT BCF (.bcfzip) ══ */
+async function exportBCF(){
+  if(!allTopics.length){ logErr('No hay topics para exportar.'); return; }
+  logInfo('Generando .bcfzip con '+allTopics.length+' topics…');
+  try {
+    const zip=new JSZip();
+    // project.bcfp
+    zip.file('project.bcfp',`<?xml version="1.0" encoding="utf-8"?>\n<ProjectExtension xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\n  <Project ProjectId="VoxelBIM-Export">\n    <Name>VoxelBIM Export</Name>\n  </Project>\n  <Version>2.1</Version>\n</ProjectExtension>`);
+
+    for(const t of allTopics){
+      const folder=zip.folder(t.guid);
+      const labels=(t.labels||[]).map(l=>`    <Labels>${l}</Labels>`).join('\n');
+      const comments=(MOCK_COMMENTS[t.guid]||[]).map(c=>`  <Comment>\n    <Guid>${c.guid||'c-'+Date.now()}</Guid>\n    <Date>${c.date||new Date().toISOString()}</Date>\n    <Author>${c.author||'voxelbim'}</Author>\n    <Comment>${c.comment}</Comment>\n  </Comment>`).join('\n');
+      folder.file('markup.bcf',
+`<?xml version="1.0" encoding="utf-8"?>
+<Markup xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Topic Guid="${t.guid}">
+    <Title>${t.title||''}</Title>
+    <Description>${t.description||''}</Description>
+    <TopicType>${t.topic_type||'Issue'}</TopicType>
+    <TopicStatus>${t.topic_status||'Open'}</TopicStatus>
+    <Priority>${t.priority||'Medium'}</Priority>
+    <AssignedTo>${t.assigned_to||''}</AssignedTo>
+    <CreationAuthor>${t.creation_author||''}</CreationAuthor>
+    <CreationDate>${t.creation_date||new Date().toISOString()}</CreationDate>
+${labels}
+  </Topic>
+${comments}
+</Markup>`);
+    }
+
+    const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='VoxelBIM_Export_'+new Date().toISOString().slice(0,10)+'.bcfzip';
+    a.click();
+    logOk('Exportado: '+allTopics.length+' topics → '+a.download);
+  } catch(e){ logErr('Error al exportar: '+e.message); }
+}
+
+/* ══ VER TOPIC EN VISOR 3D ══ */
+function verTopicEn3D(guid) {
+  const t = allTopics.find(x => x.guid === guid);
+  if (!t) return;
+  // Aplicar viewpoint si el topic lo tiene
+  if (t._viewpoint && window.applyBCFViewpoint) {
+    window.applyBCFViewpoint(t._viewpoint);
+  }
+  // Cambiar al tab 3D
+  switchTab('Visor3D');
+  // Si no hay modelo cargado, avisar
+  if (!window._visor3D?.scene?.children?.length || !document.getElementById('visor3DStatus')?.textContent?.includes('✓')) {
+    document.getElementById('visor3DOverlay').classList.remove('hidden');
+  }
+}
+
+/* ══ INIT ══ */
+switchTab('Topics');
+</script>
+
+<!-- ══ VISOR 3D — bridge postMessage con voxelbim.html en iframe ══ -->
+<script>
+(function(){
+  let iframeReady = false;
+  let pendingFile  = null;
+
+  function getIframe(){ return document.getElementById('visor3DIframe'); }
+  function setStatus(m){ const el=document.getElementById('visor3DStatus'); if(el) el.textContent=m; }
+
+  // Escuchar mensajes del iframe (voxelbim.html → bcf.html)
+  window.addEventListener('message', function(e){
+    if (!e.data || e.data.source !== 'voxelbim') return;
+    switch(e.data.type){
+      case 'ready':
+        iframeReady = true;
+        setStatus('Visor listo');
+        if (pendingFile){ sendIFC(pendingFile); pendingFile=null; }
+        break;
+      case 'model-loaded':
+        setStatus('✓ ' + (e.data.name||'Modelo cargado'));
+        document.getElementById('visor3DOverlay')?.classList.add('hidden');
+        break;
+      case 'model-progress':
+        setStatus('Cargando… ' + Math.round((e.data.pct||0)*100) + '%');
+        break;
+      case 'model-error':
+        setStatus('Error: ' + e.data.msg);
+        break;
+    }
+  });
+
+  // Enviar archivo IFC al iframe por postMessage (ArrayBuffer)
+  function sendIFC(file){
+    setStatus('Enviando al visor…');
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      getIframe()?.contentWindow?.postMessage({
+        source: 'bcf-parent',
+        type:   'load-ifc',
+        name:   file.name,
+        buffer: ev.target.result   // ArrayBuffer
+      }, '*', [ev.target.result]); // transferable
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  // Exponer para que processIFCFile lo llame
+  window.loadIFCIntoVisor = function(file){
+    // Cambiar al tab primero
+    switchTab('Visor3D');
+    if (!iframeReady){ pendingFile = file; setStatus('Esperando visor…'); return; }
+    sendIFC(file);
+  };
+
+  // Comandos generales al visor
+  window.visorCmd = function(cmd, payload){
+    getIframe()?.contentWindow?.postMessage({ source:'bcf-parent', type:'cmd', cmd, payload }, '*');
+  };
+  window.visorFit        = ()=> visorCmd('fit');
+  window.visorResetCam   = ()=> visorCmd('resetCam');
+  window.visorToggleOrtho= ()=> visorCmd('toggleOrtho');
+
+  // Aplicar viewpoint BCF
+  window.applyBCFViewpoint = function(vp){
+    visorCmd('applyViewpoint', vp);
+    switchTab('Visor3D');
+  };
+
+  // Hook: cuando se carga IFC en tab Files, también disparar al visor
+  const _orig = window.processIFCFile;
+  window.processIFCFile = function(file){
+    if(_orig) _orig(file);
+    window.loadIFCIntoVisor(file);
+  };
+})();
+</script>
+</body>
+</html>
