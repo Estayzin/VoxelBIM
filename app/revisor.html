@@ -19,6 +19,7 @@
 <meta name="copyright" content="Carlos Estay Ruggieri, 2026">
 <title>VoxelBIM — Generación de Reportes</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root {
   --navy:#060d18; --blue:#0a1628; --accent:#00d4ff; --green:#00c853;
@@ -305,6 +306,7 @@ header { background:var(--navy); padding:16px 24px; min-height:72px; display:fle
     <div class="vtoolbar" id="vtoolbar">
       <span class="vt-title" id="vtitle">-</span>
       <button class="btn-vdl" id="vbtnDl">&#11015;&nbsp; Descargar</button>
+      <button class="btn-vdl" id="vbtnXlsx" style="color:var(--green);border-color:rgba(0,200,83,.4);display:none;" onclick="exportarXLSX()">&#11015;&nbsp; Exportar XLSX</button>
     </div>
     <div class="view-content" id="viewContent">
       <iframe class="vframe" id="vframe" src="about:blank"></iframe>
@@ -886,6 +888,10 @@ function generarHTML(espNombre, ents, entsNoRev, est, modeloNombre, fecha) {
 var selFile = null;
 var pendingBuffer = null;
 var pendingIdsEsp = [];
+// Datos del ultimo reporte generado
+var lastEst = null, lastEntsSelec = [], lastEntsNoRev = [];
+var lastROrg = [], lastRNom = [], lastRNiv = [], lastRCla = {}, lastNcData = {};
+var lastRepNombre = '', lastModeloNombre = '';
 
 function log(msg,t){var el=document.getElementById("slog"),d=document.createElement("div");if(t)d.className="log-"+t;d.textContent=msg;el.appendChild(d);el.scrollTop=el.scrollHeight;}
 function prog(p){document.getElementById("pbar").style.width=p+"%";}
@@ -971,6 +977,8 @@ function procesar(){
       log("ExpressIDs para visor 3D: "+idsEsp.length+" elementos.","info"); prog(60);
 
       var mn=selFile.name,fecha=new Date().toLocaleString("es-CL");
+      var ncData=obtenerNoClasificados(est.conteo);
+      var rOrg=verificarOrigen(est),rNom=verificarNombres(est),rNiv=verificarNiveles(est),rCla=verificarClasificacion(est);
       var html=generarHTML(espNom,entsSelec,entsNoRev,est,mn,fecha);
       var base=mn.replace(/\.[^.]+$/,"");
       var narch=base+"_"+espNom.replace(/[ /]/g,"_")+"_reporte.html";
@@ -987,11 +995,35 @@ function procesar(){
       card.className="rcard active";
       card.innerHTML="<div class='racc'></div><div class='rbody'><div class='rname'>"+rep.nombre+"</div><div class='rmeta'>"+rep.total+" elementos \u00b7 "+entsSelec.length+" entidades</div></div>";
       card.addEventListener("click",function(){
-        mostrarReporte(rep);
+        // Guardar datos para exportar XLSX
+      lastEst = est;
+      lastEntsSelec = entsSelec;
+      lastEntsNoRev = entsNoRev;
+      lastROrg = rOrg;
+      lastRNom = rNom;
+      lastRNiv = rNiv;
+      lastRCla = rCla;
+      lastNcData = ncData;
+      lastRepNombre = espNom;
+      lastModeloNombre = mn;
+      document.getElementById('vbtnXlsx').style.display = '';
+      mostrarReporte(rep);
         document.querySelectorAll(".rcard").forEach(function(c){c.classList.remove("active");});
         card.classList.add("active");
       });
       document.getElementById("rlist").appendChild(card);
+      // Guardar datos para exportar XLSX
+      lastEst = est;
+      lastEntsSelec = entsSelec;
+      lastEntsNoRev = entsNoRev;
+      lastROrg = rOrg;
+      lastRNom = rNom;
+      lastRNiv = rNiv;
+      lastRCla = rCla;
+      lastNcData = ncData;
+      lastRepNombre = espNom;
+      lastModeloNombre = mn;
+      document.getElementById('vbtnXlsx').style.display = '';
       mostrarReporte(rep);
 
       // Guardar buffer IFC y IDs para cuando se active el visor 3D
@@ -1079,6 +1111,67 @@ function mostrarReporte(rep) {
     var a = document.createElement("a");
     a.href = currentBlobUrl; a.download = rep.narch; a.click();
   };
+}
+
+// ============================================================
+// EXPORTAR XLSX
+// ============================================================
+function exportarXLSX() {
+  if (!window.XLSX || !lastEst) return;
+  // Hoja 1: Entidades revisadas
+  var aoaEnts = [['Clase IFC','Nombre','Cantidad','Estado']];
+  for (var i=0; i<lastEntsSelec.length; i++) {
+    var cls=lastEntsSelec[i][0], nom=lastEntsSelec[i][1], qty=lastEst.conteo[cls]||0;
+    aoaEnts.push([cls, nom, qty, qty>0?'Presente':'Ausente']);
+  }
+  // Hoja 2: Entidades no revisadas
+  var aoaNoRev = [['Clase IFC','Nombre','Cantidad en modelo']];
+  for (var i=0; i<lastEntsNoRev.length; i++) {
+    var cls=lastEntsNoRev[i][0], nom=lastEntsNoRev[i][1];
+    aoaNoRev.push([cls, nom, lastEst.conteo[cls]||0]);
+  }
+  // Hoja 3: Verificacion origen
+  var aoaOrg = [['Entidad','Nombre','X','Y','Z','OK']];
+  for (var i=0; i<lastROrg.length; i++) {
+    var r=lastROrg[i]; aoaOrg.push([r.entidad,r.nombre,r.x,r.y,r.z,r.ok?'OK':'ERROR']);
+  }
+  // Hoja 4: Nombres
+  var aoaNom = [['Entidad','Nombre','N caracteres','Regla','OK']];
+  for (var i=0; i<lastRNom.length; i++) {
+    var r=lastRNom[i]; aoaNom.push([r.tipo,r.nombre,r.largo,r.desc,r.ok?'OK':'ERROR']);
+  }
+  // Hoja 5: Niveles
+  var aoaNiv = [['ID','Nombre','N caracteres','OK']];
+  for (var i=0; i<lastRNiv.length; i++) {
+    var r=lastRNiv[i]; aoaNiv.push([r.id,r.nombre,r.largo,r.ok?'OK':'ERROR']);
+  }
+  // Hoja 6: Clasificacion Uniformat
+  var aoaCla = [['Codigo','Sistema','Cantidad']];
+  if (lastRCla && lastRCla.codigos) {
+    for (var i=0; i<lastRCla.codigos.length; i++) {
+      var c=lastRCla.codigos[i]; aoaCla.push([c.codigo,c.sistema||'',c.cantidad]);
+    }
+  }
+  // Hoja 7: Fuera de clasificacion
+  var aoaNc = [['Clase IFC','Tipo','Cantidad']];
+  if (lastNcData && lastNcData.nc) {
+    for (var i=0; i<lastNcData.nc.length; i++) aoaNc.push([lastNcData.nc[i][0],'No clasificada',lastNcData.nc[i][1]]);
+  }
+  if (lastNcData && lastNcData.comp) {
+    for (var i=0; i<lastNcData.comp.length; i++) aoaNc.push([lastNcData.comp[i][0],'Complementaria',lastNcData.comp[i][1]]);
+  }
+  var wb = XLSX.utils.book_new();
+  var ws1=XLSX.utils.aoa_to_sheet(aoaEnts);   ws1['!cols']=[{wch:32},{wch:28},{wch:12},{wch:12}]; XLSX.utils.book_append_sheet(wb,ws1,'Entidades');
+  var ws2=XLSX.utils.aoa_to_sheet(aoaNoRev);  ws2['!cols']=[{wch:32},{wch:28},{wch:18}]; XLSX.utils.book_append_sheet(wb,ws2,'No Revisadas');
+  var ws3=XLSX.utils.aoa_to_sheet(aoaOrg);    ws3['!cols']=[{wch:22},{wch:28},{wch:14},{wch:14},{wch:14},{wch:8}]; XLSX.utils.book_append_sheet(wb,ws3,'Origen');
+  var ws4=XLSX.utils.aoa_to_sheet(aoaNom);    ws4['!cols']=[{wch:22},{wch:28},{wch:14},{wch:30},{wch:8}]; XLSX.utils.book_append_sheet(wb,ws4,'Nombres');
+  var ws5=XLSX.utils.aoa_to_sheet(aoaNiv);    ws5['!cols']=[{wch:10},{wch:28},{wch:14},{wch:8}]; XLSX.utils.book_append_sheet(wb,ws5,'Niveles');
+  var ws6=XLSX.utils.aoa_to_sheet(aoaCla);    ws6['!cols']=[{wch:18},{wch:28},{wch:12}]; XLSX.utils.book_append_sheet(wb,ws6,'Clasificacion');
+  var ws7=XLSX.utils.aoa_to_sheet(aoaNc);     ws7['!cols']=[{wch:32},{wch:18},{wch:12}]; XLSX.utils.book_append_sheet(wb,ws7,'No Clasificadas');
+  var date=new Date().toISOString().slice(0,10);
+  var safeName=(lastModeloNombre||'reporte').replace(/\.[^.]+$/,'').replace(/[^a-z0-9_\-]/gi,'_').slice(0,30);
+  var espCode=(lastRepNombre||'REP').replace(/[ /]/g,'_').slice(0,12);
+  XLSX.writeFile(wb,'reporte_'+safeName+'_'+espCode+'_'+date+'.xlsx');
 }
 </script>
 <script src="./js/web-ifc-api.js"></script>
