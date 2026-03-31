@@ -1273,6 +1273,30 @@ function exportToXLSX() {
       num(cb.length,3), num(cb.area,3), num(cb.volume,4), cbKn, cbMcg]);
   }
 
+  // ── Hoja 3: Por Keynote ────────────────────────────────────
+  const colsKn = [{wch:28},{wch:22},{wch:28},{wch:10},{wch:14},{wch:16},{wch:14},{wch:22}];
+  const aoaKn = [['Clase IFC', 'Descripci\u00f3n', 'Keynote', 'Cantidad', 'Largo (m)', 'Superficie (m\u00b2)', 'Volumen (m\u00b3)', 'MCG_EETT']];
+  for (const key of selectedKeys) {
+    const cat   = CATALOG_MAP[key];
+    const knMap = cachedCountsByKeynote[key] || {};
+    for (const [kn, b] of Object.entries(knMap).sort((a,z) => a[0].localeCompare(z[0]))) {
+      const mc = [...(b.mcgeettos||[])].sort().join('; ');
+      aoaKn.push([key, cat.label, kn, b.count, num(b.length,3), num(b.area,3), num(b.volume,4), mc]);
+    }
+  }
+
+  // ── Hoja 4: Por MCG_EETT ─────────────────────────────────────
+  const colsMcg = [{wch:28},{wch:22},{wch:28},{wch:10},{wch:14},{wch:16},{wch:14},{wch:22}];
+  const aoaMcg = [['Clase IFC', 'Descripci\u00f3n', 'MCG_EETT', 'Cantidad', 'Largo (m)', 'Superficie (m\u00b2)', 'Volumen (m\u00b3)', 'Keynote']];
+  for (const key of selectedKeys) {
+    const cat   = CATALOG_MAP[key];
+    const mcMap = cachedCountsByMCGEETT[key] || {};
+    for (const [mc, b] of Object.entries(mcMap).sort((a,z) => a[0].localeCompare(z[0]))) {
+      const kn = [...(b.keynotes||[])].sort().join('; ');
+      aoaMcg.push([key, cat.label, mc, b.count, num(b.length,3), num(b.area,3), num(b.volume,4), kn]);
+    }
+  }
+
   // Crear libro
   const wb = XLSX.utils.book_new();
 
@@ -1283,6 +1307,14 @@ function exportToXLSX() {
   const wsDet = XLSX.utils.aoa_to_sheet(aoaDet);
   wsDet['!cols'] = [{wch:28},{wch:22},{wch:38},{wch:22},{wch:10},{wch:14},{wch:16},{wch:14},{wch:22},{wch:22}];
   XLSX.utils.book_append_sheet(wb, wsDet, 'Detalle');
+
+  const wsKn = XLSX.utils.aoa_to_sheet(aoaKn);
+  wsKn['!cols'] = colsKn;
+  XLSX.utils.book_append_sheet(wb, wsKn, 'Por Keynote');
+
+  const wsMcg = XLSX.utils.aoa_to_sheet(aoaMcg);
+  wsMcg['!cols'] = colsMcg;
+  XLSX.utils.book_append_sheet(wb, wsMcg, 'Por MCG_EETT');
 
   const date = new Date().toISOString().slice(0,10);
   const safeName = modelName.replace(/[^a-z0-9_\-]/gi,'_').slice(0,30);
