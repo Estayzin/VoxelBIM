@@ -347,7 +347,18 @@ var ESP = {
   "Gases Clinicos":       {cod:"GCL",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCVALVE","Valvula"],["IFCUNITARYCONTROLELEMENT","Elemento de Control Unitario"],["IFCTANK","Estanque"],["IFCMEDICALDEVICE","Dispositivo Medico"]]},
   "Iluminacion":          {cod:"ILU",ents:[["IFCGRID","Grilla"],["IFCLIGHTFIXTURE","Luminaria"],["IFCSWITCHINGDEVICE","Interruptor"]]},
   "Proteccion Incendios": {cod:"PCI",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCSENSOR","Sensor"],["IFCTANK","Estanque"],["IFCPUMP","Bomba"],["IFCFIRESUPPRESSIONTERMINAL","Terminal Supresion Incendio"],["IFCALARM","Alarma"],["IFCVALVE","Valvula"]]},
-  "Electricidad":         {cod:"ELE",ents:[["IFCGRID","Grilla"],["IFCCABLECARRIERSEGMENT","Bandeja de Cable"],["IFCCABLECARRIERFITTING","Fitting Bandeja de Cable"],["IFCDISTRIBUTIONCHAMBERELEME","Camara de Distribucion"],["IFCELECTRICDISTRIBUTIONBOARD","Tablero Electrico"]]}
+  "Electricidad":         {cod:"ELE",ents:[["IFCGRID","Grilla"],["IFCCABLECARRIERSEGMENT","Bandeja de Cable"],["IFCCABLECARRIERFITTING","Fitting Bandeja de Cable"],["IFCDISTRIBUTIONCHAMBERELEME","Camara de Distribucion"],["IFCELECTRICDISTRIBUTIONBOARD","Tablero Electrico"]]},
+  "Helipuerto":           {cod:"HEL",ents:[["IFCGRID","Grilla"],["IFCELEMENTASSEMBLY","Ensamble de Elementos"]]},
+  "Insonorizacion":       {cod:"INS",ents:[["IFCGRID","Grilla"],["IFCCOVERING","Revestimiento / Cielo"],["IFCDUCTSILENCER","Silenciador de Ducto"]]},
+  "Equipamiento":         {cod:"EQP",ents:[["IFCGRID","Grilla"],["IFCFURNITURE","Mobiliario / Equipamiento"],["IFCCOVERING","Revestimiento"],["IFCMEDICALDEVICE","Dispositivo Medico"]]},
+  "Limpiafachada":        {cod:"LFA",ents:[["IFCGRID","Grilla"],["IFCELEMENTASSEMBLY","Ensamble de Elementos"]]},
+  "Mobiliario":           {cod:"MOB",ents:[["IFCGRID","Grilla"],["IFCFURNITURE","Mobiliario"]]},
+  "Paisajismo":           {cod:"PSJ",ents:[["IFCGRID","Grilla"],["IFCGEOGRAPHICELEMENT","Elemento Geografico"],["IFCSLAB","Losa"],["IFCCOVERING","Revestimiento / Pavimento"],["IFCFURNITURE","Mobiliario Exterior"]]},
+  "Pavimentacion":        {cod:"PAV",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCSLAB","Losa"],["IFCCOVERING","Revestimiento / Pavimento"]]},
+  "Residuos":             {cod:"RES",ents:[["IFCGRID","Grilla"],["IFCFURNITURE","Mobiliario / Contenedor"]]},
+  "Riego":                {cod:"RIE",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCPUMP","Bomba"],["IFCTANK","Estanque"],["IFCVALVE","Valvula"]]},
+  "Senaletica":           {cod:"SIE",ents:[["IFCGRID","Grilla"],["IFCFURNITURE","Señaletica / Mobiliario"],["IFCSIGN","Señal"],["IFCSIGNAGE","Señaletica"]]},
+  "Transporte Vertical":  {cod:"TRV",ents:[["IFCGRID","Grilla"],["IFCTRANSPORTELEMENT","Elemento de Transporte"]]}
 };
 
 var COD_PRIO = {SIT:1,VOL:1};
@@ -443,6 +454,8 @@ var PRODUCTOS = {
   IFCCONTROLLER:1,IFCDISTRIBUTIONCONTROLELEMENT:1,
   IFCAUDIOVISUALAPPLIANCE:1,IFCCOMMUNICATIONSAPPLIANCE:1,
   IFCFIRESUPPRESSIONTERMINAL:1,
+  IFCDUCTSILENCER:1,
+  IFCSIGN:1,IFCSIGNAGE:1,
   IFCGRID:1,IFCSPACE:1,IFCZONE:1,
   IFCDISTRIBUTIONELEMENT:1,IFCBUILDINGELEMENT:1,
   IFCENERGYCONVERSIONDEVICE:1,IFCDISTRIBUTIONFLOWELEMENT:1,
