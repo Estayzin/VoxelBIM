@@ -237,6 +237,7 @@ body.light-mode footer { border-top-color:#b0c4d8; }
 
 /* PANEL PROPIEDADES — consistente con reporte BIM */
 #propsPanel { width:270px; flex-shrink:0; background:var(--blue); border-right:1px solid var(--border); display:none; flex-direction:column; overflow-y:scroll; overflow-x:hidden; position:relative; }
+#propsPanel.show { display:flex; }
 
 /* PANEL REPORTE */
 #reportePanel { width:300px; flex-shrink:0; background:var(--blue); border-right:1px solid var(--border); display:none; flex-direction:column; overflow-y:scroll; overflow-x:hidden; position:relative; }
@@ -382,6 +383,54 @@ body.light-mode footer { border-top-color:#b0c4d8; }
 #claudePanel::-webkit-scrollbar-track { background:var(--blue); }
 #claudePanel::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
 #claudePanel::-webkit-scrollbar-thumb:hover { background:var(--muted); }
+#btnClaude.active { border-color:rgba(199,125,255,.6); color:#c77dff; background:rgba(199,125,255,.1); }
+
+/* CHAT UI */
+#claudePanel { width:320px; flex-shrink:0; background:var(--blue); border-right:1px solid var(--border); display:none; flex-direction:column; overflow:hidden; position:relative; }
+#claudePanel.show { display:flex; }
+#claudeKeySetup { flex:1; display:flex; flex-direction:column; padding:20px 16px; gap:12px; overflow-y:auto; }
+.ck-title { font:700 10px var(--mono); color:#c77dff; text-transform:uppercase; letter-spacing:.12em; }
+.ck-desc { font:400 10px var(--mono); color:var(--muted); line-height:1.7; }
+.ck-input { width:100%; padding:8px 10px; background:var(--navy); color:var(--text); border:1px solid var(--border); border-radius:4px; font:400 11px var(--mono); outline:none; transition:border .15s; }
+.ck-input:focus { border-color:#c77dff; }
+.ck-btn { width:100%; padding:9px; background:linear-gradient(135deg,#7c4dff,#c77dff); color:#fff; border:none; border-radius:4px; font:700 9px var(--mono); text-transform:uppercase; letter-spacing:.12em; cursor:pointer; }
+.ck-note { font:400 9px var(--mono); color:var(--muted); opacity:.6; line-height:1.6; text-align:center; }
+#claudeChat { flex:1; display:none; flex-direction:column; overflow:hidden; }
+#claudeCtxPill { padding:5px 12px; border-bottom:1px solid var(--border); font:500 9px var(--mono); color:var(--muted); display:flex; align-items:center; gap:6px; flex-shrink:0; }
+#claudeCtxPill .ctx-dot { width:6px; height:6px; border-radius:50%; background:var(--muted); flex-shrink:0; }
+#claudeCtxPill.has-model .ctx-dot { background:var(--green); }
+#claudeCtxPill.has-model { color:var(--text); }
+#claudeMsgs { flex:1; overflow-y:auto; padding:8px; display:flex; flex-direction:column; gap:8px; }
+#claudeMsgs::-webkit-scrollbar { width:3px; }
+#claudeMsgs::-webkit-scrollbar-track { background:transparent; }
+#claudeMsgs::-webkit-scrollbar-thumb { background:rgba(199,125,255,.2); border-radius:2px; }
+.cm-msg { display:flex; flex-direction:column; gap:3px; max-width:92%; }
+.cm-msg.user { align-self:flex-end; align-items:flex-end; }
+.cm-msg.assistant { align-self:flex-start; align-items:flex-start; }
+.cm-bubble { padding:9px 12px; border-radius:10px; font:400 11px var(--mono); line-height:1.6; word-break:break-word; }
+.cm-msg.user .cm-bubble { background:rgba(0,144,255,.18); border:1px solid rgba(0,144,255,.3); color:#c8e8ff; border-radius:10px 10px 3px 10px; }
+.cm-msg.assistant .cm-bubble { background:rgba(199,125,255,.1); border:1px solid rgba(199,125,255,.2); color:#e0c8ff; border-radius:10px 10px 10px 3px; }
+.cm-bubble code { background:rgba(199,125,255,.15); color:#c77dff; padding:1px 5px; border-radius:3px; font-size:10px; }
+.cm-bubble strong { color:#f0e0ff; }
+.cm-bubble ul { padding-left:14px; margin:4px 0; }
+.cm-bubble li { margin:2px 0; }
+.cm-label { font:600 8px var(--mono); color:var(--muted); letter-spacing:.08em; text-transform:uppercase; padding:0 2px; }
+.cm-thinking { display:flex; align-items:center; gap:5px; padding:9px 12px; background:rgba(199,125,255,.06); border:1px dashed rgba(199,125,255,.2); border-radius:10px 10px 10px 3px; }
+.cm-thinking span { width:5px; height:5px; border-radius:50%; background:#c77dff; animation:think .9s infinite; }
+.cm-thinking span:nth-child(2) { animation-delay:.15s; }
+.cm-thinking span:nth-child(3) { animation-delay:.3s; }
+@keyframes think { 0%,100%{opacity:.2;transform:scale(.8)} 50%{opacity:1;transform:scale(1.1)} }
+#claudeInputArea { padding:10px 14px; border-top:1px solid rgba(199,125,255,.12); display:flex; flex-direction:column; gap:7px; flex-shrink:0; }
+.claude-input-row { display:flex; gap:8px; align-items:flex-end; }
+#claudeTextarea { flex:1; background:rgba(255,255,255,.04); color:var(--text); border:1px solid rgba(199,125,255,.2); border-radius:7px; padding:8px 12px; font:400 11px var(--mono); resize:none; outline:none; line-height:1.5; height:38px; max-height:100px; overflow-y:auto; transition:border .15s; }
+#claudeTextarea:focus { border-color:rgba(199,125,255,.5); }
+#claudeTextarea::placeholder { color:var(--muted); opacity:.5; }
+#claudeSendBtn { padding:8px 14px; height:38px; background:linear-gradient(135deg,#7c4dff,#c77dff); border:none; border-radius:7px; color:#fff; font:700 9px var(--mono); letter-spacing:.06em; text-transform:uppercase; cursor:pointer; flex-shrink:0; transition:all .18s; }
+#claudeSendBtn:hover:not(:disabled) { box-shadow:0 0 20px rgba(199,125,255,.4); transform:translateY(-1px); }
+#claudeSendBtn:disabled { opacity:.4; cursor:default; transform:none; }
+#claudeChatFooter { padding:5px 12px; border-top:1px solid rgba(199,125,255,.08); display:flex; gap:6px; justify-content:space-between; flex-shrink:0; }
+.cc-foot-btn { background:transparent; border:none; color:rgba(199,125,255,.4); font:400 9px var(--mono); cursor:pointer; padding:3px 6px; border-radius:3px; }
+.cc-foot-btn:hover { color:#c77dff; background:rgba(199,125,255,.08); }
 </style>
 </head>
 <body>
@@ -457,7 +506,7 @@ body.light-mode footer { border-top-color:#b0c4d8; }
       <div class="header-toolbar">
         <button class="hbar-btn" id="btnProps"><span class="hb-icon">&#9776;</span> Propiedades</button>
         <button class="hbar-btn" id="btnReporte"><span class="hb-icon">&#9636;</span> Reporte</button>
-        <button class="hbar-btn disabled" title="Pr&oacute;ximamente"><span class="hb-icon">&#10022;</span> Chat IA <span class="hbar-tag">PR&Oacute;X.</span></button>
+        <button class="hbar-btn" id="btnClaude" title="Chat IA con Claude"><span class="hb-icon">&#10022;</span> Chat IA</button>
       </div>
 
       <div class="header-toolbar-sep"></div>
@@ -595,25 +644,44 @@ body.light-mode footer { border-top-color:#b0c4d8; }
           <span class="pp-title">Reporte BIM</span>
           <button class="pp-close" id="reporteClose">✕</button>
         </div>
+        <div class="rp-esp-row">
+          <span class="rp-esp-label">Especialidad</span>
+          <select id="espSel" class="rp-esp-sel"></select>
+        </div>
         <div class="rp-body" id="rpBody">
           <div class="rp-msg">Carga un modelo IFC para ver el reporte.</div>
         </div>
       </div>
 
       <!-- PANEL CLAUDE AI -->
-      <div id="claudePanel" style="width:280px;flex-shrink:0;background:var(--blue);border-right:1px solid var(--border);display:none;flex-direction:column;overflow-y:auto;overflow-x:hidden;position:relative;">
+      <div id="claudePanel">
         <div class="pp-header">
           <span class="pp-title" style="color:#c77dff">✦ Claude AI</span>
           <button class="pp-close" id="claudeClose">✕</button>
         </div>
-        <div class="pp-body">
-          <div style="padding:22px 18px;text-align:center;color:var(--muted);font:400 10px var(--mono);line-height:1.7;">
-            <div style="width:48px;height:48px;background:rgba(199,125,255,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 16px;border:1px solid rgba(199,125,255,.2);color:#c77dff;">✦</div>
-            <div style="font:700 11px var(--mono);color:#fff;margin-bottom:8px;letter-spacing:.05em;text-transform:uppercase;">Asistente Inteligente</div>
-            <div>Realiza consultas sobre cantidades, interferencias y cumplimiento normativo de tu modelo BIM.</div>
-            <div style="margin-top:24px;padding:12px;background:rgba(10,15,30,.3);border-radius:6px;border:1px dashed rgba(199,125,255,.3);color:#e0c8ff;font-style:italic;">
-              Próximamente: Integración con Claude 3.5 Sonnet para análisis en tiempo real.
+
+        <!-- PANTALLA: ingresar API key -->
+        <div id="claudeKeySetup">
+          <div class="ck-title">Configurar Asistente</div>
+          <div class="ck-desc">Ingresa tu API key de Anthropic para activar el asistente BIM con inteligencia artificial.</div>
+          <input id="claudeKeyInput" class="ck-input" type="password" placeholder="sk-ant-api03-..." autocomplete="off" spellcheck="false">
+          <button id="claudeKeySaveBtn" class="ck-btn">✦ Activar Claude AI</button>
+          <div class="ck-note">La API key se guarda solo en tu navegador (localStorage).<br>No se envía a ningún servidor externo.</div>
+        </div>
+
+        <!-- PANTALLA: chat -->
+        <div id="claudeChat">
+          <div id="claudeCtxPill"><span class="ctx-dot"></span><span id="claudeCtxText">Sin modelo cargado</span></div>
+          <div id="claudeMsgs"></div>
+          <div id="claudeInputArea">
+            <div class="claude-input-row">
+              <textarea id="claudeTextarea" placeholder="Pregunta sobre el modelo..." rows="1"></textarea>
+              <button id="claudeSendBtn" disabled>Send</button>
             </div>
+          </div>
+          <div id="claudeChatFooter">
+            <button class="cc-foot-btn" id="claudeClearBtn">↺ Limpiar chat</button>
+            <button class="cc-foot-btn" id="claudeChangeKeyBtn">⚙ Cambiar key</button>
           </div>
         </div>
       </div>
