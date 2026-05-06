@@ -133,6 +133,7 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
 .tag-beta  { background:rgba(255,107,53,.08); color:var(--warn); border:1px solid rgba(255,107,53,.2); }
 .tag-pro   { background:rgba(245,197,24,.1); color:var(--gold); border:1px solid rgba(245,197,24,.3); }
 .tag-lock  { background:rgba(255,255,255,.03); color:var(--muted); border:1px solid var(--border); }
+.tag-soon  { background:rgba(0,212,255,.06);  color:var(--muted); border:1px solid var(--border); }
 .btn-logout { padding:5px 12px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:4px; font:600 9px var(--mono); cursor:pointer; text-transform:uppercase; letter-spacing:.1em; transition:all .15s; margin-left:auto; }
 .btn-logout:hover { border-color:#ff3d57; color:#ff3d57; }
 .header-plan { font:600 9px var(--mono); padding:3px 10px; border-radius:10px; }
@@ -149,27 +150,7 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
       <div class="login-headline">
         <div style="display:flex;align-items:center;gap:22px;line-height:1;">
           <div style="flex-shrink:0;width:90px;height:90px;display:flex;align-items:center;justify-content:center;">
-            <svg width="90" height="90" viewBox="0 0 90 105" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <g class="bit-wrap">
-                <polygon class="bit-face" points="45,4 75,28 15,28" fill="rgba(0,212,255,0.22)" stroke="#00d4ff" stroke-width="1.4" stroke-linejoin="round"/>
-                <polygon points="75,28 45,4 82,52" fill="rgba(0,212,255,0.10)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
-                <polygon points="15,28 45,4 8,52"  fill="rgba(0,212,255,0.18)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
-                <polygon points="15,28 75,28 82,52 45,68 8,52" fill="rgba(0,212,255,0.07)" stroke="#00d4ff" stroke-width="1.0" stroke-linejoin="round"/>
-                <polygon points="75,28 82,52 62,78" fill="rgba(0,212,255,0.15)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
-                <polygon points="15,28 8,52 28,78"  fill="rgba(0,212,255,0.20)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
-                <polygon points="8,52 28,78 45,100 45,68" fill="rgba(0,212,255,0.07)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
-                <polygon points="82,52 62,78 45,100 45,68" fill="rgba(0,212,255,0.12)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
-                <polygon points="28,78 62,78 45,100" fill="rgba(0,212,255,0.14)" stroke="#00d4ff" stroke-width="1.2" stroke-linejoin="round"/>
-                <line class="bit-ea" x1="15" y1="28" x2="45" y2="4" stroke="#00d4ff" stroke-width="2.4" stroke-linecap="round"/>
-                <line class="bit-eb" x1="45" y1="4" x2="75" y2="28" stroke="#00d4ff" stroke-width="1.6" stroke-linecap="round"/>
-                <circle class="bit-top"     cx="45" cy="4"   r="3"   fill="#00d4ff"/>
-                <circle class="bit-vtx-mid" cx="15" cy="28"  r="1.8" fill="#00d4ff" opacity="0.5"/>
-                <circle class="bit-vtx-mid" cx="75" cy="28"  r="1.8" fill="#00d4ff" opacity="0.5"/>
-                <circle class="bit-vtx-mid" cx="8"  cy="52"  r="1.4" fill="#00d4ff" opacity="0.35"/>
-                <circle class="bit-vtx-mid" cx="82" cy="52"  r="1.4" fill="#00d4ff" opacity="0.35"/>
-                <circle class="bit-vtx-bot" cx="45" cy="100" r="2.2" fill="#00d4ff" opacity="0.65"/>
-              </g>
-            </svg>
+            <svg class="bim-svg" width="90" height="90" viewBox="0 0 90 105" fill="none" xmlns="http://www.w3.org/2000/svg"></svg>
           </div>
           <span>Voxel<br><span style="color:var(--accent);text-shadow:0 0 40px rgba(0,212,255,.4);">BIM</span></span>
         </div>
@@ -214,27 +195,7 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
 <div id="portal">
   <div class="portal-header">
     <div class="portal-icon">
-      <svg width="34" height="34" viewBox="0 0 90 105" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <g class="bit-wrap">
-          <polygon class="bit-face" points="45,4 75,28 15,28" fill="rgba(0,212,255,0.22)" stroke="#00d4ff" stroke-width="1.4" stroke-linejoin="round"/>
-          <polygon points="75,28 45,4 82,52" fill="rgba(0,212,255,0.10)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
-          <polygon points="15,28 45,4 8,52"  fill="rgba(0,212,255,0.18)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
-          <polygon points="15,28 75,28 82,52 45,68 8,52" fill="rgba(0,212,255,0.07)" stroke="#00d4ff" stroke-width="1.0" stroke-linejoin="round"/>
-          <polygon points="75,28 82,52 62,78" fill="rgba(0,212,255,0.15)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
-          <polygon points="15,28 8,52 28,78"  fill="rgba(0,212,255,0.20)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
-          <polygon points="8,52 28,78 45,100 45,68" fill="rgba(0,212,255,0.07)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
-          <polygon points="82,52 62,78 45,100 45,68" fill="rgba(0,212,255,0.12)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
-          <polygon points="28,78 62,78 45,100" fill="rgba(0,212,255,0.14)" stroke="#00d4ff" stroke-width="1.2" stroke-linejoin="round"/>
-          <line class="bit-ea" x1="15" y1="28" x2="45" y2="4" stroke="#00d4ff" stroke-width="2.4" stroke-linecap="round"/>
-          <line class="bit-eb" x1="45" y1="4" x2="75" y2="28" stroke="#00d4ff" stroke-width="1.6" stroke-linecap="round"/>
-          <circle class="bit-top"     cx="45" cy="4"   r="3"   fill="#00d4ff"/>
-          <circle class="bit-vtx-mid" cx="15" cy="28"  r="1.8" fill="#00d4ff" opacity="0.5"/>
-          <circle class="bit-vtx-mid" cx="75" cy="28"  r="1.8" fill="#00d4ff" opacity="0.5"/>
-          <circle class="bit-vtx-mid" cx="8"  cy="52"  r="1.4" fill="#00d4ff" opacity="0.35"/>
-          <circle class="bit-vtx-mid" cx="82" cy="52"  r="1.4" fill="#00d4ff" opacity="0.35"/>
-          <circle class="bit-vtx-bot" cx="45" cy="100" r="2.2" fill="#00d4ff" opacity="0.65"/>
-        </g>
-      </svg>
+      <svg class="bim-svg" width="34" height="34" viewBox="0 0 90 105" fill="none" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
     <div>
       <div style="font:600 13px var(--mono);color:#e0f0ff;letter-spacing:.05em;text-transform:uppercase;">VoxelBIM</div>
@@ -304,7 +265,7 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
       <!-- GRILLA DEMO 3 (todos los modulos activos) -->
       <div id="gridDemo3" class="modules-grid pro-grid" style="display:none;">
         <a id="linkExplorerDemo3" href="#" class="module-card">
-          <div class="mc-icon" style="background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.2);">&#x1F5C2;&#xFE0F;</div>
+          <div class="mc-icon" style="background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.2);">🗂️</div>
           <div>
             <div class="mc-title">Explorador BIM</div>
             <div class="mc-desc">Navegador de proyectos con visor 3D, planos y documentos integrados.</div>
@@ -312,46 +273,48 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
           <div class="mc-tags"><span class="mc-tag tag-live">Activo</span><span class="mc-tag" style="background:rgba(0,212,255,.06);color:var(--muted);border:1px solid var(--border);">3D Planos Docs</span></div>
         </a>
         <a id="linkAutodeskDemo3" href="/app/autodesk.html" class="module-card" onclick="abrirModulo('/app/autodesk.html'); return false;">
-          <div class="mc-icon" style="background:rgba(0,144,255,.1);border:1px solid rgba(0,144,255,.2);">&#x1F4BB;</div>
+          <div class="mc-icon" style="background:rgba(0,144,255,.1);border:1px solid rgba(0,144,255,.2);">💻</div>
           <div>
             <div class="mc-title">Autodesk APS</div>
-            <div class="mc-desc">Revisi&#xF3;n de modelos Revit y acceso a proyectos BIM 360 / ACC via Autodesk Platform Services.</div>
+            <div class="mc-desc">Revisión de modelos Revit y acceso a proyectos BIM 360 / ACC via Autodesk Platform Services.</div>
           </div>
           <div class="mc-tags"><span class="mc-tag tag-live">Activo</span><span class="mc-tag" style="background:rgba(0,212,255,.06);color:var(--muted);border:1px solid var(--border);">RVT BIM 360</span></div>
         </a>
         <a id="linkReportesDemo3" href="/app/revisor.html" class="module-card" onclick="abrirModulo('/app/revisor.html'); return false;">
-          <div class="mc-icon" style="background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.2);">&#x1F4CA;</div>
+          <div class="mc-icon" style="background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.2);">📊</div>
           <div>
-            <div class="mc-title">Generaci&#xF3;n de Reportes</div>
-            <div class="mc-desc">Reportes detallados por disciplina, fecha y proyecto en formato est&#xE1;ndar.</div>
+            <div class="mc-title">Generación de Reportes</div>
+            <div class="mc-desc">Reportes detallados por disciplina, fecha y proyecto en formato estándar.</div>
           </div>
           <div class="mc-tags"><span class="mc-tag tag-live">Activo</span><span class="mc-tag" style="background:rgba(0,212,255,.06);color:var(--muted);border:1px solid var(--border);">IFC PDF</span></div>
         </a>
         <a id="linkInventarioDemo3" href="/app/inventario.html" class="module-card" onclick="abrirModulo('/app/inventario.html'); return false;">
-          <div class="mc-icon" style="background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.2);">&#x1F4C8;</div>
+          <div class="mc-icon" style="background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.2);">📈</div>
           <div>
             <div class="mc-title">Inventario y Tablas</div>
-            <div class="mc-desc">Exportaci&#xF3;n de inventarios y tablas de elementos BIM en PDF y XLS.</div>
+            <div class="mc-desc">Exportación de inventarios y tablas de elementos BIM en PDF y XLS.</div>
           </div>
           <div class="mc-tags"><span class="mc-tag tag-beta">Beta / Desarrollo</span></div>
         </a>
         <div class="module-card disabled locked">
-          <div class="mc-icon" style="background:rgba(124,77,255,.1);border:1px solid rgba(124,77,255,.2);">&#x1F4CB;</div>
+          <div class="mc-icon" style="background:rgba(124,77,255,.1);border:1px solid rgba(124,77,255,.2);">📋</div>
           <div>
             <div class="mc-title">Incidencias BCF</div>
-            <div class="mc-desc">Gesti&#xF3;n y revisi&#xF3;n de incidencias BIM en formato BCF (BIM Collaboration Format).</div>
+            <div class="mc-desc">Gestión y revisión de incidencias BIM en formato BCF (BIM Collaboration Format).</div>
           </div>
-          <div class="mc-tags"><span class="mc-tag tag-soon">Pr&#xF3;ximamente</span></div>
+          <div class="mc-tags"><span class="mc-tag tag-soon">Próximamente</span></div>
         </div>
         <a href="mailto:c.estay@outlook.com" class="module-card">
-          <div class="mc-icon" style="background:rgba(124,77,255,.1);border:1px solid rgba(124,77,255,.2);">&#x1F4E7;</div>
+          <div class="mc-icon" style="background:rgba(124,77,255,.1);border:1px solid rgba(124,77,255,.2);">📧</div>
           <div>
             <div class="mc-title">Contacto</div>
-            <div class="mc-desc">&#xBF;Consultas o sugerencias? Escr&#xED;beme directamente.</div>
+            <div class="mc-desc">¿Consultas o sugerencias? Escríbeme directamente.</div>
           </div>
           <div class="mc-tags"><span class="mc-tag" style="background:rgba(124,77,255,.1);color:var(--accent2);border:1px solid rgba(124,77,255,.2);">c.estay@outlook.com</span></div>
         </a>
-      </div>      <!-- GRILLA PRO -->
+      </div>
+
+      <!-- GRILLA PRO -->
       <div id="gridPro" class="modules-grid pro-grid" style="display:none;">
         <a id="linkExplorerPro" href="#" onclick="abrirModulo(getVisorUrl());return false;" class="module-card">
           <div class="mc-icon" style="background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.2);">🗂️</div>
@@ -407,7 +370,29 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
   </div>
 </div>
 
+<script src="/scripts/tutorial.js"></script>
 <script>
+const BIM_LOGO_HTML = `<g class="bit-wrap">
+  <polygon class="bit-face" points="45,4 75,28 15,28" fill="rgba(0,212,255,0.22)" stroke="#00d4ff" stroke-width="1.4" stroke-linejoin="round"/>
+  <polygon points="75,28 45,4 82,52" fill="rgba(0,212,255,0.10)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+  <polygon points="15,28 45,4 8,52"  fill="rgba(0,212,255,0.18)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+  <polygon points="15,28 75,28 82,52 45,68 8,52" fill="rgba(0,212,255,0.07)" stroke="#00d4ff" stroke-width="1.0" stroke-linejoin="round"/>
+  <polygon points="75,28 82,52 62,78" fill="rgba(0,212,255,0.15)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+  <polygon points="15,28 8,52 28,78"  fill="rgba(0,212,255,0.20)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+  <polygon points="8,52 28,78 45,100 45,68" fill="rgba(0,212,255,0.07)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+  <polygon points="82,52 62,78 45,100 45,68" fill="rgba(0,212,255,0.12)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+  <polygon points="28,78 62,78 45,100" fill="rgba(0,212,255,0.14)" stroke="#00d4ff" stroke-width="1.2" stroke-linejoin="round"/>
+  <line class="bit-ea" x1="15" y1="28" x2="45" y2="4" stroke="#00d4ff" stroke-width="2.4" stroke-linecap="round"/>
+  <line class="bit-eb" x1="45" y1="4" x2="75" y2="28" stroke="#00d4ff" stroke-width="1.6" stroke-linecap="round"/>
+  <circle class="bit-top"     cx="45" cy="4"   r="3"   fill="#00d4ff"/>
+  <circle class="bit-vtx-mid" cx="15" cy="28"  r="1.8" fill="#00d4ff" opacity="0.5"/>
+  <circle class="bit-vtx-mid" cx="75" cy="28"  r="1.8" fill="#00d4ff" opacity="0.5"/>
+  <circle class="bit-vtx-mid" cx="8"  cy="52"  r="1.4" fill="#00d4ff" opacity="0.35"/>
+  <circle class="bit-vtx-mid" cx="82" cy="52"  r="1.4" fill="#00d4ff" opacity="0.35"/>
+  <circle class="bit-vtx-bot" cx="45" cy="100" r="2.2" fill="#00d4ff" opacity="0.65"/>
+</g>`;
+document.querySelectorAll('.bim-svg').forEach(svg => { svg.innerHTML = BIM_LOGO_HTML; });
+
 // Hash SHA-256 de las credenciales
 // Pro:    usuario "admin"  + contraseña "221472"
 // Demo 1: usuario "demo1"  + contraseña "5167" (Explorador BIM)
@@ -473,6 +458,8 @@ function mostrarPortal(plan) {
     wrap.innerHTML = '<div class="plan-badge pro"><div class="plan-badge-dot"></div>Plan Pro — acceso completo</div>';
   } else if (plan === 'demo_explorer') {
     wrap.innerHTML = '<div class="plan-badge demo"><div class="plan-badge-dot"></div>Plan Demo — Explorador BIM</div>';
+  } else if (plan === 'demo_all') {
+    wrap.innerHTML = '<div class="plan-badge demo"><div class="plan-badge-dot"></div>Plan Demo — acceso completo</div>';
   } else {
     wrap.innerHTML = '<div class="plan-badge demo"><div class="plan-badge-dot"></div>Plan Demo — Autodesk APS</div>';
   }
@@ -486,6 +473,8 @@ function mostrarPortal(plan) {
     var d3exp = document.getElementById('linkExplorerDemo3');
     if (d3exp) { d3exp.onclick = function() { abrirModulo(getVisorUrl()); return false; }; }
   }
+
+  setTimeout(function() { startPortalTutorial(plan); }, 350);
   if (!isPro) {
     var cardExp = document.getElementById('linkExplorerDemo');
     var cardAut = document.getElementById('linkAutodeskDemo');
@@ -508,7 +497,6 @@ function activarCard(el, url, label) {
   el.onclick = function() { abrirModulo(url); return false; };
   var tags = el.querySelector('.mc-tags');
   if (tags) {
-    // Limpiamos tags previos si hay varios
     tags.innerHTML = '<span class="mc-tag tag-live">' + label + '</span>';
   }
 }
@@ -520,6 +508,38 @@ function bloquearCard(el, label) {
   if (tags) {
     tags.innerHTML = '<span class="mc-tag tag-lock">' + label + '</span>';
   }
+}
+
+function startPortalTutorial(plan) {
+  const gridId = plan === 'pro' ? 'gridPro' : plan === 'demo_all' ? 'gridDemo3' : 'gridDemo';
+  new Tutorial({
+    key: 'vbim_portal_v1',
+    steps: [
+      {
+        target: null,
+        title: 'Bienvenido a VoxelBIM',
+        body: 'Este es el portal principal de acceso. Te mostramos un recorrido rápido para que sepas dónde está cada cosa.',
+      },
+      {
+        target: '#planBadgeWrap .plan-badge',
+        title: 'Tu plan de acceso',
+        body: 'Indica qué módulos tienes disponibles. <b style="color:#c8d8f0">Demo</b> limita algunas herramientas; <b style="color:#f5c518">Pro</b> desbloquea el sistema completo.',
+        position: 'bottom',
+      },
+      {
+        target: '#' + gridId + ' .module-card:not(.disabled)',
+        title: 'Módulos del sistema',
+        body: 'Cada tarjeta es una herramienta independiente. Las marcadas con 🔒 requieren plan Pro. Haz clic en una activa para comenzar.',
+        position: 'right',
+      },
+      {
+        target: '.btn-logout',
+        title: 'Cerrar sesión',
+        body: 'Cuando termines de trabajar, usa este botón para salir de forma segura y limpiar tu sesión.',
+        position: 'bottom',
+      },
+    ],
+  }).start();
 }
 
 function cerrarSesion() {

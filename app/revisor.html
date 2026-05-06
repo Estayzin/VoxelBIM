@@ -1203,6 +1203,37 @@ function exportarXLSX() {
   &copy; 2026 VoxelBIM &mdash; Coordinaci&oacute;n BIM &mdash; MIT License
   &nbsp;&middot;&nbsp; <span style="opacity:.4;">Carlos Estay Ruggieri</span>
 </footer>
+<script src="/scripts/tutorial.js"></script>
+<script>
+new Tutorial({
+  key: 'vbim_revisor_v1',
+  steps: [
+    {
+      target: null,
+      title: 'Generación de Reportes IFC',
+      body: 'Este módulo analiza tu modelo IFC y genera un reporte de revisión por especialidad, validando entidades según el estándar PlanBIM Chile.',
+    },
+    {
+      target: '#btnCargarIfc',
+      title: 'Paso 1 — Cargar modelo',
+      body: 'Haz clic aquí para abrir un archivo <b style="color:#c8d8f0">.ifc</b>. También puedes arrastrarlo directamente sobre el área derecha.',
+      position: 'right',
+    },
+    {
+      target: '.panel-left',
+      title: 'Paso 2 — Configurar revisión',
+      body: 'Tras cargar el modelo, aquí aparecerán los pasos de configuración: <b style="color:#c8d8f0">especialidad → entidades → parámetros</b>. Completa cada paso y luego genera el reporte.',
+      position: 'right',
+    },
+    {
+      target: '.panel-right',
+      title: 'Paso 3 — Ver e imprimir',
+      body: 'El reporte generado se muestra aquí. Puedes descargarlo en PDF usando el botón de la barra superior del reporte.',
+      position: 'left',
+    },
+  ],
+}).start();
+</script>
 </body>
 </html>
 

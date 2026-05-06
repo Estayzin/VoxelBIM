@@ -1453,5 +1453,42 @@ function exportToXLSX() {
   XLSX.writeFile(wb, `inventario_${safeName}_${date}.xlsx`);
 }
 </script>
+<script src="/scripts/tutorial.js"></script>
+<script>
+new Tutorial({
+  key: 'vbim_inventario_v1',
+  steps: [
+    {
+      target: null,
+      title: 'Inventario BIM',
+      body: 'Este módulo extrae y cuantifica todos los elementos de tu modelo IFC, organizándolos por tipo, nivel o keynote, con exportación a Excel.',
+    },
+    {
+      target: '#btnCargarIfc',
+      title: 'Paso 1 — Cargar modelo',
+      body: 'Abre tu archivo <b style="color:#c8d8f0">.ifc</b>. El sistema lo procesará automáticamente y calculará las cantidades de cada elemento.',
+      position: 'right',
+    },
+    {
+      target: '#selGrupo',
+      title: 'Paso 2 — Agrupar resultados',
+      body: 'Elige cómo organizar el inventario: por <b style="color:#c8d8f0">Tipo → Nivel</b>, solo por Tipo, por Nivel, por Keynote o por MCG_EETT.',
+      position: 'right',
+    },
+    {
+      target: '.cls-toolbar',
+      title: 'Paso 3 — Filtrar clases IFC',
+      body: 'Selecciona qué tipos de elementos incluir en el inventario. Puedes marcar todos, ninguno o una selección personalizada.',
+      position: 'right',
+    },
+    {
+      target: '.main-header',
+      title: 'Paso 4 — Resultados y exportación',
+      body: 'Aquí se muestran los totales del inventario. Usa el botón <b style="color:#00c853">Exportar XLS</b> para descargar el inventario completo en Excel.',
+      position: 'bottom',
+    },
+  ],
+}).start();
+</script>
 </body>
 </html>

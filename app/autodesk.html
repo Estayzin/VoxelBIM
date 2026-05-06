@@ -2740,5 +2740,42 @@ document.getElementById('chatInput').addEventListener('input', function() {
   });
 })();
 </script>
+<script src="/scripts/tutorial.js"></script>
+<script>
+new Tutorial({
+  key: 'vbim_autodesk_v1',
+  steps: [
+    {
+      target: null,
+      title: 'Autodesk APS — BIM 360 / ACC',
+      body: 'Este módulo conecta con tu cuenta de Autodesk para visualizar modelos Revit, navegar proyectos BIM 360 / ACC y analizar propiedades con asistencia IA.',
+    },
+    {
+      target: '#btnLogin',
+      title: 'Paso 1 — Autenticación',
+      body: 'Inicia sesión con tu cuenta de Autodesk. Se abrirá una ventana del portal de Autodesk para autorizar el acceso a tus proyectos.',
+      position: 'right',
+    },
+    {
+      target: '#projectTree',
+      title: 'Paso 2 — Árbol de proyecto',
+      body: 'Tras autenticarte, aquí aparece el árbol de tus proyectos BIM 360 o ACC. Navega las carpetas y haz clic en un modelo <b style="color:#c8d8f0">.rvt</b> para cargarlo.',
+      position: 'right',
+    },
+    {
+      target: '#viewerContainer',
+      title: 'Paso 3 — Visor 3D APS',
+      body: 'El modelo se renderiza aquí usando el Autodesk Platform Services Viewer. Puedes navegar en 3D, seccionar y seleccionar elementos.',
+      position: 'left',
+    },
+    {
+      target: '#panelProps',
+      title: 'Paso 4 — Propiedades e IA',
+      body: 'Al seleccionar un elemento en el visor, sus propiedades aparecen aquí. El asistente IA puede analizar los datos del modelo y responder tus preguntas.',
+      position: 'left',
+    },
+  ],
+}).start();
+</script>
 </body>
 </html>
