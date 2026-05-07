@@ -1,67 +1,28 @@
-# Reporte IFC por Especialidad
+# VoxelBIM
 
-Herramienta web para verificar y contar entidades IFC por especialidad (MOP Chile / PlanBIM).
+Plataforma web para coordinación y validación de modelos BIM/IFC, orientada al estándar PlanBIM Chile.
 
 ---
 
-## ⚠ Paso obligatorio antes del primer deploy
+## Módulos
 
-El visor 3D necesita dos archivos que **debes descargar manualmente** y subir al repositorio.
-
-### 1. Descarga estos archivos (clic derecho → Guardar como)
-
-| Guardar como... | URL |
+| Módulo | Descripción |
 |---|---|
-| `js/web-ifc-api.js` | https://unpkg.com/web-ifc@0.0.51/web-ifc-api.js |
-| `wasm/web-ifc.wasm` | https://unpkg.com/web-ifc@0.0.51/web-ifc.wasm |
+| **Portal** | Acceso central con autenticación y navegación entre módulos |
+| **Visor IFC** | Visor 3D de modelos IFC con árbol de propiedades, filtros por especialidad y asistente Claude AI |
+| **Revisor IFC** | Validación y generación de reportes de entidades IFC por especialidad (MOP / PlanBIM Chile) |
+| **Inventario BIM** | Cuantificación de elementos IFC con extracción de largo, área y volumen; exportación a Excel |
+| **Explorador APS** | Navegador de proyectos BIM 360 / Autodesk Construction Cloud con visor integrado |
 
-> ⚠ **Usa unpkg.com**, no jsDelivr — jsDelivr sirve una versión ESM incompatible.
+---
 
-### 2. Estructura del repositorio después de descargar
-
-```
-tu-repo/
-├── index.html
-├── js/
-│   └── web-ifc-api.js     ← ~2 MB
-└── wasm/
-    └── web-ifc.wasm       ← ~5 MB
-```
-
-### 3. Commit y push de AMBOS archivos
+## Uso local
 
 ```bash
-git add js/web-ifc-api.js wasm/web-ifc.wasm
-git commit -m "add web-ifc files for 3D viewer"
-git push
+node server.js
+# Abrir: http://localhost:3000
 ```
 
 ---
 
-## Deploy en GitHub Pages
-
-1. Settings → Pages → Source: **main / root**
-2. URL: `https://<usuario>.github.io/<repo>/`
-3. Esperar 1-2 minutos después de cada push
-
----
-
-## Uso
-
-1. Arrastra o selecciona un archivo `.ifc`
-2. Elige especialidad en el dropdown
-3. Marca las entidades a revisar
-4. **Generar reporte** → toggle **◈ 3D** o **⬧ Ambos** para el visor
-
----
-
-## Pruebas locales (requiere servidor HTTP)
-
-```bash
-python -m http.server 8080
-# Abrir: http://localhost:8080
-```
-
----
-
-Creado por Carlos Estay Ruggieri
+Desarrollado por Carlos Estay Ruggieri
