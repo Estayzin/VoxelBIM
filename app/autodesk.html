@@ -446,8 +446,8 @@ body.light-mode #connStatus { color:#5a7a9a !important; }
 .rpt-exp-btn:disabled { opacity:.35; cursor:not-allowed; }
 .rpt-exp-btn.done { border-color:var(--green) !important; color:var(--green) !important; background:rgba(0,200,83,.08) !important; }
 .rpt-exp-btn.loading { opacity:.55; cursor:wait; }
-.rpt-exp-btn.soon { opacity:.35; cursor:default; border-style:dashed; }
-.rpt-exp-btn.soon:hover { background:rgba(124,77,255,.06); border-color:rgba(124,77,255,.18); color:#b39ddb; }
+.rpt-exp-btn.soon { opacity:.35; cursor:not-allowed; border-style:dashed; pointer-events:auto; }
+.rpt-exp-btn.soon:hover { background:transparent; transform:none; box-shadow:none; }
 .rpt-soon-tag { font:600 6px var(--mono); color:rgba(124,77,255,.5); letter-spacing:.08em; text-transform:uppercase; margin-top:1px; }
 .rpt-export-sep { grid-column:1/-1; height:1px; background:rgba(124,77,255,.1); margin:4px 0 2px; }
 .rpt-export-sub { grid-column:1/-1; font:700 8px var(--mono); color:rgba(124,77,255,.3); text-transform:uppercase; letter-spacing:.18em; margin-bottom:2px; }
@@ -635,9 +635,13 @@ if (!_hasCode && !_hasToken && !_hasAuth && window.location.protocol !== 'file:'
 
     <!-- Lista de hubs/proyectos -->
     <div class="tree" id="projectTree">
-      <div style="padding:20px 16px;text-align:center;">
-        <div style="font:400 10px var(--mono);color:var(--muted);line-height:1.8;">
-          Conecta tu cuenta Autodesk<br>para ver tus proyectos BIM 360 / ACC
+      <div style="padding:20px 16px;text-align:left;">
+        <div style="font:400 9px var(--mono);color:var(--muted);line-height:2;">
+          <div style="color:var(--aps);font-weight:700;margin-bottom:6px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;">Pasos para comenzar</div>
+          <div>1. Conecta tu cuenta Autodesk ↑</div>
+          <div>2. Elige una plataforma (BIM 360 / ACC)</div>
+          <div>3. Abre un proyecto</div>
+          <div>4. Selecciona un modelo para visualizar</div>
         </div>
       </div>
     </div>
@@ -696,7 +700,7 @@ if (!_hasCode && !_hasToken && !_hasAuth && window.location.protocol !== 'file:'
           <div class="vw-title">Voxel360</div>
           <div style="font:400 10px var(--mono);color:var(--aps);letter-spacing:.2em;text-transform:uppercase;opacity:.7;">Visor BIM &middot; APS &middot; ACC</div>
           <div style="width:40px;height:1px;background:var(--border);"></div>
-          <div class="vw-sub">Conecta tu cuenta y selecciona un modelo</div>
+          <div class="vw-sub">1. Conecta → 2. Elige plataforma → 3. Abre proyecto → 4. Selecciona modelo</div>
           <div style="font:400 9px var(--mono);color:var(--muted);opacity:.45;">BIM 360 &middot; ACC &middot; A360 &middot; RVT &middot; IFC &middot; DWG</div>
         </div>
       </div>
@@ -1031,7 +1035,7 @@ function cerrarSesion() {
   todosLosHubs = [];
   cerrarNavegador();
   document.getElementById('projectTree').innerHTML =
-    '<div style="padding:20px 16px;text-align:center;"><div style="font:400 10px var(--mono);color:var(--muted);line-height:1.8;">Conecta tu cuenta Autodesk para ver tus proyectos</div></div>';
+    '<div style="padding:20px 16px;text-align:left;"><div style="font:400 9px var(--mono);color:var(--muted);line-height:2;"><div style="color:var(--aps);font-weight:700;margin-bottom:6px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;">Pasos para comenzar</div><div>1. Conecta tu cuenta Autodesk ↑</div><div>2. Elige una plataforma (BIM 360 / ACC)</div><div>3. Abre un proyecto</div><div>4. Selecciona un modelo para visualizar</div></div></div>';
 }
 </script>
 

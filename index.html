@@ -121,7 +121,7 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
 .modules-grid.pro-grid { grid-template-columns:1fr 1fr 1fr; }
 .module-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:32px 28px; text-decoration:none; display:flex; flex-direction:column; gap:16px; transition:all .18s; position:relative; }
 .module-card:hover:not(.disabled) { border-color:var(--accent); transform:translateY(-3px); box-shadow:0 10px 40px rgba(0,212,255,.12); }
-.module-card.disabled { opacity:.45; cursor:default; }
+.module-card.disabled { opacity:.45; cursor:not-allowed; pointer-events:none; }
 .module-card.locked::after { content:'🔒'; position:absolute; top:14px; right:14px; font-size:13px; opacity:.6; }
 .mc-icon { width:50px; height:50px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:24px; }
 .mc-title { font:700 15px var(--sans); color:var(--text); margin-bottom:6px; }
@@ -186,7 +186,7 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
           <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
         </div>
         <button class="login-btn" onclick="doLogin()">Acceder</button>
-        <div class="login-error" id="loginError">Usuario o contraseña incorrectos</div>
+        <div class="login-error" id="loginError">⚠ Usuario o contraseña incorrectos</div>
       </div>
     </div>
   </div>
@@ -543,6 +543,7 @@ function startPortalTutorial(plan) {
 }
 
 function cerrarSesion() {
+  if (!confirm('¿Cerrar sesión?')) return;
   sessionStorage.removeItem('ifc_auth');
   sessionStorage.removeItem('ifc_plan');
   document.getElementById('portal').style.display = 'none';

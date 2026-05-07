@@ -172,7 +172,7 @@ header { background:var(--navy); padding:16px 24px; min-height:72px; display:fle
     <div class="htitle">VoxelBIM</div>
     <div class="hsub">Generaci&oacute;n de Reportes &middot; IFC</div>
   </div>
-  <button class="hback" style="margin-left:auto;" onclick="history.length > 1 ? history.back() : window.location.href='/'">&#8592; Volver</button>
+  <button class="hback" style="margin-left:auto;" onclick="window.location.href='/'">&#8592; Volver</button>
 </header>
 
 <div class="workspace">
@@ -204,6 +204,7 @@ header { background:var(--navy); padding:16px 24px; min-height:72px; display:fle
           <div class="ents-toolbar">
             <button class="btn-chk" id="btnAll">Todas</button>
             <button class="btn-chk" id="btnNone">Ninguna</button>
+            <span id="entCount" style="font:400 9px var(--mono);color:var(--muted);margin-left:auto;align-self:center;"></span>
           </div>
           <div class="ents-list" id="entsList"></div>
         </div>
@@ -250,13 +251,14 @@ header { background:var(--navy); padding:16px 24px; min-height:72px; display:fle
           </div>
         </div>
 
-        <button class="btn-gen" id="btnGen" disabled>&#9654;&nbsp; Generar Reporte</button>
+        <button class="btn-gen" id="btnGen" disabled title="Selecciona especialidad y al menos una entidad para habilitar">&#9654;&nbsp; Generar Reporte</button>
       </div>
 
       <div class="sbox" id="sbox">
         <div class="shdr">
           <div class="spin" id="spin"></div>
           <span id="stitle">Procesando...</span>
+          <button onclick="document.getElementById('slog').innerHTML=''" style="margin-left:auto;background:none;border:none;color:var(--muted);font:400 9px var(--mono);cursor:pointer;padding:2px 6px;" title="Limpiar log">✕ limpiar</button>
         </div>
         <div class="pwrap" id="pwrap"><div class="pbar" id="pbar"></div></div>
         <div class="slog" id="slog"></div>
@@ -306,7 +308,7 @@ header { background:var(--navy); padding:16px 24px; min-height:72px; display:fle
     <div class="vtoolbar" id="vtoolbar">
       <span class="vt-title" id="vtitle">-</span>
       <button class="btn-vdl" id="vbtnDl">&#11015;&nbsp; Descargar</button>
-      <button class="btn-vdl" id="vbtnXlsx" style="color:var(--green);border-color:rgba(0,200,83,.4);display:none;" onclick="exportarXLSX()">&#11015;&nbsp; Exportar XLSX</button>
+      <button class="btn-vdl" id="vbtnXlsx" style="color:var(--green);border-color:rgba(0,200,83,.4);" disabled title="Genera un reporte primero" onclick="exportarXLSX()">&#11015;&nbsp; Exportar XLSX</button>
     </div>
     <div class="view-content" id="viewContent">
       <iframe class="vframe" id="vframe" src="about:blank"></iframe>
@@ -944,9 +946,11 @@ function actualizarEntidades(){
 }
 
 function validarSeleccion(){
-  var cbs=document.querySelectorAll("#entsList input[type=checkbox]"),ok=false;
-  for(var i=0;i<cbs.length;i++) if(cbs[i].checked){ok=true;break;}
+  var cbs=document.querySelectorAll("#entsList input[type=checkbox]"),ok=false,sel=0;
+  for(var i=0;i<cbs.length;i++) if(cbs[i].checked){ok=true;sel++;}
   document.getElementById("btnGen").disabled=!ok;
+  var c=document.getElementById("entCount");
+  if(c) c.textContent=sel>0?sel+" seleccionada"+(sel>1?"s":""):"";
 }
 
 function procesar(){
@@ -1025,7 +1029,7 @@ function procesar(){
       lastNcData = ncData;
       lastRepNombre = espNom;
       lastModeloNombre = mn;
-      document.getElementById('vbtnXlsx').style.display = '';
+      document.getElementById('vbtnXlsx').removeAttribute('disabled');
       mostrarReporte(rep);
         document.querySelectorAll(".rcard").forEach(function(c){c.classList.remove("active");});
         card.classList.add("active");
@@ -1042,7 +1046,7 @@ function procesar(){
       lastNcData = ncData;
       lastRepNombre = espNom;
       lastModeloNombre = mn;
-      document.getElementById('vbtnXlsx').style.display = '';
+      document.getElementById('vbtnXlsx').removeAttribute('disabled');
       mostrarReporte(rep);
 
       // Guardar buffer IFC y IDs para cuando se active el visor 3D

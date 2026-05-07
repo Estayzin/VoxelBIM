@@ -186,9 +186,12 @@ footer { text-align:center; padding:6px 24px; font:400 9px var(--mono); color:va
 .loading { position:absolute; inset:0; background:rgba(6,13,24,.8); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; z-index:10; }
 .spinner { width:24px; height:24px; border:2px solid rgba(0,212,255,.2); border-top-color:var(--accent); border-radius:50%; animation:spin-s .8s linear infinite; }
 @keyframes spin-s { to { transform:rotate(360deg); } }
+#toast-inv { position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(0,200,83,.15);color:var(--green);border:1px solid rgba(0,200,83,.35);border-radius:6px;padding:8px 18px;font:600 10px var(--mono);letter-spacing:.05em;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:9999; }
+#toast-inv.show { opacity:1;transform:translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
+<div id="toast-inv"></div>
 
 <header>
   <div class="hicon">
@@ -219,7 +222,7 @@ footer { text-align:center; padding:6px 24px; font:400 9px var(--mono); color:va
     <div class="hsub">Inventario BIM &middot; C&aacute;lculo de Cantidades</div>
   </div>
   <button class="btn-theme" id="btnLightMode" title="Modo claro/oscuro">&#9681;</button>
-  <button class="hback" onclick="history.length > 1 ? history.back() : window.location.href='/'">&#8592; Volver</button>
+  <button class="hback" onclick="window.location.href='/'">&#8592; Volver</button>
 </header>
 
 <div class="workspace">
@@ -282,7 +285,7 @@ footer { text-align:center; padding:6px 24px; font:400 9px var(--mono); color:va
   <div class="main">
     <div class="main-header">
       <div class="main-title">Cuadro General de Cantidades</div>
-      <button class="btn-export" id="btnExport" onclick="exportToXLSX()" disabled>
+      <button class="btn-export" id="btnExport" onclick="exportToXLSX()" disabled title="Carga un archivo IFC para habilitar la exportación">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Exportar XLSX
       </button>
@@ -903,6 +906,7 @@ async function handleFile(file) {
       : `Largo:${cov.length} Área:${cov.area}${cov.areaCalc?'('+cov.areaCalc+'~)':''} Vol:${cov.volume}${cov.volCalc?'('+cov.volCalc+'~)':''} Alto:${cov.height} Grosor:${cov.width}`;
     progressText.textContent = `✓ ${Object.keys(entities).length.toLocaleString()} entidades · ${unitsLabel} · ${covMsg}`;
     setTimeout(() => progressWrap.classList.remove('show'), 6000);
+    mostrarToast(`✓ Inventario generado — ${Object.keys(entities).length.toLocaleString()} elementos`);
   } catch(err) {
     console.error('[Inventario] Error:', err);
     progressText.textContent = 'Error: ' + err.message;
@@ -911,6 +915,13 @@ async function handleFile(file) {
 }
 
 function tick() { return new Promise(r => setTimeout(r, 16)); }
+
+function mostrarToast(msg) {
+  const t = document.getElementById('toast-inv');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
 
 // ============================================================
 // EXTRACCIÓN DE TIPOS (IFCRELDEFINESBYTYPE)

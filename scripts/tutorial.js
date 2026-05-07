@@ -114,7 +114,7 @@ class Tutorial {
       </div>
       <div style="text-align:center;margin-top:10px;">
         <button id="tut-skip"
-          style="background:none;border:none;color:#2a3a50;font:400 10px 'JetBrains Mono',monospace;
+          style="background:none;border:none;color:rgba(200,216,240,.4);font:400 10px 'JetBrains Mono',monospace;
                  cursor:pointer;letter-spacing:.08em;text-transform:uppercase;">
           Saltar tutorial
         </button>
