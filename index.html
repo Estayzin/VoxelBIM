@@ -139,6 +139,13 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
 .header-plan { font:600 9px var(--mono); padding:3px 10px; border-radius:10px; }
 .header-plan.demo { background:rgba(255,107,53,.1); color:var(--warn); border:1px solid rgba(255,107,53,.25); }
 .header-plan.pro  { background:rgba(245,197,24,.1); color:var(--gold); border:1px solid rgba(245,197,24,.25); }
+@media (max-width:768px) {
+  .portal-main { padding:20px 12px; }
+  .login-card { flex-direction:column; min-height:auto; }
+  .login-left { padding:32px 24px; border-right:none; border-bottom:1px solid var(--border); }
+  .modules-grid, .modules-grid.pro-grid { grid-template-columns:1fr; }
+  header { flex-wrap:wrap; padding:10px 14px; gap:6px; min-height:auto; }
+}
 </style>
 </head>
 <body>
@@ -605,7 +612,7 @@ function cerrarSesion() {
 })();
 </script>
 <footer style="text-align:center;padding:10px;font:400 9px var(--mono);color:var(--muted);border-top:1px solid var(--border);letter-spacing:.08em;">
-  &copy; 2026 Carlos Estay Ruggieri &mdash; Coordinaci&oacute;n BIM &mdash; c.estay@outlook.com &mdash; MIT License
+  &copy; 2026 Carlos Estay Ruggieri &mdash; Coordinaci&oacute;n BIM &mdash; c.estay@outlook.com &mdash; <a href="/LICENSE" target="_blank" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">MIT License</a>
 </footer>
 </body>
 </html>

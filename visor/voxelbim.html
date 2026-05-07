@@ -431,6 +431,14 @@ body.light-mode footer { border-top-color:#b0c4d8; }
 #claudeChatFooter { padding:5px 12px; border-top:1px solid rgba(199,125,255,.08); display:flex; gap:6px; justify-content:space-between; flex-shrink:0; }
 .cc-foot-btn { background:transparent; border:none; color:rgba(199,125,255,.4); font:400 9px var(--mono); cursor:pointer; padding:3px 6px; border-radius:3px; }
 .cc-foot-btn:hover { color:#c77dff; background:rgba(199,125,255,.08); }
+.sug-btn:active { background:rgba(199,125,255,.25) !important; transform:scale(.97); }
+@media (max-width:768px) {
+  .main { flex-direction:column; }
+  .sidebar { width:100%; max-height:40vh; border-right:none; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .viewer-wrap { flex:1; min-height:300px; }
+  header { flex-wrap:wrap; padding:10px 14px; gap:6px; min-height:auto; }
+  .hright { flex-wrap:wrap; }
+}
 </style>
 </head>
 <body>
@@ -552,6 +560,15 @@ body.light-mode footer { border-top-color:#b0c4d8; }
         </div>
       </div>
 
+      <!-- PASOS INICIALES -->
+      <div id="stepsGuide" style="padding:14px 16px 4px;font:400 9px var(--mono);color:var(--muted);line-height:2.1;border-top:1px solid var(--border);">
+        <div style="color:var(--accent);font-weight:700;margin-bottom:4px;letter-spacing:.08em;text-transform:uppercase;font-size:8px;">Pasos para comenzar</div>
+        <div>1. Carga un archivo IFC (botón arriba)</div>
+        <div>2. Explora el árbol de elementos</div>
+        <div>3. Selecciona elementos para ver propiedades</div>
+        <div>4. Consulta al asistente IA si necesitas ayuda</div>
+      </div>
+
       <!-- NAVEGADOR DEL MODELO — eliminado del sidebar, ahora es panel lateral -->
     </div>
 
@@ -562,7 +579,7 @@ body.light-mode footer { border-top-color:#b0c4d8; }
         <button class="nav-close" onclick="window.toggleNav()" title="Cerrar">&#10005;</button>
       </div>
       <div class="nav-body" id="navBody">
-        <div class="nav-empty">Carga un modelo IFC<br>para ver el &aacute;rbol del proyecto</div>
+        <div class="nav-empty">&#8592; Carga un modelo IFC<br>para explorar su estructura</div>
       </div>
     </div>
 
@@ -797,6 +814,27 @@ body.light-mode footer { border-top-color:#b0c4d8; }
       localStorage.setItem('voxelbim_theme', isLight ? 'light' : 'dark');
     });
   })();
+  </script>
+  <script>
+    new MutationObserver(() => {
+      if (document.getElementById('dropzoneCentral').classList.contains('hidden'))
+        document.getElementById('stepsGuide').style.display = 'none';
+    }).observe(document.getElementById('dropzoneCentral'), { attributes: true, attributeFilter: ['class'] });
+
+    // Aviso si la carga supera 30s
+    let _loadTimer = null;
+    new MutationObserver(() => {
+      const pw = document.getElementById('progressWrap');
+      const lbl = document.getElementById('progressLabel');
+      if (pw && pw.classList.contains('show')) {
+        _loadTimer = _loadTimer || setTimeout(() => {
+          if (pw.classList.contains('show') && lbl)
+            lbl.textContent += ' — Modelo grande, por favor espera...';
+        }, 30000);
+      } else {
+        clearTimeout(_loadTimer); _loadTimer = null;
+      }
+    }).observe(document.getElementById('progressWrap'), { attributes: true, attributeFilter: ['class'] });
   </script>
 </body>
 </html>

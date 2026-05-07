@@ -179,6 +179,19 @@ body.light-mode .bit-top          { animation:bit-pulse 2s ease-in-out infinite;
 .btn-export:hover { background:rgba(0,200,83,.1); border-color:var(--green); box-shadow:0 0 14px rgba(0,200,83,.2); }
 .btn-export:disabled { opacity:.35; cursor:not-allowed; }
 
+/* DROPZONE CENTRAL */
+#dropzoneCentral { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:25; cursor:pointer; transition:background .2s; pointer-events:auto; }
+#dropzoneCentral.over { background:rgba(0,212,255,.05); }
+#dropzoneCentral.hidden { display:none; }
+.dzc-box { border:1px dashed rgba(0,212,255,.25); border-radius:16px; padding:48px 56px; display:flex; flex-direction:column; align-items:center; gap:14px; background:rgba(6,13,24,.55); transition:all .2s; pointer-events:none; }
+#dropzoneCentral.over .dzc-box { border-color:var(--accent); background:rgba(0,212,255,.07); }
+.dzc-title { font:700 16px var(--mono); color:#e0f0ff; letter-spacing:.08em; text-transform:uppercase; }
+.dzc-sub   { font:400 10px var(--mono); color:var(--muted); letter-spacing:.12em; text-transform:uppercase; }
+body.light-mode #dropzoneCentral .dzc-box { background:rgba(255,255,255,.75); border-color:rgba(0,119,170,.3); }
+body.light-mode #dropzoneCentral.over .dzc-box { background:rgba(255,255,255,.9); border-color:var(--accent); }
+body.light-mode .dzc-title { color:#1a2a3a; }
+body.light-mode .dzc-sub   { color:#5a7a9a; }
+
 /* FOOTER */
 footer { text-align:center; padding:6px 24px; font:400 9px var(--mono); color:var(--muted); border-top:1px solid var(--border); letter-spacing:.08em; flex-shrink:0; }
 
@@ -188,6 +201,13 @@ footer { text-align:center; padding:6px 24px; font:400 9px var(--mono); color:va
 @keyframes spin-s { to { transform:rotate(360deg); } }
 #toast-inv { position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(0,200,83,.15);color:var(--green);border:1px solid rgba(0,200,83,.35);border-radius:6px;padding:8px 18px;font:600 10px var(--mono);letter-spacing:.05em;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:9999; }
 #toast-inv.show { opacity:1;transform:translateX(-50%) translateY(0); }
+@media (max-width:768px) {
+  .workspace { flex-direction:column; }
+  aside.sidebar { width:100%; max-height:42vh; border-right:none; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .main { flex:1; overflow:hidden; }
+  .main-header { flex-wrap:wrap; gap:6px; }
+  header { flex-wrap:wrap; padding:10px 14px; gap:6px; min-height:auto; }
+}
 </style>
 </head>
 <body>
@@ -240,6 +260,13 @@ footer { text-align:center; padding:6px 24px; font:400 9px var(--mono); color:va
     </div>
     <div class="sb-body">
 
+      <div id="stepsGuide" style="font:400 9px var(--mono);color:var(--muted);line-height:2.1;">
+        <div style="color:var(--accent);font-weight:700;margin-bottom:4px;letter-spacing:.08em;text-transform:uppercase;font-size:8px;">Pasos para comenzar</div>
+        <div>1. Carga un archivo IFC (botón arriba)</div>
+        <div>2. Filtra por clase o nivel si necesitas</div>
+        <div>3. Exporta a XLSX cuando el inventario esté listo</div>
+      </div>
+
       <div class="progress-wrap" id="progressWrap">
         <div class="progress-label" id="progressText">Procesando IFC...</div>
         <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
@@ -283,6 +310,38 @@ footer { text-align:center; padding:6px 24px; font:400 9px var(--mono); color:va
   </aside>
 
   <div class="main">
+    <!-- Dropzone central -->
+    <div id="dropzoneCentral" onclick="document.getElementById('fileInput').click()">
+      <div class="dzc-box">
+        <svg width="56" height="64" viewBox="0 0 90 105" fill="none">
+          <g class="bit-wrap">
+            <polygon class="bit-face" points="45,4 75,28 15,28" fill="rgba(0,212,255,0.22)" stroke="#00d4ff" stroke-width="1.4" stroke-linejoin="round"/>
+            <polygon points="75,28 45,4 82,52" fill="rgba(0,212,255,0.10)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+            <polygon points="15,28 45,4 8,52"  fill="rgba(0,212,255,0.18)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+            <polygon points="15,28 75,28 82,52 45,68 8,52" fill="rgba(0,212,255,0.07)" stroke="#00d4ff" stroke-width="1.0" stroke-linejoin="round"/>
+            <polygon points="75,28 82,52 62,78" fill="rgba(0,212,255,0.15)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+            <polygon points="15,28 8,52 28,78"  fill="rgba(0,212,255,0.20)" stroke="#00d4ff" stroke-width="0.9" stroke-linejoin="round"/>
+            <polygon points="8,52 28,78 45,100 45,68" fill="rgba(0,212,255,0.07)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+            <polygon points="82,52 62,78 45,100 45,68" fill="rgba(0,212,255,0.12)" stroke="rgba(0,212,255,0.35)" stroke-width="0.7" stroke-linejoin="round"/>
+            <polygon points="28,78 62,78 45,100" fill="rgba(0,212,255,0.14)" stroke="#00d4ff" stroke-width="1.2" stroke-linejoin="round"/>
+            <line class="bit-edge1" x1="15" y1="28" x2="45" y2="4" stroke="#00d4ff" stroke-width="2.4" stroke-linecap="round"/>
+            <line class="bit-edge2" x1="45" y1="4" x2="75" y2="28" stroke="#00d4ff" stroke-width="1.6" stroke-linecap="round"/>
+            <circle class="bit-top"     cx="45" cy="4"   r="3"   fill="#00d4ff"/>
+            <circle class="bit-vtx-mid" cx="15" cy="28"  r="1.8" fill="#00d4ff" opacity="0.5"/>
+            <circle class="bit-vtx-mid" cx="75" cy="28"  r="1.8" fill="#00d4ff" opacity="0.5"/>
+            <circle class="bit-vtx-mid" cx="8"  cy="52"  r="1.4" fill="#00d4ff" opacity="0.35"/>
+            <circle class="bit-vtx-mid" cx="82" cy="52"  r="1.4" fill="#00d4ff" opacity="0.35"/>
+            <circle class="bit-vtx-bot" cx="45" cy="100" r="2.2" fill="#00d4ff" opacity="0.65"/>
+          </g>
+        </svg>
+        <div class="dzc-title">VoxelBIM</div>
+        <div style="font:400 10px var(--mono);color:var(--accent);letter-spacing:.2em;text-transform:uppercase;opacity:.7;">Inventario BIM &middot; IFC</div>
+        <div style="width:40px;height:1px;background:var(--border);"></div>
+        <div class="dzc-sub">Haz clic o arrastra un archivo IFC</div>
+        <div style="font:400 9px var(--mono);color:var(--muted);opacity:.45;">Formatos soportados: .ifc</div>
+      </div>
+    </div>
+
     <div class="main-header">
       <div class="main-title">Cuadro General de Cantidades</div>
       <button class="btn-export" id="btnExport" onclick="exportToXLSX()" disabled title="Carga un archivo IFC para habilitar la exportación">
@@ -812,6 +871,10 @@ window.addEventListener('dragover', e => e.preventDefault(), false);
 window.addEventListener('drop',     e => e.preventDefault(), false);
 
 fileInput.addEventListener('change', e => { const f = e.target.files[0]; if (f) handleFile(f); });
+const dzc = document.getElementById('dropzoneCentral');
+dzc.addEventListener('dragover', e => { e.preventDefault(); dzc.classList.add('over'); });
+dzc.addEventListener('dragleave', () => dzc.classList.remove('over'));
+dzc.addEventListener('drop', e => { e.preventDefault(); dzc.classList.remove('over'); const f = e.dataTransfer.files[0]; if (f) handleFile(f); });
 document.getElementById('selNivel').addEventListener('change', renderTable);
 document.getElementById('selGrupo').addEventListener('change', renderTable);
 document.getElementById('selKeynote').addEventListener('change', renderTable);
@@ -844,6 +907,8 @@ document.getElementById('btnNinguna').addEventListener('click', () => {
 // CARGA DE ARCHIVO
 // ============================================================
 async function handleFile(file) {
+  document.getElementById('dropzoneCentral').classList.add('hidden');
+  document.getElementById('stepsGuide').style.display = 'none';
   document.getElementById('modelTag').classList.add('show');
   document.getElementById('modelName').textContent = file.name;
   document.getElementById('modelMeta').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';

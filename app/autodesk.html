@@ -503,16 +503,31 @@ body.light-mode #connStatus { color:#5a7a9a !important; }
 /* ── NOTIFICACIÓN TOAST ── */
 .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(60px); background:rgba(13,21,38,.96); border:1px solid rgba(199,125,255,.3); border-radius:8px; padding:10px 18px; font:500 10px var(--mono); color:#e0c8ff; letter-spacing:.06em; z-index:9999; transition:transform .25s ease, opacity .25s ease; opacity:0; pointer-events:none; white-space:nowrap; }
 .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+@media (max-width:768px) {
+  .workspace { flex-direction:column; }
+  .panel-left { width:100%; max-height:38vh; border-right:none; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .panel-mid  { width:100% !important; opacity:1 !important; border-right:none; border-bottom:1px solid var(--border); max-height:35vh; }
+  header { flex-wrap:wrap; padding:10px 14px; gap:6px; min-height:auto; }
+  .header-toolbar { flex-wrap:wrap; }
+  .hnav-group { flex-wrap:wrap; margin-left:0; padding-left:0; border-left:none; }
+}
 </style>
 </head>
 <body>
 <script>
 // Guard: permite si tiene sesión, si viene de OAuth (?code=), si tiene token APS, o si es local
-var _hasCode  = new URLSearchParams(window.location.search).get('code');
+var _params   = new URLSearchParams(window.location.search);
+var _hasCode  = _params.get('code');
+var _hasError = _params.get('error');
 var _hasToken = sessionStorage.getItem('aps_token');
 var _hasAuth  = sessionStorage.getItem('ifc_auth') === '1';
 if (!_hasCode && !_hasToken && !_hasAuth && window.location.protocol !== 'file:') {
   window.location.href = '/';
+}
+// Si Autodesk devolvió un error (ej: acceso denegado), limpiar URL y marcar para mostrar aviso
+if (_hasError) {
+  sessionStorage.setItem('aps_oauth_error', _params.get('error_description') || _hasError);
+  history.replaceState({}, '', window.location.pathname);
 }
 </script>
 
@@ -557,10 +572,10 @@ if (!_hasCode && !_hasToken && !_hasAuth && window.location.protocol !== 'file:'
 
     <!-- Paneles: Propiedades y Reporte -->
     <div class="header-toolbar">
-      <button class="hbar-btn sidebar-tab" data-tab="props" onclick="cambiarSidebarTab('props', this)">
+      <button class="hbar-btn sidebar-tab" data-tab="props" onclick="cambiarSidebarTab('props', this)" title="Panel de propiedades del elemento seleccionado">
         <span class="hb-icon">&#9776;</span> Propiedades
       </button>
-      <button class="hbar-btn sidebar-tab" data-tab="charts" onclick="cambiarSidebarTab('charts', this)">
+      <button class="hbar-btn sidebar-tab" data-tab="charts" onclick="cambiarSidebarTab('charts', this)" title="Reporte de usos BIM PlanBIM">
         <span class="hb-icon">&#9636;</span> Reporte
       </button>
       <button class="hbar-btn disabled" title="Pr&oacute;ximamente">
@@ -994,6 +1009,16 @@ function mostrarToast(msg) {
   }
   var stored = sessionStorage.getItem('aps_token');
   if (stored) { apsToken = stored; onTokenReady(); }
+
+  var oauthErr = sessionStorage.getItem('aps_oauth_error');
+  if (oauthErr) {
+    sessionStorage.removeItem('aps_oauth_error');
+    var errMsg = document.createElement('div');
+    errMsg.style.cssText = 'padding:12px 16px;font:400 10px var(--mono);color:#ff9800;background:rgba(255,152,0,.08);border-left:3px solid #ff9800;margin:8px;border-radius:3px;line-height:1.8;';
+    errMsg.innerHTML = '&#9888; Autenticación cancelada o denegada.<br><button onclick="iniciarLogin()" style="margin-top:6px;padding:4px 10px;font:600 9px var(--mono);background:#ff9800;color:#000;border:none;border-radius:3px;cursor:pointer;">Intentar de nuevo</button>'
+      + ' <button onclick="this.parentElement.remove()" style="margin-top:6px;margin-left:4px;padding:4px 10px;font:600 9px var(--mono);background:transparent;color:#ff9800;border:1px solid #ff9800;border-radius:3px;cursor:pointer;">Cancelar</button>';
+    document.getElementById('projectTree').prepend(errMsg);
+  }
 })();
 
 function manejarTokenExpirado() {

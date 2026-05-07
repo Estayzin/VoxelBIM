@@ -140,6 +140,12 @@ header { background:var(--navy); padding:16px 24px; min-height:72px; display:fle
 .cfg-field input,.cfg-field-full input{width:100%;padding:5px 8px;background:var(--blue);border:1px solid var(--border);border-radius:3px;font:400 11px var(--mono);color:var(--text);outline:none;text-align:center;}
 .cfg-field input:focus,.cfg-field-full input:focus{border-color:var(--accent);}
 .cfg-field-full{width:100%;}
+@media (max-width:768px) {
+  .workspace { flex-direction:column; }
+  .panel-left { width:100%; max-height:42vh; border-right:none; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .panel-right { flex:1; overflow:hidden; }
+  header { flex-wrap:wrap; padding:10px 14px; gap:6px; min-height:auto; }
+}
 </style>
 </head>
 <body>
@@ -192,6 +198,13 @@ header { background:var(--navy); padding:16px 24px; min-height:72px; display:fle
     </div>
 
     <div class="pl">
+      <div id="stepsGuide" style="padding:14px 0 4px;font:400 9px var(--mono);color:var(--muted);line-height:2.1;">
+        <div style="color:var(--accent);font-weight:700;margin-bottom:4px;letter-spacing:.08em;text-transform:uppercase;font-size:8px;">Pasos para comenzar</div>
+        <div>1. Carga un archivo IFC (botón arriba)</div>
+        <div>2. Elige la especialidad</div>
+        <div>3. Selecciona las entidades a validar</div>
+        <div>4. Haz clic en "Generar Reporte"</div>
+      </div>
       <div id="configBlock" style="display:none;flex-direction:column;gap:12px">
         <div>
           <div class="step-label">2. Especialidad</div>
@@ -1086,6 +1099,7 @@ function handleFile(file){
   else selEsp.value="";
   actualizarEntidades();
   document.getElementById("configBlock").style.display="flex";
+  document.getElementById("stepsGuide").style.display="none";
   document.getElementById("sbox").classList.remove("show");
   document.getElementById("res").classList.remove("show");
   var fr=document.getElementById("vframe"),tb=document.getElementById("vtoolbar");
