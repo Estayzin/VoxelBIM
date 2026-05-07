@@ -96,6 +96,10 @@ const setProgress = (v) => {
 };
 
 const loadIfc = async (file) => {
+  if (file.size > 500 * 1024 * 1024) {
+    alert("El archivo supera el límite de 500 MB. Usa un IFC más liviano.");
+    return;
+  }
   overlay.classList.add("hidden");
   progressWrap.classList.add("show");
   modelName.textContent = file.name;
@@ -103,6 +107,12 @@ const loadIfc = async (file) => {
   modelInfo.classList.add("show");
   const buffer = await file.arrayBuffer();
   const texto = new TextDecoder('utf-8').decode(buffer);
+  if (!texto.trimStart().startsWith("ISO-10303-21;")) {
+    progressWrap.classList.remove("show");
+    overlay.classList.remove("hidden");
+    alert("El archivo no es un IFC válido (falta header ISO-10303-21).");
+    return;
+  }
   const est = parsearIFC(texto);
   _tiposCache = null;
   _clsFiltroActiva = null;

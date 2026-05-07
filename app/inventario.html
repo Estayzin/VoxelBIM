@@ -855,8 +855,19 @@ async function handleFile(file) {
   progressBar.style.width = '5%';
   progressText.textContent = 'Leyendo archivo...';
 
+  if (file.size > 500 * 1024 * 1024) {
+    progressText.textContent = 'Error: El archivo supera el límite de 500 MB.';
+    progressBar.style.background = 'var(--red)';
+    return;
+  }
+
   try {
     const text = await file.text();
+    if (!text.trimStart().startsWith('ISO-10303-21;')) {
+      progressText.textContent = 'Error: El archivo no es un IFC válido (falta header ISO-10303-21).';
+      progressBar.style.background = 'var(--red)';
+      return;
+    }
     progressBar.style.width = '20%';
     progressText.textContent = 'Parseando entidades IFC...';
     await tick();

@@ -992,6 +992,24 @@ function mostrarToast(msg) {
   if (stored) { apsToken = stored; onTokenReady(); }
 })();
 
+function manejarTokenExpirado() {
+  sessionStorage.removeItem('aps_token');
+  apsToken = null;
+  document.getElementById('btnLogin').innerHTML = '<span>&#128279;</span> Conectar con Autodesk';
+  document.getElementById('btnLogin').className = 'btn-login';
+  document.getElementById('btnLogin').onclick = iniciarLogin;
+  document.getElementById('userInfo').style.display = 'none';
+  document.getElementById('connDot').className = 'conn-dot';
+  document.getElementById('connStatus').textContent = 'Sin conexión';
+  document.getElementById('platformWrap').style.display = 'none';
+  todosLosHubs = [];
+  var msg = document.createElement('div');
+  msg.style.cssText = 'padding:14px 16px;font:400 10px var(--mono);color:#ff9800;background:rgba(255,152,0,.08);border-left:3px solid #ff9800;margin:8px;border-radius:3px;line-height:1.8;';
+  msg.innerHTML = '&#9888; Tu sesión de Autodesk expiró (60 min).<br><button onclick="iniciarLogin()" style="margin-top:6px;padding:4px 10px;font:600 9px var(--mono);background:#ff9800;color:#000;border:none;border-radius:3px;cursor:pointer;">Reconectar con Autodesk</button>';
+  document.getElementById('projectTree').innerHTML = '';
+  document.getElementById('projectTree').prepend(msg);
+}
+
 function iniciarLogin() {
   window.location.href = 'https://developer.api.autodesk.com/authentication/v2/authorize'
     + '?response_type=code'
@@ -1027,7 +1045,8 @@ async function onTokenReady() {
     var res  = await fetch('https://api.userprofile.autodesk.com/userinfo', {
       headers: { 'Authorization': 'Bearer ' + apsToken }
     });
-    if (!res.ok) throw new Error('Token inválido o expirado');
+    if (res.status === 401) { manejarTokenExpirado(); return; }
+    if (!res.ok) throw new Error('Error obteniendo usuario: ' + res.status);
     var user = await res.json();
     document.getElementById('userName').textContent  = user.name || (user.given_name + ' ' + user.family_name);
     document.getElementById('userEmail').textContent = user.email;
@@ -1058,6 +1077,8 @@ async function cargarHubs() {
     var res  = await fetch('https://developer.api.autodesk.com/project/v1/hubs', {
       headers: { 'Authorization': 'Bearer ' + apsToken }
     });
+    if (res.status === 401) { ocultarLoading(); manejarTokenExpirado(); return; }
+    if (!res.ok) throw new Error('Error cargando hubs: ' + res.status);
     var data = await res.json();
     todosLosHubs = data.data || [];
     console.log('[APS] Hubs recibidos:', todosLosHubs.length);

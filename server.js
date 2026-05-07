@@ -273,31 +273,46 @@ http.createServer((req, res) => {
     return;
   }
 
+  // El visor (voxelbim) NO necesita crossOriginIsolated en local — igual que Cloudflare.
+  // Con COEP activo, SharedArrayBuffer se habilita y web-ifc elige web-ifc-mt.wasm
+  // (multi-hilo), lo que intenta cargar el bundle completo como pthread worker y falla.
+  const isVisorAsset = pathname.startsWith('/visor/') || pathname === '/voxelbim.js'
+    || pathname === '/voxelbim.html' || pathname === '/worker.mjs'
+    || pathname.startsWith('/web-ifc/') || pathname.startsWith('/assets/');
+
+  function serveData(data, filePath) {
+    const ext = filePath.split('.').pop().toLowerCase();
+    const contentType = MIME[ext] || 'application/octet-stream';
+    const headers = { 'Content-Type': contentType };
+    if (!isVisorAsset) {
+      headers['Cross-Origin-Opener-Policy']  = 'same-origin';
+      headers['Cross-Origin-Embedder-Policy'] = 'credentialless';
+    }
+    headers['Cross-Origin-Resource-Policy'] = 'cross-origin';
+    res.writeHead(200, headers);
+    res.end(data);
+  }
+
   fs.readFile(full, (err, data) => {
     if (err) {
+      // Fallback: buscar en visor/dist/ para los assets del bundle compilado
+      const visorFull = path.join(ROOT, 'visor', 'dist', file);
+      if (visorFull.startsWith(path.resolve(ROOT))) {
+        fs.readFile(visorFull, (err2, data2) => {
+          if (err2) {
+            res.writeHead(404, { 'Content-Type': 'text/plain' });
+            res.end('404 Not Found: ' + file);
+            return;
+          }
+          serveData(data2, visorFull);
+        });
+        return;
+      }
       res.writeHead(404, { 'Content-Type': 'text/plain' });
       res.end('404 Not Found: ' + file);
       return;
     }
-
-    const ext = full.split('.').pop().toLowerCase();
-    const contentType = MIME[ext] || 'application/octet-stream';
-
-    // Headers COOP/COEP para Autodesk Viewer y WASM
-    const headers = {
-      'Content-Type': contentType,
-      'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'credentialless',
-      'Cross-Origin-Resource-Policy': 'cross-origin',
-    };
-
-    // Para recursos remotos (CDN), necesitamos indicar que tienen CORP
-    if (contentType === 'application/javascript' || contentType === 'text/css') {
-      headers['Cross-Origin-Resource-Policy'] = 'cross-origin';
-    }
-
-    res.writeHead(200, headers);
-    res.end(data);
+    serveData(data, full);
   });
 }).listen(PORT, () => {
   console.log('\n╔════════════════════════════════════════════════╗');

@@ -16,10 +16,10 @@ if (workerFile) {
 }
 
 // 2. Patch main bundle: fix Emscripten pthread workers in ES module context
-const mainFile = files.find(f => f.startsWith('voxelbim-') && f.endsWith('.js'));
-if (mainFile) {
-  const filePath = path.join(assetsDir, mainFile);
-  let code = fs.readFileSync(filePath, 'utf8');
+// El entry file va a dist/voxelbim.js (sin hash) por entryFileNames:'[name].js'
+const mainBundlePath = path.join(__dirname, 'dist', 'voxelbim.js');
+if (fs.existsSync(mainBundlePath)) {
+  let code = fs.readFileSync(mainBundlePath, 'utf8');
   let patched = false;
 
   const SRC_ORIG = 'var e=globalThis.document?.currentScript?.src;';
@@ -29,7 +29,7 @@ if (mainFile) {
     console.log('[patch] Fix 1: currentScript.src → import.meta.url fallback aplicado');
     patched = true;
   } else {
-    console.warn('[patch] AVISO: patrón Fix 1 no encontrado');
+    console.warn('[patch] AVISO: patrón Fix 1 no encontrado en voxelbim.js');
   }
 
   const WORKER_ORIG = 'new Worker(n,{name:`em-pthread`})';
@@ -39,13 +39,15 @@ if (mainFile) {
     console.log('[patch] Fix 2: pthread workers → type:module aplicado');
     patched = true;
   } else {
-    console.warn('[patch] AVISO: patrón Fix 2 no encontrado');
+    console.warn('[patch] AVISO: patrón Fix 2 no encontrado en voxelbim.js');
   }
 
   if (patched) {
-    fs.writeFileSync(filePath, code, 'utf8');
-    console.log('[patch] Bundle actualizado:', mainFile);
+    fs.writeFileSync(mainBundlePath, code, 'utf8');
+    console.log('[patch] Bundle actualizado: dist/voxelbim.js');
   }
+} else {
+  console.warn('[patch] AVISO: dist/voxelbim.js no encontrado');
 }
 
 // 3. Copiar index.html (portal login) a dist/

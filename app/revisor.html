@@ -976,6 +976,12 @@ function procesar(){
   reader.onload=function(e){
     try{
       var texto=e.target.result;
+      if(!texto.trimStart().startsWith("ISO-10303-21;")){
+        log("ERROR: El archivo no es un IFC válido (falta header ISO-10303-21).","error");
+        document.getElementById("spin").classList.remove("show");
+        document.getElementById("btnGen").disabled=false;
+        return;
+      }
       log("Archivo leido ("+(texto.length/1024/1024).toFixed(1)+" MB).","ok"); prog(20);
       log("Parseando productos IFC...","info");
       var est=parsearIFC(texto);
@@ -1065,6 +1071,7 @@ function procesar(){
 // ============================================================
 function handleFile(file){
   if(!file||!file.name.toLowerCase().endsWith(".ifc")){alert("Por favor selecciona un archivo .ifc");return;}
+  if(file.size > 500*1024*1024){alert("El archivo supera el límite de 500 MB. Usa un IFC más liviano.");return;}
   selFile=file;
   document.getElementById("fname").textContent=file.name;
   document.getElementById("fmeta").textContent=(file.size/1024/1024).toFixed(1)+" MB";
