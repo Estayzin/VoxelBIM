@@ -597,6 +597,7 @@ if (_hasError) {
     </div>
 
     <a href="/index.html" class="hback">&#8592; Volver</a>
+    <button class="hback" style="margin-left:8px;opacity:.5;" onclick="window._tutorial&&window._tutorial.restart()" title="Ver tutorial de introducción">? Tutorial</button>
   </div>
 </header>
 
@@ -765,10 +766,11 @@ if (_hasError) {
       <div class="chat-input-area">
         <div class="chat-context-tag" id="contextTag">📍 Elemento seleccionado como contexto</div>
         <div class="chat-input-row">
-          <textarea class="chat-input" id="chatInput" placeholder="Pregunta..." rows="1"
+          <textarea class="chat-input" id="chatInput" placeholder="Pregunta..." rows="1" maxlength="2000"
             onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();enviarMensaje();}"></textarea>
           <button class="chat-send" id="chatSendBtn" onclick="enviarMensaje()">Send</button>
         </div>
+        <div id="chatCharCount" style="text-align:right;font:400 8px var(--mono);color:rgba(160,180,210,.3);margin-top:4px;transition:color .2s;">0 / 2000</div>
       </div>
     </div>
 
@@ -2742,6 +2744,9 @@ function mostrarToast(msg) {
 document.getElementById('chatInput').addEventListener('input', function() {
   this.style.height = '38px';
   this.style.height = Math.min(this.scrollHeight, 90) + 'px';
+  var n = this.value.length, cc = document.getElementById('chatCharCount');
+  cc.textContent = n + ' / 2000';
+  cc.style.color = n > 1800 ? '#ff3d57' : n > 1500 ? '#f5c518' : 'rgba(160,180,210,.3)';
 });
 </script>
 
@@ -2792,7 +2797,7 @@ document.getElementById('chatInput').addEventListener('input', function() {
 </script>
 <script src="/scripts/tutorial.js"></script>
 <script>
-new Tutorial({
+window._tutorial = new Tutorial({
   key: 'vbim_autodesk_v1',
   steps: [
     {

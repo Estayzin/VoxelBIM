@@ -179,6 +179,7 @@ header { background:var(--navy); padding:16px 24px; min-height:72px; display:fle
     <div class="hsub">Generaci&oacute;n de Reportes &middot; IFC</div>
   </div>
   <button class="hback" style="margin-left:auto;" onclick="window.location.href='/'">&#8592; Volver</button>
+  <button class="hback" style="opacity:.5;" onclick="window._tutorial&&window._tutorial.restart()" title="Ver tutorial de introducción">? Tutorial</button>
 </header>
 
 <div class="workspace">
@@ -1156,6 +1157,9 @@ function mostrarReporte(rep) {
 // ============================================================
 function exportarXLSX() {
   if (!window.XLSX || !lastEst) return;
+  var btn = document.getElementById('vbtnXlsx');
+  var orig = btn.innerHTML; btn.innerHTML = '&#11015;&nbsp; Descargando...'; btn.disabled = true;
+  setTimeout(function(){ btn.innerHTML = orig; btn.disabled = false; }, 2000);
   // Hoja 1: Entidades revisadas
   var aoaEnts = [['Clase IFC','Nombre','Cantidad','Estado']];
   for (var i=0; i<lastEntsSelec.length; i++) {
@@ -1230,7 +1234,7 @@ function exportarXLSX() {
 </footer>
 <script src="/scripts/tutorial.js"></script>
 <script>
-new Tutorial({
+window._tutorial = new Tutorial({
   key: 'vbim_revisor_v1',
   steps: [
     {

@@ -836,5 +836,30 @@ body.light-mode footer { border-top-color:#b0c4d8; }
       }
     }).observe(document.getElementById('progressWrap'), { attributes: true, attributeFilter: ['class'] });
   </script>
+  <script>
+    document.addEventListener('click', function(e) {
+      if (e.target.closest('.model-item-del')) {
+        if (!confirm('¿Eliminar este modelo de la escena?')) {
+          e.stopImmediatePropagation(); e.preventDefault();
+        }
+        return;
+      }
+      if (e.target.id === 'claudeClearBtn' || e.target.closest('#claudeClearBtn')) {
+        if (!confirm('¿Limpiar el historial del chat?')) {
+          e.stopImmediatePropagation(); e.preventDefault();
+        }
+      }
+    }, true);
+    document.addEventListener('keydown', function(e) {
+      if (e.key !== 'Escape') return;
+      var p = document.getElementById('claudePanel');
+      if (p && p.classList.contains('show')) {
+        var btn = document.getElementById('btnClaude');
+        p.classList.remove('show');
+        if (btn) btn.classList.remove('active');
+      }
+    });
+  </script>
+  <style>:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }</style>
 </body>
 </html>

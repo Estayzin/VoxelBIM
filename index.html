@@ -73,12 +73,14 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
 .login-card { display:flex; width:100%; max-width:920px; min-height:520px; background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden; box-shadow:0 0 80px rgba(0,212,255,.07); }
 .login-left { flex:2; padding:56px 52px; display:flex; flex-direction:column; justify-content:center; background:linear-gradient(140deg,var(--navy) 60%,rgba(0,212,255,.04)); border-right:1px solid var(--border); position:relative; overflow:hidden; }
 .login-left::before { content:''; position:absolute; top:-80px; left:-80px; width:300px; height:300px; background:radial-gradient(circle,rgba(0,212,255,.06),transparent 70%); pointer-events:none; }
-.login-badge { display:inline-flex; align-items:center; gap:8px; padding:5px 12px; background:rgba(0,212,255,.08); border:1px solid rgba(0,212,255,.2); border-radius:20px; margin-bottom:32px; }
-.login-badge span { font:600 9px var(--mono); color:var(--accent); text-transform:uppercase; letter-spacing:.15em; }
-.login-badge-dot { width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 6px var(--accent); }
+.login-badge { display:inline-flex; align-items:center; gap:8px; padding:5px 14px; background:rgba(0,212,255,.08); border:1px solid rgba(0,212,255,.2); border-radius:20px; margin-bottom:32px; }
+.login-badge-dot { width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 6px var(--accent); flex-shrink:0; animation:badgePulse 2s ease-in-out infinite; }
+.login-badge-sub { font:400 9px var(--mono); color:var(--muted); letter-spacing:.08em; transition:opacity .4s ease; white-space:nowrap; }
+.login-badge-sub.fade { opacity:0; }
+@keyframes badgePulse { 0%,100%{box-shadow:0 0 6px var(--accent)} 50%{box-shadow:0 0 12px var(--accent),0 0 20px rgba(0,212,255,.3)} }
 .login-headline { font:700 54px var(--sans); color:#e8f4ff; line-height:1.0; margin-bottom:14px; letter-spacing:-.03em; }
 .login-headline span { color:var(--accent); text-shadow:0 0 40px rgba(0,212,255,.4); }
-.login-desc { font:400 13px var(--sans); color:var(--muted); line-height:1.7; max-width:340px; margin-bottom:28px; }
+.login-desc { font:400 13px var(--sans); color:var(--muted); line-height:1.7; max-width:340px; margin-bottom:28px; text-align:justify; }
 .login-tags { display:flex; flex-wrap:wrap; gap:8px; }
 .login-tag { padding:5px 11px; background:rgba(255,255,255,.04); border:1px solid var(--border); border-radius:4px; font:500 10px var(--mono); color:var(--muted); letter-spacing:.06em; display:inline-flex; align-items:center; }
 .login-tag--active { background:rgba(0,212,255,.1); border-color:rgba(0,212,255,.35); color:var(--accent); font-weight:700; font-size:11px; letter-spacing:.08em; box-shadow:0 0 10px rgba(0,212,255,.1); }
@@ -97,10 +99,35 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
 .login-field label { display:block; font:600 9px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.15em; margin-bottom:7px; }
 .login-field input { width:100%; padding:10px 13px; background:var(--navy); border:1px solid var(--border); border-radius:5px; font:400 13px var(--mono); color:var(--text); outline:none; transition:all .15s; }
 .login-field input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,212,255,.08); }
+:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+.login-field input:-webkit-autofill,
+.login-field input:-webkit-autofill:hover,
+.login-field input:-webkit-autofill:focus { -webkit-box-shadow:0 0 0 1000px #060d18 inset; -webkit-text-fill-color:#c8d8f0; caret-color:#c8d8f0; border-color:#1a2a40; }
 .login-btn { width:100%; padding:11px; margin-top:8px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#000; border:none; border-radius:5px; font:700 11px var(--mono); cursor:pointer; letter-spacing:.12em; text-transform:uppercase; transition:all .15s; box-shadow:0 0 20px rgba(0,212,255,.2); }
 .login-btn:hover { box-shadow:0 0 35px rgba(0,212,255,.45); transform:translateY(-1px); }
 .login-error { font:400 10px var(--mono); color:#ff3d57; text-align:center; margin-top:12px; letter-spacing:.05em; display:none; }
 .login-error.show { display:block; animation:shake .4s ease; }
+.svc-section { margin-top:36px; padding-top:24px; border-top:1px solid var(--border); }
+.svc-label { font:400 9px var(--mono); color:rgba(160,180,210,.45); letter-spacing:.1em; margin-bottom:9px; text-align:center; }
+.svc-btns { display:flex; gap:8px; }
+.svc-btn { flex:1; padding:10px 8px; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.07); border-radius:5px; color:rgba(160,180,210,.45); font:500 9px var(--mono); cursor:pointer; text-transform:uppercase; letter-spacing:.06em; transition:all .2s; display:flex; flex-direction:column; align-items:center; gap:6px; border-top-width:2px; }
+.svc-btn--yellow { border-top-color:#e8b84b; }
+.svc-btn--violet { border-top-color:#7c4dff; }
+.svc-btn:hover { background:rgba(255,255,255,.05); color:rgba(200,220,255,.7); }
+.svc-btn-icon { font-size:16px; line-height:1; opacity:.6; }
+.svc-btn-name { font:600 9px var(--mono); text-transform:uppercase; letter-spacing:.08em; }
+.svc-btn-desc { font:400 8px var(--mono); text-transform:none; letter-spacing:.02em; opacity:.6; line-height:1.4; text-align:center; }
+.svc-modal-wrap { display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,.6); backdrop-filter:blur(4px); align-items:center; justify-content:center; }
+.svc-modal-wrap.open { display:flex; }
+.svc-modal { background:var(--card); border:1px solid var(--border); border-top:2px solid var(--accent2); border-radius:10px; padding:28px; width:100%; max-width:360px; display:flex; flex-direction:column; gap:14px; box-shadow:0 0 60px rgba(124,77,255,.15); }
+.svc-modal-icon { font-size:32px; }
+.svc-modal-title { font:700 14px var(--sans); color:var(--text); }
+.svc-modal-desc { font:400 11px var(--mono); color:var(--muted); line-height:1.8; }
+.svc-modal-footer { display:flex; gap:8px; margin-top:4px; }
+.svc-modal-contact { flex:2; padding:9px; background:linear-gradient(135deg,var(--accent2),#9c6dff); color:#fff; border:none; border-radius:5px; font:700 9px var(--mono); cursor:pointer; text-transform:uppercase; letter-spacing:.1em; transition:all .15s; }
+.svc-modal-contact:hover { box-shadow:0 0 20px rgba(124,77,255,.4); transform:translateY(-1px); }
+.svc-modal-close { flex:1; padding:9px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:5px; font:600 9px var(--mono); cursor:pointer; text-transform:uppercase; letter-spacing:.1em; transition:all .15s; }
+.svc-modal-close:hover { border-color:var(--muted); color:var(--text); }
 @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
 /* PORTAL */
 #portal { display:none; flex-direction:column; min-height:100vh; }
@@ -153,7 +180,10 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
 <div id="loginScreen">
   <div class="login-card">
     <div class="login-left">
-      <div class="login-badge"><div class="login-badge-dot"></div><span>VoxelBIM</span></div>
+      <div class="login-badge">
+        <div class="login-badge-dot"></div>
+        <span class="login-badge-sub" id="badgeMsg">Revisa modelos IFC sin instalar nada</span>
+      </div>
       <div class="login-headline">
         <div style="display:flex;align-items:center;gap:22px;line-height:1;">
           <div style="flex-shrink:0;width:90px;height:90px;display:flex;align-items:center;justify-content:center;">
@@ -162,7 +192,7 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
           <span>Voxel<br><span style="color:var(--accent);text-shadow:0 0 40px rgba(0,212,255,.4);">BIM</span></span>
         </div>
       </div>
-      <div class="login-desc">Sistema de revisión, validación y visualización de modelos BIM basado en IFC. Próximamente compatible con Autodesk Platform Services.</div>
+      <div class="login-desc">Plataforma BIM de revisión, validación y visualización de modelos IFC. Permite inspeccionar geometría 3D, cuantificar elementos, generar reportes de calidad y conectar con proyectos en la nube alojados en BIM 360, ACC y Forma, obteniendo información directamente sin necesidad de software o equipos locales.</div>
       <div class="login-tags">
         <div class="login-tag login-tag--active">
           <svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline-block;vertical-align:middle;margin-right:4px;"><polygon points="6,1 11,3.5 11,8.5 6,11 1,8.5 1,3.5" fill="rgba(0,212,255,0.2)" stroke="rgba(0,212,255,0.8)" stroke-width="1"/><polygon points="6,1 11,3.5 6,6 1,3.5" fill="rgba(0,212,255,0.35)" stroke="none"/></svg>IFC2x3
@@ -170,8 +200,9 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
         <div class="login-tag login-tag--active">
           <svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline-block;vertical-align:middle;margin-right:4px;"><polygon points="6,1 11,3.5 11,8.5 6,11 1,8.5 1,3.5" fill="rgba(0,212,255,0.2)" stroke="rgba(0,212,255,0.8)" stroke-width="1"/><polygon points="6,1 11,3.5 6,6 1,3.5" fill="rgba(0,212,255,0.35)" stroke="none"/></svg>IFC4
         </div>
-        <div class="login-tag login-tag--soon">🕐 RVT <span class="login-tag-soon-label">próximamente</span></div>
-        <div class="login-tag login-tag--soon">🕐 APS <span class="login-tag-soon-label">próximamente</span></div>
+        <div class="login-tag login-tag--active">
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline-block;vertical-align:middle;margin-right:4px;"><polygon points="6,1 11,3.5 11,8.5 6,11 1,8.5 1,3.5" fill="rgba(0,212,255,0.2)" stroke="rgba(0,212,255,0.8)" stroke-width="1"/><polygon points="6,1 11,3.5 6,6 1,3.5" fill="rgba(0,212,255,0.35)" stroke="none"/></svg>APS
+        </div>
       </div>
       <div class="login-author">
         <div class="author-name">Carlos Estay Ruggieri</div>
@@ -181,19 +212,33 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
     </div>
     <div class="login-right">
       <div class="login-right-inner">
-        <div class="login-logo">🧊</div>
         <div class="login-form-title">Acceso al sistema</div>
         <div class="login-form-sub">Ingresa tus credenciales para continuar</div>
         <div class="login-field">
           <label>Usuario</label>
-          <input type="text" id="loginUser" placeholder="usuario" autocomplete="username">
+          <input type="text" id="loginUser" placeholder="usuario" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
         </div>
         <div class="login-field">
           <label>Contraseña</label>
-          <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+          <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
         </div>
         <button class="login-btn" onclick="doLogin()">Acceder</button>
         <div class="login-error" id="loginError">⚠ Usuario o contraseña incorrectos</div>
+        <div class="svc-section">
+          <div class="svc-label">También desarrollamos otros servicios</div>
+          <div class="svc-btns">
+            <button class="svc-btn svc-btn--yellow" onclick="abrirModal('modalSoftware')">
+              <span class="svc-btn-icon">💻</span>
+              <span class="svc-btn-name">Software a medida</span>
+              <span class="svc-btn-desc">Escritorio y web para flujos BIM</span>
+            </button>
+            <button class="svc-btn svc-btn--violet" onclick="abrirModal('modalRevit')">
+              <span class="svc-btn-icon">🧩</span>
+              <span class="svc-btn-name">Add-ins Revit</span>
+              <span class="svc-btn-desc">Plugins para automatizar tu modelo</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -246,7 +291,7 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
           <div class="mc-icon" style="background:rgba(245,197,24,.06);border:1px solid var(--border);">📤</div>
           <div>
             <div class="mc-title">Inventario y Tablas</div>
-            <div class="mc-desc">Exportación de inventarios y tablas de elementos BIM en PDF y XLS.</div>
+            <div class="mc-desc">Cuantificación de elementos IFC con exportación a Excel (XLSX).</div>
           </div>
           <div class="mc-tags"><span class="mc-tag tag-lock">Solo Pro</span></div>
         </div>
@@ -254,7 +299,7 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
           <div class="mc-icon" style="background:rgba(124,77,255,.06);border:1px solid var(--border);">📋</div>
           <div>
             <div class="mc-title">Incidencias BCF</div>
-            <div class="mc-desc">Validación de modelos IFC contra Information Delivery Specifications.</div>
+            <div class="mc-desc">Gestión y revisión de incidencias BIM en formato BCF (BIM Collaboration Format).</div>
           </div>
           <div class="mc-tags"><span class="mc-tag tag-lock">Solo Pro</span></div>
         </div>
@@ -299,7 +344,7 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
           <div class="mc-icon" style="background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.2);">📈</div>
           <div>
             <div class="mc-title">Inventario y Tablas</div>
-            <div class="mc-desc">Exportación de inventarios y tablas de elementos BIM en PDF y XLS.</div>
+            <div class="mc-desc">Cuantificación de elementos IFC con exportación a Excel (XLSX).</div>
           </div>
           <div class="mc-tags"><span class="mc-tag tag-beta">Beta / Desarrollo</span></div>
         </a>
@@ -351,7 +396,7 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
           <div class="mc-icon" style="background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.2);">📤</div>
           <div>
             <div class="mc-title">Inventario y Tablas</div>
-            <div class="mc-desc">Exportación de inventarios y tablas de elementos BIM en PDF y XLS.</div>
+            <div class="mc-desc">Cuantificación de elementos IFC con exportación a Excel (XLSX).</div>
           </div>
           <div class="mc-tags"><span class="mc-tag tag-beta">Beta / Desarrollo</span></div>
         </a>
@@ -359,7 +404,7 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); display
           <div class="mc-icon" style="background:rgba(124,77,255,.1);border:1px solid rgba(124,77,255,.2);">📋</div>
           <div>
             <div class="mc-title">Incidencias BCF</div>
-            <div class="mc-desc">Validación de modelos IFC contra Information Delivery Specifications.</div>
+            <div class="mc-desc">Gestión y revisión de incidencias BIM en formato BCF (BIM Collaboration Format).</div>
           </div>
           <div class="mc-tags"><span class="mc-tag tag-soon">Próximamente</span></div>
         </div>
@@ -610,9 +655,60 @@ function cerrarSesion() {
     });
   });
 })();
+
+function abrirModal(id) { document.getElementById(id).classList.add('open'); }
+function cerrarModal(id) { document.getElementById(id).classList.remove('open'); }
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') document.querySelectorAll('.svc-modal-wrap.open').forEach(function(m){ m.classList.remove('open'); });
+});
+document.querySelectorAll('.module-card.disabled').forEach(function(c){ c.setAttribute('tabindex','-1'); c.setAttribute('aria-disabled','true'); });
+
+(function() {
+  var msgs = [
+    'Revisa modelos IFC sin instalar nada',
+    'Valida y cuantifica elementos BIM',
+    'Conectado con BIM 360, ACC y Forma',
+    'Genera reportes de calidad automatizados',
+    'Tu coordinación BIM, en la nube'
+  ];
+  var el = document.getElementById('badgeMsg');
+  var i = 0;
+  setInterval(function() {
+    el.classList.add('fade');
+    setTimeout(function() {
+      i = (i + 1) % msgs.length;
+      el.textContent = msgs[i];
+      el.classList.remove('fade');
+    }, 400);
+  }, 3200);
+})();
 </script>
 <footer style="text-align:center;padding:10px;font:400 9px var(--mono);color:var(--muted);border-top:1px solid var(--border);letter-spacing:.08em;">
   &copy; 2026 Carlos Estay Ruggieri &mdash; Coordinaci&oacute;n BIM &mdash; c.estay@outlook.com &mdash; <a href="/LICENSE" target="_blank" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">MIT License</a>
 </footer>
+<!-- MODAL: Software local -->
+<div class="svc-modal-wrap" id="modalSoftware" onclick="if(event.target===this)cerrarModal('modalSoftware')">
+  <div class="svc-modal">
+    <div class="svc-modal-icon">💻</div>
+    <div class="svc-modal-title">Creación de software locales</div>
+    <div class="svc-modal-desc">Desarrollamos herramientas de escritorio a medida para flujos BIM: procesadores de modelos IFC, generadores de reportes, integraciones con sistemas de gestión y automatización de procesos constructivos.</div>
+    <div class="svc-modal-footer">
+      <button class="svc-modal-contact" onclick="window.location='mailto:carlos@geisterconsultores.com?subject=Software%20local%20BIM'">Contactar</button>
+      <button class="svc-modal-close" onclick="cerrarModal('modalSoftware')">Cerrar</button>
+    </div>
+  </div>
+</div>
+<!-- MODAL: Add-ins Revit -->
+<div class="svc-modal-wrap" id="modalRevit" onclick="if(event.target===this)cerrarModal('modalRevit')">
+  <div class="svc-modal">
+    <div class="svc-modal-icon">🧩</div>
+    <div class="svc-modal-title">Add-ins para Revit</div>
+    <div class="svc-modal-desc">Desarrollamos plugins y add-ins para Autodesk Revit orientados a automatizar la extracción de datos, validación de modelos, nomenclatura de elementos y exportación personalizada a formatos de gestión.</div>
+    <div class="svc-modal-footer">
+      <button class="svc-modal-contact" onclick="window.location='mailto:carlos@geisterconsultores.com?subject=Add-in%20Revit%20BIM'">Contactar</button>
+      <button class="svc-modal-close" onclick="cerrarModal('modalRevit')">Cerrar</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

@@ -26,6 +26,11 @@ class Tutorial {
     localStorage.removeItem(this.key);
   }
 
+  restart() {
+    this.reset();
+    this._show(0);
+  }
+
   // ── Render de un paso ──────────────────────────────────────────────────────
 
   _show(i) {

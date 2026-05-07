@@ -243,6 +243,7 @@ footer { text-align:center; padding:6px 24px; font:400 9px var(--mono); color:va
   </div>
   <button class="btn-theme" id="btnLightMode" title="Modo claro/oscuro">&#9681;</button>
   <button class="hback" onclick="window.location.href='/'">&#8592; Volver</button>
+  <button class="hback" style="opacity:.5;" onclick="window._tutorial&&window._tutorial.restart()" title="Ver tutorial de introducción">? Tutorial</button>
 </header>
 
 <div class="workspace">
@@ -1542,7 +1543,7 @@ function exportToXLSX() {
 </script>
 <script src="/scripts/tutorial.js"></script>
 <script>
-new Tutorial({
+window._tutorial = new Tutorial({
   key: 'vbim_inventario_v1',
   steps: [
     {
