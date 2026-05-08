@@ -1,0 +1,1007 @@
+<!--
+  ACC Explorer + Gemini AI — VoxelBIM
+  Carlos Estay Ruggieri · carlos@geisterconsultores.com · 2026
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ACC Explorer — VoxelBIM</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.min.css">
+<script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.min.js"></script>
+<style>
+:root {
+  --bg:#0f0f0f; --sidebar:#171717; --card:#1e1e1e; --border:#2a2a2a;
+  --text:#ececec; --muted:#8e8ea0; --muted2:#555568;
+  --user-bg:#2f2f2f; --ai-bg:transparent;
+  --accent:#10a37f; --aps:#0090ff; --warn:#e87b3a;
+  --mono:'JetBrains Mono',monospace; --sans:'Inter',sans-serif;
+  --radius:12px; --sidebar-w:272px;
+}
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html,body { height:100%; overflow:hidden; }
+body { font-family:var(--sans); background:var(--bg); color:var(--text); display:flex; flex-direction:column; height:100vh; font-size:14px; }
+
+/* ── HEADER ── */
+header {
+  height:52px; flex-shrink:0; display:flex; align-items:center; gap:10px;
+  padding:0 16px; border-bottom:1px solid var(--border); background:var(--sidebar);
+}
+.h-logo { width:24px; height:24px; flex-shrink:0; }
+.h-title { font:600 14px var(--sans); color:var(--text); }
+.h-sub { font:400 11px var(--mono); color:var(--muted); margin-left:2px; }
+.h-spacer { flex:1; }
+.h-btn { width:32px; height:32px; display:flex; align-items:center; justify-content:center; background:transparent; border:1px solid var(--border); border-radius:7px; cursor:pointer; color:var(--muted); font-size:14px; transition:all .15s; }
+.h-btn:hover { border-color:#555; color:var(--text); }
+.h-btn.active { border-color:var(--accent); color:var(--accent); background:rgba(16,163,127,.08); }
+
+/* ── LAYOUT ── */
+.workspace { display:flex; flex:1; overflow:hidden; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width:var(--sidebar-w); flex-shrink:0; background:var(--sidebar);
+  border-right:1px solid var(--border); display:flex; flex-direction:column;
+  overflow:hidden; transition:width .2s ease;
+}
+.sidebar.collapsed { width:0; }
+
+.sb-top { padding:12px; border-bottom:1px solid var(--border); flex-shrink:0; }
+.sb-label { font:500 10px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.12em; margin-bottom:8px; }
+.btn-connect { width:100%; padding:8px 12px; background:var(--aps); color:#fff; border:none; border-radius:8px; font:600 12px var(--sans); cursor:pointer; transition:background .15s; }
+.btn-connect:hover { background:#0077dd; }
+.btn-connect.ok { background:rgba(16,163,127,.12); color:var(--accent); border:1px solid rgba(16,163,127,.25); cursor:default; font-size:11px; }
+.user-chip { margin-top:8px; display:flex; align-items:center; gap:8px; padding:7px 9px; background:var(--card); border-radius:8px; border:1px solid var(--border); }
+.user-av { width:26px; height:26px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font:700 11px var(--sans); color:#fff; flex-shrink:0; }
+.user-info2 { flex:1; min-width:0; }
+.user-name2 { font:500 11px var(--sans); color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.user-email2 { font:400 9px var(--mono); color:var(--muted); }
+.btn-logout2 { padding:2px 7px; background:transparent; border:1px solid var(--border); border-radius:4px; font:500 9px var(--sans); color:var(--muted); cursor:pointer; }
+.btn-logout2:hover { border-color:var(--warn); color:var(--warn); }
+
+.plat-tabs { display:flex; gap:4px; margin-top:8px; }
+.plat-btn { flex:1; padding:5px; background:transparent; border:1px solid var(--border); border-radius:6px; font:500 10px var(--sans); color:var(--muted); cursor:pointer; transition:all .12s; }
+.plat-btn:hover { border-color:#555; color:var(--text); }
+.plat-btn.active { background:rgba(0,144,255,.1); border-color:var(--aps); color:var(--aps); }
+
+/* ── BREADCRUMB ── */
+.sb-breadcrumb { padding:6px 12px; border-bottom:1px solid var(--border); display:none; flex-shrink:0; }
+.bc-wrap { display:flex; align-items:center; gap:3px; flex-wrap:wrap; }
+.bc-seg { font:400 10px var(--mono); color:var(--muted); cursor:pointer; padding:2px 4px; border-radius:4px; transition:all .1s; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.bc-seg:hover { color:var(--text); background:var(--card); }
+.bc-seg.last { color:var(--text); cursor:default; }
+.bc-arrow { color:var(--muted2); font-size:9px; }
+
+/* ── FILE TREE ── */
+.sb-tree { flex:1; overflow-y:auto; padding:4px 6px; }
+.sb-tree::-webkit-scrollbar { width:3px; }
+.sb-tree::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+.tree-section { padding:8px 8px 4px; font:500 10px var(--mono); color:var(--muted2); text-transform:uppercase; letter-spacing:.12em; }
+.tree-row { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:7px; cursor:pointer; transition:background .1s; }
+.tree-row:hover { background:var(--card); }
+.tree-row.active { background:rgba(16,163,127,.08); }
+.tr-icon { font-size:13px; flex-shrink:0; width:18px; text-align:center; }
+.tr-body { flex:1; min-width:0; }
+.tr-name { font:500 12px var(--sans); color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tr-sub  { font:400 10px var(--mono); color:var(--muted); margin-top:1px; }
+.tr-tag  { font:600 8px var(--mono); padding:1px 5px; border-radius:3px; flex-shrink:0; }
+.tag-rvt { background:rgba(0,144,255,.1); color:#60b0ff; }
+.tag-ifc { background:rgba(16,163,127,.1); color:#4dd; }
+.tag-dwg { background:rgba(232,123,58,.1); color:#e87b3a; }
+.tag-pdf { background:rgba(220,50,50,.1); color:#f88; }
+.tag-doc { background:rgba(124,77,255,.1); color:#b39ddb; }
+.tag-gen { background:rgba(100,100,120,.1); color:var(--muted); }
+.tree-row.disabled { opacity:.35; cursor:default; }
+.tree-empty { padding:20px 12px; font:400 11px var(--sans); color:var(--muted); text-align:center; line-height:1.8; }
+.tree-loading { padding:14px 12px; display:flex; align-items:center; gap:8px; font:400 11px var(--sans); color:var(--muted); }
+.spin { width:13px; height:13px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; flex-shrink:0; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ── MAIN CHAT ── */
+.main { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
+
+/* Context bar */
+.ctx-bar { flex-shrink:0; padding:8px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; min-height:40px; background:var(--bg); }
+.ctx-pill { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:20px; font:500 11px var(--sans); border:1px solid var(--border); color:var(--muted); background:var(--card); max-width:400px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ctx-pill.folder { border-color:rgba(0,144,255,.3); color:#60b0ff; background:rgba(0,144,255,.06); }
+.ctx-pill.model  { border-color:rgba(16,163,127,.3); color:#4de8b8; background:rgba(16,163,127,.06); }
+.ctx-pill.doc    { border-color:rgba(232,123,58,.3); color:#e87b3a; background:rgba(232,123,58,.06); }
+.ctx-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+.ctx-dot.none   { background:var(--muted); }
+.ctx-dot.folder { background:var(--aps); }
+.ctx-dot.model  { background:var(--accent); }
+.ctx-dot.doc    { background:var(--warn); }
+.ctx-action { margin-left:auto; }
+.btn-viewer { padding:4px 12px; background:var(--card); border:1px solid var(--border); border-radius:6px; font:500 11px var(--sans); color:var(--muted); cursor:pointer; transition:all .15s; display:none; }
+.btn-viewer:hover { border-color:var(--accent); color:var(--accent); }
+.btn-viewer.show { display:inline-flex; align-items:center; gap:5px; }
+
+/* Messages */
+.messages { flex:1; overflow-y:auto; padding:24px 0; }
+.messages::-webkit-scrollbar { width:5px; }
+.messages::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+.msg-wrap { max-width:720px; margin:0 auto; padding:0 20px 4px; width:100%; }
+.msg-row { display:flex; gap:12px; margin-bottom:20px; }
+.msg-row.user { flex-direction:row-reverse; }
+.msg-avatar { width:32px; height:32px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font:600 12px var(--sans); margin-top:2px; }
+.av-ai   { background:var(--accent); color:#fff; }
+.av-user { background:#3a3a3a; color:var(--text); }
+.msg-bubble { flex:1; min-width:0; }
+.msg-row.user .msg-bubble { display:flex; justify-content:flex-end; }
+.msg-content {
+  padding:12px 16px; border-radius:var(--radius); line-height:1.7;
+  font:400 14px var(--sans); color:var(--text); max-width:85%; word-break:break-word;
+}
+.msg-row.ai .msg-content { background:transparent; padding-left:0; border-radius:0; max-width:100%; }
+.msg-row.user .msg-content { background:var(--user-bg); border-radius:var(--radius) var(--radius) 4px var(--radius); }
+.msg-content.typing { opacity:.5; }
+.msg-system-row { text-align:center; margin-bottom:16px; }
+.msg-system-text { display:inline-block; font:400 11px var(--sans); color:var(--muted); padding:4px 12px; border-radius:20px; border:1px solid var(--border); background:var(--card); }
+.msg-content strong { font-weight:600; }
+.msg-content code { font:500 12px var(--mono); background:var(--card); padding:1px 5px; border-radius:4px; color:#a8c8f0; }
+.msg-content pre { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:12px; margin:8px 0; overflow-x:auto; }
+.msg-content pre code { background:none; padding:0; }
+.msg-content ul,
+.msg-content ol { padding-left:20px; margin:6px 0; }
+.msg-content li { margin-bottom:3px; }
+.msg-name { font:500 11px var(--sans); color:var(--muted); margin-bottom:4px; padding-left:2px; }
+
+/* Welcome */
+.welcome-wrap { max-width:600px; margin:60px auto 0; padding:0 24px; text-align:center; }
+.wlc-gem { font-size:40px; margin-bottom:16px; }
+.wlc-h { font:600 22px var(--sans); color:var(--text); margin-bottom:8px; }
+.wlc-p { font:400 14px var(--sans); color:var(--muted); line-height:1.7; }
+.wlc-chips { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:20px; }
+.wlc-chip { padding:7px 14px; background:var(--card); border:1px solid var(--border); border-radius:8px; font:400 12px var(--sans); color:var(--muted); cursor:pointer; transition:all .15s; }
+.wlc-chip:hover { border-color:#555; color:var(--text); }
+
+/* Input */
+.input-area { flex-shrink:0; padding:12px 20px 16px; background:var(--bg); }
+.input-wrap { max-width:720px; margin:0 auto; position:relative; }
+.input-box { width:100%; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:12px 52px 12px 16px; font:400 14px var(--sans); color:var(--text); resize:none; min-height:52px; max-height:200px; line-height:1.6; transition:border .15s; }
+.input-box:focus { outline:none; border-color:#555; }
+.input-box::placeholder { color:var(--muted); }
+.btn-send { position:absolute; right:10px; bottom:10px; width:32px; height:32px; background:var(--accent); border:none; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .15s; }
+.btn-send:hover { background:#0e9070; }
+.btn-send:disabled { background:var(--border); cursor:not-allowed; }
+.btn-send svg { fill:#fff; width:16px; height:16px; }
+.input-hint { text-align:center; font:400 10px var(--sans); color:var(--muted2); margin-top:8px; }
+
+/* ── VIEWER OVERLAY ── */
+.viewer-overlay { position:fixed; inset:0; background:var(--bg); z-index:100; display:none; flex-direction:column; }
+.viewer-overlay.show { display:flex; }
+.vo-bar { height:52px; flex-shrink:0; display:flex; align-items:center; gap:12px; padding:0 16px; border-bottom:1px solid var(--border); background:var(--sidebar); }
+.vo-title { font:600 14px var(--sans); color:var(--text); flex:1; }
+.btn-close-viewer { padding:6px 14px; background:var(--card); border:1px solid var(--border); border-radius:7px; font:500 12px var(--sans); color:var(--text); cursor:pointer; transition:all .15s; }
+.btn-close-viewer:hover { border-color:var(--warn); color:var(--warn); }
+#forgeViewer { flex:1; }
+
+/* ── MODAL ── */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.7); backdrop-filter:blur(6px); z-index:200; display:none; align-items:center; justify-content:center; }
+.modal-overlay.show { display:flex; }
+.modal-box { background:#1a1a1a; border:1px solid var(--border); border-radius:var(--radius); padding:24px; width:440px; max-width:90vw; }
+.modal-title { font:600 16px var(--sans); color:var(--text); margin-bottom:6px; }
+.modal-sub { font:400 12px var(--sans); color:var(--muted); line-height:1.7; margin-bottom:16px; }
+.modal-label { font:500 11px var(--sans); color:var(--muted); margin-bottom:5px; display:block; }
+.modal-input { width:100%; background:var(--card); border:1px solid var(--border); border-radius:8px; padding:10px 12px; font:400 13px var(--sans); color:var(--text); margin-bottom:12px; }
+.modal-input:focus { outline:none; border-color:var(--accent); }
+.modal-select { cursor:pointer; }
+.modal-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:5px; }
+.modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:4px; }
+.btn-ok { padding:8px 20px; background:var(--accent); color:#fff; border:none; border-radius:8px; font:600 13px var(--sans); cursor:pointer; }
+.btn-ok:hover { background:#0e9070; }
+.btn-cancel { padding:8px 14px; background:transparent; border:1px solid var(--border); color:var(--muted); border-radius:8px; font:500 13px var(--sans); cursor:pointer; }
+.btn-small { padding:4px 10px; background:transparent; border:1px solid var(--border); border-radius:5px; font:500 10px var(--mono); color:var(--muted); cursor:pointer; }
+.btn-small:hover { border-color:var(--accent); color:var(--accent); }
+.modal-note { font:400 10px var(--mono); color:var(--muted2); margin-top:8px; padding:8px; background:rgba(255,255,255,.03); border-radius:6px; line-height:1.7; }
+
+/* ── TOAST ── */
+#toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%) translateY(6px); background:#1e1e1e; border:1px solid var(--border); border-radius:8px; padding:8px 16px; font:500 12px var(--sans); color:var(--text); z-index:300; opacity:0; transition:all .2s; pointer-events:none; white-space:nowrap; }
+#toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+#toast.error { border-color:rgba(200,60,60,.4); color:#f99; }
+
+/* ── LIGHT MODE ── */
+body.light {
+  --bg:#f5f5f5; --sidebar:#fff; --card:#efefef; --border:#e0e0e0;
+  --text:#1a1a1a; --muted:#6e6e80; --muted2:#aaa;
+  --user-bg:#e8e8e8;
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <svg class="h-logo" viewBox="0 0 90 90" fill="none">
+    <polygon points="45,8 78,26 78,62 45,80 12,62 12,26" stroke="#10a37f" stroke-width="2.5" fill="rgba(16,163,127,.07)"/>
+    <polygon points="45,22 65,33 65,55 45,66 25,55 25,33" stroke="#10a37f" stroke-width="1.5" fill="rgba(16,163,127,.1)"/>
+    <circle cx="45" cy="44" r="7" fill="#10a37f"/>
+  </svg>
+  <span class="h-title">ACC Explorer</span>
+  <span class="h-sub">+ Gemini</span>
+  <div class="h-spacer"></div>
+  <button class="h-btn" onclick="mostrarModalKey()" title="Configurar Gemini">&#128273;</button>
+  <button class="h-btn" onclick="document.body.classList.toggle('light')" title="Tema">&#9790;</button>
+  <button class="h-btn" id="btnToggleSidebar" onclick="toggleSidebar()" title="Sidebar">&#9776;</button>
+  <a href="/" class="h-btn" title="Volver" style="text-decoration:none;">&#8592;</a>
+</header>
+
+<div class="workspace">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sb-top">
+      <div class="sb-label">Conexión ACC / BIM 360</div>
+      <button id="btnLogin" class="btn-connect" onclick="iniciarLogin()">Conectar con Autodesk</button>
+      <div id="userChip" style="display:none">
+        <div class="user-chip">
+          <div class="user-av" id="userAv">?</div>
+          <div class="user-info2">
+            <div class="user-name2" id="userName">—</div>
+            <div class="user-email2" id="userEmail">—</div>
+          </div>
+          <button class="btn-logout2" onclick="cerrarSesion()">Salir</button>
+        </div>
+        <div id="platTabs" class="plat-tabs" style="display:none">
+          <button id="btnBIM360" class="plat-btn active" onclick="seleccionarPlataforma('bim360')">BIM 360</button>
+          <button id="btnACC"    class="plat-btn"        onclick="seleccionarPlataforma('acc')">ACC</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="sbBreadcrumb" class="sb-breadcrumb">
+      <div class="bc-wrap" id="bcWrap"></div>
+    </div>
+
+    <div id="fileTree" class="sb-tree">
+      <div class="tree-empty">Conecta con Autodesk<br>para explorar tus proyectos.</div>
+    </div>
+  </div>
+
+  <!-- MAIN CHAT -->
+  <div class="main">
+
+    <!-- Context bar -->
+    <div class="ctx-bar">
+      <div class="ctx-pill none" id="ctxPill">
+        <div class="ctx-dot none" id="ctxDot"></div>
+        <span id="ctxLabel">Sin contexto</span>
+      </div>
+      <div class="ctx-action">
+        <button id="btnOpenViewer" class="btn-viewer" onclick="abrirVisorOverlay()">&#128230; Ver en 3D</button>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="messages" id="messages">
+      <div class="msg-wrap">
+        <div class="welcome-wrap">
+          <div class="wlc-gem">&#129302;</div>
+          <div class="wlc-h">Hola, soy tu asistente BIM</div>
+          <div class="wlc-p">Conecta tu cuenta de Autodesk para explorar carpetas y modelos de ACC. Puedes pedirme que navegue a cualquier carpeta o abra un archivo.</div>
+          <div class="wlc-chips">
+            <div class="wlc-chip" onclick="usarSugerencia(this)">¿Qué hay en la carpeta actual?</div>
+            <div class="wlc-chip" onclick="usarSugerencia(this)">Muéstrame los modelos RVT</div>
+            <div class="wlc-chip" onclick="usarSugerencia(this)">¿Cuántos elementos tiene el modelo?</div>
+            <div class="wlc-chip" onclick="usarSugerencia(this)">Abre el modelo estructural</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div class="input-area">
+      <div class="input-wrap">
+        <textarea id="chatInput" class="input-box" placeholder="Escribe un mensaje o pide abrir una carpeta / archivo..."
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();enviarMensaje();}"></textarea>
+        <button class="btn-send" id="btnSend" onclick="enviarMensaje()">
+          <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+        </button>
+      </div>
+      <div class="input-hint">Enter para enviar · Shift+Enter para nueva línea</div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /workspace -->
+
+<!-- VIEWER OVERLAY -->
+<div id="viewerOverlay" class="viewer-overlay">
+  <div class="vo-bar">
+    <span>&#128230;</span>
+    <div class="vo-title" id="voTitle">Visor 3D</div>
+    <button class="btn-close-viewer" onclick="cerrarVisorOverlay()">&#10005; Cerrar visor</button>
+  </div>
+  <div id="forgeViewer"></div>
+</div>
+
+<!-- MODAL: Gemini API Key -->
+<div id="keyModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-title">&#128273; Configuración Gemini</div>
+    <div class="modal-sub">Obtén tu API key gratis en <strong>aistudio.google.com</strong>. Se guarda solo en tu navegador.</div>
+    <label class="modal-label">API Key</label>
+    <input type="password" id="geminiKeyInput" class="modal-input" placeholder="AIza...">
+    <div class="modal-row">
+      <label class="modal-label" style="margin:0">Modelo</label>
+      <button class="btn-small" id="btnListModels" onclick="cargarModelosDisponibles()">&#8635; Ver disponibles</button>
+    </div>
+    <select id="geminiModelSelect" class="modal-input modal-select">
+      <option value="gemini-2.0-flash-lite">gemini-2.0-flash-lite (free tier)</option>
+      <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+      <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+      <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+    </select>
+    <div id="modelStatus" class="modal-note" style="display:none"></div>
+    <div class="modal-note">
+      &#9888; Primera vez: agrega <strong>http://localhost:3000/app/acc-explorer.html</strong>
+      como Callback URL en tu app de Autodesk (manage.autodesk.com).
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="cerrarModalKey()">Cancelar</button>
+      <button class="btn-ok" onclick="guardarGeminiKey()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── CONFIG ──
+var IS_LOCAL     = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+var APS_CLIENT_ID = 'kOJ4igA0Lm8a9ZHA3KGkATKASthAdjiWBjY9ventTQBnGVab';
+var APS_CALLBACK  = location.origin + location.pathname;
+var APS_TOKEN_URL = IS_LOCAL ? location.origin + '/aps/token' : 'https://voxelbim.zinnarox.workers.dev/token';
+var APS_SCOPES    = 'data:read viewables:read account:read bucket:read';
+var GEMINI_BASE   = 'https://generativelanguage.googleapis.com/v1beta';
+
+// ── STATE ──
+var apsToken        = null;
+var viewer          = null;
+var viewerIniciado  = false;
+var modelIndex      = null;
+var currentUrn      = null;
+var currentFileName = null;
+var chatHistory     = [];
+var todosLosHubs    = [];
+var plataforma      = 'bim360';
+var navState = { hubId:null, hubName:'', projectId:null, projectName:'', rootFolderId:null, stack:[], allItems:[] };
+var chatCtx  = { type:'none', label:'Sin contexto', data:'' };
+var geminiKey   = localStorage.getItem('gemini_api_key') || '';
+var geminiModel = localStorage.getItem('gemini_model')   || 'gemini-2.0-flash-lite';
+
+// ── SIDEBAR ──
+var sidebarOpen = true;
+function toggleSidebar() {
+  sidebarOpen = !sidebarOpen;
+  document.getElementById('sidebar').classList.toggle('collapsed', !sidebarOpen);
+  document.getElementById('btnToggleSidebar').classList.toggle('active', sidebarOpen);
+}
+document.getElementById('btnToggleSidebar').classList.add('active');
+
+// ── GEMINI KEY ──
+function mostrarModalKey() {
+  document.getElementById('geminiKeyInput').value = geminiKey;
+  var sel = document.getElementById('geminiModelSelect');
+  sel.value = geminiModel;
+  if (!sel.value) sel.value = sel.options[0].value;
+  document.getElementById('modelStatus').style.display = 'none';
+  document.getElementById('keyModal').classList.add('show');
+  document.getElementById('geminiKeyInput').focus();
+}
+function cerrarModalKey() { document.getElementById('keyModal').classList.remove('show'); }
+function guardarGeminiKey() {
+  var k = document.getElementById('geminiKeyInput').value.trim();
+  if (!k) { toast('Ingresa una API key válida', true); return; }
+  geminiKey   = k;
+  geminiModel = document.getElementById('geminiModelSelect').value;
+  localStorage.setItem('gemini_api_key', k);
+  localStorage.setItem('gemini_model', geminiModel);
+  cerrarModalKey();
+  toast('Guardado · modelo: ' + geminiModel);
+}
+async function cargarModelosDisponibles() {
+  var k = document.getElementById('geminiKeyInput').value.trim() || geminiKey;
+  if (!k) { toast('Ingresa tu API key primero', true); return; }
+  var btn = document.getElementById('btnListModels');
+  var status = document.getElementById('modelStatus');
+  btn.textContent = '...'; btn.disabled = true;
+  status.style.display = 'block'; status.textContent = 'Consultando...';
+  try {
+    var r = await fetch(GEMINI_BASE + '/models?key=' + k);
+    var data = await r.json();
+    if (!r.ok) { status.textContent = 'Error: ' + ((data.error && data.error.message) || r.status); return; }
+    var modelos = (data.models || [])
+      .filter(function(m) { return m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'); })
+      .map(function(m) { return m.name.replace('models/', ''); });
+    if (!modelos.length) { status.textContent = 'Sin modelos disponibles.'; return; }
+    var sel = document.getElementById('geminiModelSelect');
+    sel.innerHTML = '';
+    modelos.forEach(function(m) {
+      var opt = document.createElement('option');
+      opt.value = m; opt.textContent = m;
+      if (m === geminiModel) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    status.textContent = '✓ ' + modelos.length + ' modelos disponibles — elige uno.';
+    status.style.color = 'var(--accent)';
+  } catch(e) { status.textContent = 'Error: ' + e.message; }
+  btn.textContent = '↻ Ver disponibles'; btn.disabled = false;
+}
+if (!geminiKey) setTimeout(mostrarModalKey, 600);
+
+// ── OAUTH ──
+(function detectCallback() {
+  var params = new URLSearchParams(location.search);
+  var code = params.get('code');
+  if (code) {
+    history.replaceState({}, '', location.pathname);
+    appendSystem('Autenticando...');
+    fetch(APS_TOKEN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: code, redirect_uri: APS_CALLBACK })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.access_token) {
+        apsToken = data.access_token;
+        sessionStorage.setItem('aps_token', apsToken);
+        onTokenReady();
+      } else {
+        appendSystem('Error OAuth: ' + (data.error_description || data.error || 'Sin token'));
+      }
+    })
+    .catch(function(e) { appendSystem('Error de red: ' + e.message); });
+    return;
+  }
+  var stored = sessionStorage.getItem('aps_token');
+  if (stored) { apsToken = stored; onTokenReady(); }
+})();
+
+function iniciarLogin() {
+  location.href = 'https://developer.api.autodesk.com/authentication/v2/authorize'
+    + '?response_type=code&client_id=' + encodeURIComponent(APS_CLIENT_ID)
+    + '&redirect_uri=' + encodeURIComponent(APS_CALLBACK)
+    + '&scope=' + encodeURIComponent(APS_SCOPES);
+}
+function cerrarSesion() {
+  sessionStorage.removeItem('aps_token'); apsToken = null;
+  document.getElementById('btnLogin').style.display = 'block';
+  document.getElementById('userChip').style.display = 'none';
+  document.getElementById('platTabs').style.display = 'none';
+  document.getElementById('sbBreadcrumb').style.display = 'none';
+  todosLosHubs = [];
+  navState = { hubId:null, hubName:'', projectId:null, projectName:'', rootFolderId:null, stack:[], allItems:[] };
+  document.getElementById('fileTree').innerHTML = '<div class="tree-empty">Conecta con Autodesk para explorar tus proyectos.</div>';
+  actualizarCtx('none', 'Sin contexto', '');
+}
+async function onTokenReady() {
+  try {
+    var r = await fetch('https://api.userprofile.autodesk.com/userinfo', { headers: { 'Authorization': 'Bearer ' + apsToken } });
+    if (r.status === 401) { cerrarSesion(); toast('Sesión expirada', true); return; }
+    var u = await r.json();
+    var nombre = u.name || ((u.given_name || '') + ' ' + (u.family_name || '')).trim() || 'Usuario';
+    document.getElementById('userName').textContent  = nombre;
+    document.getElementById('userEmail').textContent = u.email || '';
+    document.getElementById('userAv').textContent    = nombre.charAt(0).toUpperCase();
+    document.getElementById('btnLogin').style.display = 'none';
+    document.getElementById('userChip').style.display = 'block';
+    cargarHubs();
+  } catch(e) { toast('Error de autenticación: ' + e.message, true); }
+}
+
+// ── HUBS ──
+async function cargarHubs() {
+  treeLoading('Cargando hubs...');
+  try {
+    var r = await fetch('https://developer.api.autodesk.com/project/v1/hubs', { headers: { 'Authorization': 'Bearer ' + apsToken } });
+    if (r.status === 401) { cerrarSesion(); return; }
+    var data = await r.json();
+    todosLosHubs = data.data || [];
+    if (!todosLosHubs.length) { treeEmpty('Sin hubs disponibles.'); return; }
+    document.getElementById('platTabs').style.display = 'flex';
+    renderHubs(plataforma);
+  } catch(e) { treeEmpty('Error: ' + e.message); }
+}
+function clasificarHub(h) {
+  var ext = ((h.attributes.extension && h.attributes.extension.type) || '').toLowerCase();
+  var id  = (h.id || '').toLowerCase();
+  if (id.startsWith('a.') || ext.includes('a360project')) return 'a360';
+  return 'bim360';
+}
+function seleccionarPlataforma(t) {
+  plataforma = t;
+  document.getElementById('btnBIM360').classList.toggle('active', t === 'bim360');
+  document.getElementById('btnACC').classList.toggle('active', t === 'acc');
+  renderHubs(t);
+}
+function renderHubs(tipo) {
+  var lista = todosLosHubs.filter(function(h) { return tipo === 'a360' ? clasificarHub(h) === 'a360' : clasificarHub(h) !== 'a360'; });
+  if (!lista.length) { treeEmpty('Sin hubs para esta plataforma.'); return; }
+  var tree = document.getElementById('fileTree');
+  tree.innerHTML = '';
+  lista.forEach(function(hub) {
+    tree.appendChild(treeRow('&#127968;', hub.attributes.name || hub.id, 'Hub', null, function() { cargarProyectos(hub.id, hub.attributes.name || hub.id); }));
+  });
+}
+
+// ── PROYECTOS ──
+async function cargarProyectos(hubId, hubName) {
+  navState.hubId = hubId; navState.hubName = hubName;
+  navState.projectId = null; navState.stack = [];
+  actualizarBreadcrumb();
+  treeLoading('Cargando proyectos...');
+  try {
+    var r = await fetch('https://developer.api.autodesk.com/project/v1/hubs/' + encodeURIComponent(hubId) + '/projects', { headers: { 'Authorization': 'Bearer ' + apsToken } });
+    if (r.status === 401) { cerrarSesion(); return; }
+    var data = await r.json();
+    var ps = data.data || [];
+    if (!ps.length) { treeEmpty('Sin proyectos.'); return; }
+    var tree = document.getElementById('fileTree');
+    tree.innerHTML = '';
+    ps.forEach(function(p) {
+      var rootId = p.relationships && p.relationships.rootFolder && p.relationships.rootFolder.data ? p.relationships.rootFolder.data.id : null;
+      tree.appendChild(treeRow('&#128196;', p.attributes.name || p.id, 'Proyecto', null, function() { abrirProyecto(p.id, p.attributes.name || p.id, rootId); }));
+    });
+  } catch(e) { treeEmpty('Error: ' + e.message); }
+}
+
+// ── CARPETAS ──
+function abrirProyecto(projectId, projectName, rootFolderId) {
+  navState.projectId   = projectId;
+  navState.projectName = projectName;
+  navState.rootFolderId = rootFolderId;
+  navState.stack = [{ id: rootFolderId, name: projectName }];
+  actualizarBreadcrumb();
+  navegarCarpeta(rootFolderId, true);
+}
+
+async function navegarCarpeta(folderId, esRaiz) {
+  actualizarBreadcrumb();
+  treeLoading('Cargando...');
+  try {
+    var r = await fetch(
+      'https://developer.api.autodesk.com/data/v1/projects/' + encodeURIComponent(navState.projectId) +
+      '/folders/' + encodeURIComponent(folderId) + '/contents',
+      { headers: { 'Authorization': 'Bearer ' + apsToken } }
+    );
+    if (r.status === 401) { cerrarSesion(); return; }
+    var data = await r.json();
+    var items = data.data || [];
+
+    if (esRaiz) {
+      var pf = items.find(function(i) {
+        var n = ((i.attributes && i.attributes.name) || '').toLowerCase();
+        return i.type === 'folders' && (n === 'project files' || n === 'archivos del proyecto');
+      });
+      if (pf) {
+        navState.stack = [{ id: pf.id, name: pf.attributes.name }];
+        navegarCarpeta(pf.id);
+        return;
+      }
+    }
+
+    navState.allItems = items;
+    renderItems(items);
+    actualizarBreadcrumb();
+    var carpeta = navState.stack[navState.stack.length - 1];
+    if (carpeta) actualizarCtxCarpeta(carpeta.name, items);
+  } catch(e) { treeEmpty('Error: ' + e.message); }
+}
+
+function renderItems(items) {
+  var carpetas = items.filter(function(i) { return i.type === 'folders'; });
+  var archivos = items.filter(function(i) { return i.type === 'items'; });
+  var tree = document.getElementById('fileTree');
+  tree.innerHTML = '';
+  if (!carpetas.length && !archivos.length) { treeEmpty('Carpeta vacía.'); return; }
+  if (carpetas.length) {
+    var sec = document.createElement('div'); sec.className = 'tree-section'; sec.textContent = 'Carpetas';
+    tree.appendChild(sec);
+    carpetas.forEach(function(f) {
+      tree.appendChild(treeRow('&#128193;', f.attributes.name || f.id, 'Carpeta', null, function() {
+        navState.stack.push({ id: f.id, name: f.attributes.name || f.id });
+        navegarCarpeta(f.id);
+      }));
+    });
+  }
+  if (archivos.length) {
+    var sec2 = document.createElement('div'); sec2.className = 'tree-section'; sec2.textContent = 'Archivos';
+    tree.appendChild(sec2);
+    archivos.forEach(function(item) {
+      var nombre = item.attributes.displayName || item.id;
+      var ext    = nombre.split('.').pop().toUpperCase();
+      var urn    = item.relationships && item.relationships.tip && item.relationships.tip.data ? item.relationships.tip.data.id : null;
+      var esViz  = ['RVT','IFC','DWG','NWD','FBX'].includes(ext);
+      var row    = treeRow(iconoPorExt(ext), nombre, ext, tagClsPorExt(ext), function() { abrirArchivo(item, urn); });
+      if (!urn && esViz) row.classList.add('disabled');
+      tree.appendChild(row);
+    });
+  }
+}
+
+// ── ABRIR ARCHIVO ──
+function abrirArchivo(item, urn) {
+  document.querySelectorAll('.tree-row').forEach(function(r) { r.classList.remove('active'); });
+  var nombre = item.attributes.displayName || item.id;
+  var ext    = nombre.split('.').pop().toUpperCase();
+  var esViz  = ['RVT','IFC','DWG','NWD','FBX'].includes(ext);
+
+  if (esViz && urn) {
+    function toBase64URN(u) { return btoa(u).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_'); }
+    currentUrn      = toBase64URN(urn);
+    currentFileName = nombre;
+    actualizarCtx('model', '&#128230; ' + nombre + ' — cargando...', '');
+    document.getElementById('btnOpenViewer').classList.add('show');
+    prepararVisor(currentUrn, nombre);
+    appendSystem('&#128230; Abriendo ' + nombre + ' en el visor 3D...');
+    abrirVisorOverlay();
+  } else {
+    currentUrn = null;
+    document.getElementById('btnOpenViewer').classList.remove('show');
+    var fecha   = item.attributes.lastModifiedTime ? new Date(item.attributes.lastModifiedTime).toLocaleDateString('es-CL') : '—';
+    var tamano  = item.attributes.storageSize ? (item.attributes.storageSize / (1024*1024)).toFixed(1) + ' MB' : '—';
+    var docData = 'Documento: ' + nombre + '\nTipo: ' + ext + '\nModificado: ' + fecha + '\nTamaño: ' + tamano;
+    actualizarCtx('doc', '&#128196; ' + nombre, docData);
+    appendSystem('&#128196; Documento seleccionado: ' + nombre + '. Puedes hacer preguntas sobre él.');
+  }
+}
+
+// ── VISOR OVERLAY ──
+function abrirVisorOverlay() {
+  document.getElementById('viewerOverlay').classList.add('show');
+  document.getElementById('voTitle').textContent = currentFileName || 'Visor 3D';
+}
+function cerrarVisorOverlay() {
+  document.getElementById('viewerOverlay').classList.remove('show');
+}
+
+function prepararVisor(urn, nombre) {
+  if (typeof Autodesk === 'undefined' || !Autodesk.Viewing) {
+    toast('SDK del visor no disponible', true); return;
+  }
+  modelIndex = null;
+  function arrancarVisor() {
+    if (viewer) { try { viewer.finish(); } catch(e) {} viewer = null; }
+    var container = document.getElementById('forgeViewer');
+    container.innerHTML = '';
+    viewer = new Autodesk.Viewing.GuiViewer3D(container, { theme: 'dark-theme' });
+    var code = viewer.start();
+    if (code > 0) { toast('Error iniciando visor (código ' + code + ')', true); return; }
+    ['Autodesk.ModelStructure','Autodesk.PropertiesManager','Autodesk.Explode'].forEach(function(e) { viewer.unloadExtension(e); });
+    Autodesk.Viewing.Document.load('urn:' + urn,
+      function(doc) {
+        var root = doc.getRoot();
+        var geos = root.search({ type: 'geometry' });
+        var viewable = geos.length ? geos[0] : root.getDefaultGeometry();
+        if (!viewable) { toast('Sin geometría visualizable', true); return; }
+        viewer.loadDocumentNode(doc, viewable, { keepCurrentModels: false }).then(function() {
+          viewer.resize();
+          setTimeout(function() { construirIndiceModelo(nombre); }, 1200);
+        });
+      },
+      function(code, msg) {
+        var msgs = { 4:'Modelo no encontrado', 7:'Sin permiso', 9:'Token expirado' };
+        toast('Error visor (' + code + '): ' + (msgs[code] || msg), true);
+      }
+    );
+  }
+  if (!viewerIniciado) {
+    viewerIniciado = true;
+    Autodesk.Viewing.Initializer({ env:'AutodeskProduction', accessToken:apsToken, api:'streamingV2' }, arrancarVisor);
+  } else { arrancarVisor(); }
+}
+
+// ── ÍNDICE MODELO ──
+function construirIndiceModelo(nombre) {
+  if (!viewer || !viewer.model) return;
+  var idx = {};
+  viewer.model.getObjectTree(function(tree) {
+    var ids = [];
+    tree.enumNodeChildren(tree.getRootId(), function(id) { ids.push(id); }, true);
+    if (!ids.length) { finalizarIdx(nombre, idx); return; }
+    var batch = 0;
+    function next() {
+      var slice = ids.slice(batch, batch + 80);
+      if (!slice.length) { finalizarIdx(nombre, idx); return; }
+      var pend = slice.length;
+      slice.forEach(function(dbId) {
+        viewer.model.getProperties(dbId, function(r) {
+          if (r && r.properties) {
+            var catProp = r.properties.find(function(p) { return p.displayName === 'Category' || p.displayName === 'Categoría'; });
+            var cat = (catProp && catProp.displayValue) || r.objectSystemName || 'Otros';
+            if (!idx[cat]) idx[cat] = [];
+            var props = {};
+            r.properties.slice(0, 6).forEach(function(p) { if (p.displayValue !== undefined && p.displayValue !== '') props[p.displayName] = p.displayValue; });
+            idx[cat].push({ nombre: r.name, props: props });
+          }
+          if (--pend === 0) { batch += 80; setTimeout(next, 10); }
+        }, function() { if (--pend === 0) { batch += 80; setTimeout(next, 10); } });
+      });
+    }
+    next();
+  });
+}
+function finalizarIdx(nombre, idx) {
+  modelIndex = idx;
+  var nC = Object.keys(idx).length;
+  var nE = Object.values(idx).reduce(function(s,v) { return s+v.length; }, 0);
+  var resumen = ['=== MODELO BIM: ' + nombre + ' ===\nCATEGORÍAS:'];
+  Object.keys(idx).forEach(function(c) { resumen.push('  ' + c + ': ' + idx[c].length + ' elementos'); });
+  resumen.push('\nMUESTRA:');
+  Object.keys(idx).forEach(function(c) {
+    resumen.push('\n[' + c + ']');
+    idx[c].slice(0, 3).forEach(function(el) {
+      var pStr = Object.entries(el.props).slice(0,4).map(function(e) { return e[0]+': '+e[1]; }).join(' | ');
+      resumen.push('  • ' + el.nombre + (pStr ? ' → ' + pStr : ''));
+    });
+    if (idx[c].length > 3) resumen.push('  ... (' + (idx[c].length - 3) + ' más)');
+  });
+  var txt = resumen.join('\n');
+  if (txt.length > 12000) txt = txt.substring(0, 12000) + '\n...(truncado)';
+  actualizarCtx('model', '&#128230; ' + nombre + ' (' + nC + ' categ., ' + nE + ' elem.)', txt);
+  appendSystem('✓ Modelo indexado: ' + nC + ' categorías, ' + nE + ' elementos.');
+}
+
+// ── BREADCRUMB ──
+function actualizarBreadcrumb() {
+  var bc = document.getElementById('sbBreadcrumb');
+  if (!navState.hubId) { bc.style.display = 'none'; return; }
+  bc.style.display = 'block';
+  var wrap = document.getElementById('bcWrap');
+  wrap.innerHTML = '';
+  function crumb(label, onclick, isLast) {
+    var sp = document.createElement('span');
+    sp.className = 'bc-seg' + (isLast ? ' last' : '');
+    sp.textContent = label;
+    if (!isLast) sp.onclick = onclick;
+    wrap.appendChild(sp);
+    if (!isLast) { var ar = document.createElement('span'); ar.className = 'bc-arrow'; ar.textContent = '›'; wrap.appendChild(ar); }
+  }
+  crumb(navState.hubName, function() {
+    navState.projectId = null; navState.stack = [];
+    renderHubs(plataforma); actualizarBreadcrumb();
+  }, !navState.projectId);
+  if (navState.projectId) {
+    crumb(navState.projectName, function() {
+      abrirProyecto(navState.projectId, navState.projectName, navState.rootFolderId);
+    }, !navState.stack.length);
+    navState.stack.forEach(function(item, i) {
+      var isLast = i === navState.stack.length - 1;
+      crumb(item.name, function() {
+        navState.stack = navState.stack.slice(0, i + 1);
+        navegarCarpeta(item.id);
+      }, isLast);
+    });
+  }
+}
+
+// ── CONTEXTO ──
+function actualizarCtx(tipo, label, data) {
+  chatCtx = { type: tipo, label: label, data: data };
+  var pill = document.getElementById('ctxPill');
+  var dot  = document.getElementById('ctxDot');
+  var lbl  = document.getElementById('ctxLabel');
+  pill.className = 'ctx-pill ' + tipo;
+  dot.className  = 'ctx-dot '  + tipo;
+  lbl.innerHTML  = label;
+}
+function actualizarCtxCarpeta(nombre, items) {
+  var archivos = items.filter(function(i) { return i.type === 'items'; });
+  var carpetas = items.filter(function(i) { return i.type === 'folders'; });
+  var lines = ['=== CARPETA: ' + nombre + ' ==='];
+  if (carpetas.length) {
+    lines.push('Subcarpetas (' + carpetas.length + '):');
+    carpetas.forEach(function(f) { lines.push('  📁 ' + (f.attributes.name || f.id)); });
+  }
+  if (archivos.length) {
+    lines.push('Archivos (' + archivos.length + '):');
+    archivos.forEach(function(a) {
+      var n = a.attributes.displayName || a.id;
+      var ext = n.split('.').pop().toUpperCase();
+      var fecha = a.attributes.lastModifiedTime ? new Date(a.attributes.lastModifiedTime).toLocaleDateString('es-CL') : '';
+      lines.push('  [' + ext + '] ' + n + (fecha ? ' (' + fecha + ')' : ''));
+    });
+  }
+  actualizarCtx('folder', '&#128193; ' + nombre + ' (' + archivos.length + ' archivos)', lines.join('\n'));
+  appendSystem('📁 Carpeta: ' + nombre + ' — ' + archivos.length + ' archivo(s). Puedes preguntarme sobre el contenido.');
+}
+
+// ── CHAT ──
+function usarSugerencia(el) {
+  document.getElementById('chatInput').value = el.textContent;
+  document.getElementById('chatInput').focus();
+}
+
+async function enviarMensaje() {
+  var input = document.getElementById('chatInput');
+  var msg = input.value.trim();
+  if (!msg) return;
+  if (!geminiKey) { mostrarModalKey(); return; }
+
+  input.value = '';
+  document.getElementById('btnSend').disabled = true;
+
+  // Borrar pantalla de bienvenida si existe
+  var wlc = document.querySelector('.welcome-wrap');
+  if (wlc) wlc.remove();
+
+  appendMsg('user', msg);
+  var typing = appendMsg('ai', '&#9679;&#9679;&#9679;', true);
+
+  try {
+    var reply = await llamarGemini(msg);
+    typing.remove();
+
+    // Detectar NAV_CMD
+    var navMatch = reply.match(/NAV_CMD:\s*(\{[^}]+\})/);
+    if (navMatch) {
+      try {
+        var cmd = JSON.parse(navMatch[1]);
+        reply = reply.replace(/NAV_CMD:\s*\{[^}]+\}/, '').trim();
+        ejecutarNavCmd(cmd);
+      } catch(e) {}
+    }
+    if (reply) appendMsg('ai', reply);
+  } catch(e) {
+    typing.remove();
+    appendMsg('ai', '⚠️ Error: ' + e.message);
+  }
+  document.getElementById('btnSend').disabled = false;
+}
+
+function ejecutarNavCmd(cmd) {
+  var items = navState.allItems;
+  var nombre = (cmd.name || '').toLowerCase();
+  if (!items.length) { appendSystem('⚠️ Primero navega a una carpeta para que pueda abrir archivos.'); return; }
+  if (cmd.action === 'folder') {
+    var folder = items.find(function(i) {
+      return i.type === 'folders' && (i.attributes.name || '').toLowerCase().includes(nombre);
+    });
+    if (folder) {
+      appendSystem('📁 Navegando a: ' + (folder.attributes.name || folder.id));
+      navState.stack.push({ id: folder.id, name: folder.attributes.name || folder.id });
+      navegarCarpeta(folder.id);
+    } else {
+      appendSystem('⚠️ No encontré la carpeta "' + cmd.name + '" en el directorio actual.');
+    }
+  } else if (cmd.action === 'file') {
+    var file = items.find(function(i) {
+      return i.type === 'items' && (i.attributes.displayName || '').toLowerCase().includes(nombre);
+    });
+    if (file) {
+      var urn = file.relationships && file.relationships.tip && file.relationships.tip.data ? file.relationships.tip.data.id : null;
+      appendSystem('&#128230; Abriendo: ' + (file.attributes.displayName || file.id));
+      abrirArchivo(file, urn);
+    } else {
+      appendSystem('⚠️ No encontré el archivo "' + cmd.name + '" en el directorio actual.');
+    }
+  }
+}
+
+async function llamarGemini(userMsg) {
+  var SYSTEM = 'Eres un asistente BIM experto en Autodesk Revit, IFC, ACC y BIM 360. '
+    + 'Respondes en el idioma del usuario. Eres conciso y técnico.\n\n'
+    + 'Si el usuario quiere ABRIR, IR A, o NAVEGAR a una carpeta o archivo, responde con este comando '
+    + 'en una sola línea ANTES de tu respuesta:\n'
+    + 'NAV_CMD:{"action":"folder","name":"nombre parcial de la carpeta"}\n'
+    + 'NAV_CMD:{"action":"file","name":"nombre parcial del archivo"}\n'
+    + 'Usa solo uno de los dos. El nombre debe coincidir (parcialmente) con los del contexto.\n'
+    + 'Si tienes propiedades BIM o lista de archivos en el contexto, úsalos para responder con precisión.';
+
+  var contexto = chatCtx.data || '';
+  var msgFinal = contexto ? contexto + '\n\n--- PREGUNTA ---\n' + userMsg : userMsg;
+
+  chatHistory.push({ role: 'user', parts: [{ text: msgFinal }] });
+  if (chatHistory.length > 20) chatHistory = chatHistory.slice(-16);
+
+  var r = await fetch(GEMINI_BASE + '/models/' + geminiModel + ':generateContent?key=' + geminiKey, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: SYSTEM }] },
+      contents: chatHistory,
+      generationConfig: { maxOutputTokens: 1500, temperature: 0.7 }
+    })
+  });
+
+  if (!r.ok) {
+    var err = await r.json().catch(function() { return {}; });
+    var msg = (err.error && err.error.message) || ('HTTP ' + r.status);
+    if (r.status === 400 && msg.includes('not found')) {
+      mostrarModalKey();
+      throw new Error('Modelo no disponible — cambia el modelo en Configuración (↻ Ver disponibles).');
+    }
+    throw new Error(msg);
+  }
+
+  var data = await r.json();
+  var reply = data.candidates && data.candidates[0] && data.candidates[0].content
+    && data.candidates[0].content.parts && data.candidates[0].content.parts[0]
+    ? data.candidates[0].content.parts[0].text : 'Sin respuesta.';
+
+  chatHistory.push({ role: 'model', parts: [{ text: reply }] });
+  return reply;
+}
+
+// ── UI HELPERS ──
+function appendMsg(tipo, texto, isTyping) {
+  var msgs = document.getElementById('messages');
+  var wrap = document.createElement('div'); wrap.className = 'msg-wrap';
+  var row  = document.createElement('div'); row.className  = 'msg-row ' + tipo;
+  var av   = document.createElement('div');
+  av.className = 'msg-avatar ' + (tipo === 'user' ? 'av-user' : 'av-ai');
+  av.textContent = tipo === 'user' ? 'Tú' : 'G';
+  var bub  = document.createElement('div'); bub.className = 'msg-bubble';
+  var con  = document.createElement('div'); con.className  = 'msg-content' + (isTyping ? ' typing' : '');
+  if (!isTyping) {
+    var nombre = document.createElement('div'); nombre.className = 'msg-name';
+    nombre.textContent = tipo === 'user' ? 'Tú' : 'Gemini';
+    bub.appendChild(nombre);
+  }
+  con.innerHTML = isTyping ? texto : renderMarkdown(texto);
+  bub.appendChild(con); row.appendChild(av); row.appendChild(bub); wrap.appendChild(row);
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+  return con;
+}
+function appendSystem(texto) {
+  var msgs = document.getElementById('messages');
+  var wrap = document.createElement('div'); wrap.className = 'msg-wrap';
+  var row  = document.createElement('div'); row.className  = 'msg-system-row';
+  var sp   = document.createElement('span'); sp.className   = 'msg-system-text';
+  sp.innerHTML = texto;
+  row.appendChild(sp); wrap.appendChild(row); msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function renderMarkdown(text) {
+  return escHtml(text)
+    .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^###\s(.+)$/gm, '<strong>$1</strong>')
+    .replace(/^##\s(.+)$/gm,  '<strong>$1</strong>')
+    .replace(/^#\s(.+)$/gm,   '<strong>$1</strong>')
+    .replace(/^- (.+)$/gm, '• $1')
+    .replace(/\n/g, '<br>');
+}
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function treeLoading(txt) {
+  document.getElementById('fileTree').innerHTML = '<div class="tree-loading"><div class="spin"></div>' + (txt||'Cargando...') + '</div>';
+}
+function treeEmpty(txt) {
+  document.getElementById('fileTree').innerHTML = '<div class="tree-empty">' + txt + '</div>';
+}
+function treeRow(icon, name, sub, tagCls, onclick) {
+  var row = document.createElement('div'); row.className = 'tree-row';
+  row.innerHTML = '<div class="tr-icon">' + icon + '</div>'
+    + '<div class="tr-body"><div class="tr-name">' + escHtml(name) + '</div><div class="tr-sub">' + escHtml(sub) + '</div></div>'
+    + (tagCls ? '<span class="tr-tag ' + tagCls + '">' + escHtml(sub) + '</span>' : '');
+  if (onclick) row.onclick = onclick;
+  return row;
+}
+function iconoPorExt(ext) {
+  return { RVT:'&#128208;', IFC:'&#128230;', DWG:'&#128195;', PDF:'&#128196;',
+    DOC:'&#128196;', DOCX:'&#128196;', XLS:'&#128196;', XLSX:'&#128196;',
+    PNG:'&#128444;', JPG:'&#128444;', ZIP:'&#128230;' }[ext] || '&#128196;';
+}
+function tagClsPorExt(ext) {
+  return { RVT:'tag-rvt', IFC:'tag-ifc', DWG:'tag-dwg', PDF:'tag-pdf', DOC:'tag-doc', DOCX:'tag-doc', XLS:'tag-doc', XLSX:'tag-doc' }[ext] || 'tag-gen';
+}
+function toast(msg, isErr) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show' + (isErr ? ' error' : '');
+  clearTimeout(t._t); t._t = setTimeout(function() { t.className = ''; }, 3200);
+}
+
+// Escape cierra modal
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') cerrarModalKey(); });
+document.getElementById('keyModal').addEventListener('click', function(e) { if (e.target === this) cerrarModalKey(); });
+</script>
+</body>
+</html>

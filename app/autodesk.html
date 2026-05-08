@@ -159,8 +159,12 @@ body.light-mode #connStatus { color:#5a7a9a !important; }
 .workspace { display:flex; flex:1; overflow:hidden; position:relative; }
 /* ── PANEL IZQUIERDO ── */
 .panel-left { width:300px; flex-shrink:0; background:var(--blue); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
-/* ── UPLOAD RVT ── */
+/* ── UPLOAD LOCAL ── */
 .pl-upload { padding:10px 12px; border-top:1px solid var(--border); flex-shrink:0; background:var(--navy); }
+.upload-card { border:1px solid rgba(0,200,83,.2); border-radius:7px; padding:10px 10px 8px; background:rgba(0,200,83,.03); position:relative; }
+.upload-card-label { position:absolute; top:-8px; left:10px; background:var(--navy); padding:0 6px; font:700 8px var(--mono); color:var(--green); text-transform:uppercase; letter-spacing:.15em; white-space:nowrap; }
+body.light-mode .upload-card { background:rgba(0,140,60,.04); border-color:rgba(0,140,60,.25); }
+body.light-mode .upload-card-label { background:var(--blue); }
 .btn-upload-rvt { width:100%; padding:9px; background:rgba(0,144,255,.07); color:var(--aps); border:1px solid rgba(0,144,255,.2); border-radius:6px; font:700 10px var(--mono); cursor:pointer; text-transform:uppercase; letter-spacing:.1em; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:7px; }
 .btn-upload-rvt:hover:not(:disabled) { background:rgba(0,144,255,.14); border-color:rgba(0,144,255,.5); box-shadow:0 0 14px rgba(0,144,255,.15); }
 .btn-upload-rvt:disabled { opacity:.4; cursor:not-allowed; }
@@ -244,6 +248,54 @@ body.light-mode #connStatus { color:#5a7a9a !important; }
 .viewer-empty .hint { font:400 10px var(--mono); color:var(--muted); opacity:.5; max-width:280px; text-align:center; line-height:1.6; }
 .loading-overlay { position:absolute; inset:0; background:rgba(10,15,30,.9); display:none; flex-direction:column; align-items:center; justify-content:center; gap:14px; z-index:100; }
 .loading-overlay.show { display:flex; }
+/* ── VIEWS PICKER MODAL ── */
+.views-modal-overlay { position:fixed; inset:0; background:rgba(6,13,24,.82); backdrop-filter:blur(4px); z-index:500; display:none; align-items:center; justify-content:center; }
+.views-modal-overlay.show { display:flex; }
+.views-modal { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:20px; width:460px; max-width:92vw; max-height:80vh; display:flex; flex-direction:column; gap:12px; }
+.vm-title { font:700 13px var(--sans); color:var(--text); }
+.vm-sub { font:400 9px var(--mono); color:var(--muted); }
+.vm-section { font:700 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.15em; margin-top:4px; }
+.vm-list { overflow-y:auto; max-height:320px; display:flex; flex-direction:column; gap:4px; }
+.vm-list::-webkit-scrollbar { width:3px; }
+.vm-list::-webkit-scrollbar-thumb { background:var(--border); }
+.vm-item { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:5px; border:1px solid var(--border); cursor:pointer; transition:all .12s; }
+.vm-item:hover { border-color:var(--aps); background:rgba(0,144,255,.05); }
+.vm-item-icon { font-size:16px; flex-shrink:0; }
+.vm-item-info { flex:1; min-width:0; }
+.vm-item-name { font:500 11px var(--mono); color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.vm-item-meta { font:400 8px var(--mono); color:var(--muted); margin-top:1px; }
+.vm-tag { font:700 7px var(--mono); padding:1px 5px; border-radius:2px; flex-shrink:0; }
+.vm-tag.t3d { background:rgba(0,144,255,.1); color:var(--aps); }
+.vm-tag.t2d { background:rgba(0,200,83,.1); color:var(--green); }
+/* ── PLANBIM VALIDATION MODAL ── */
+.pbi-overlay { position:fixed; inset:0; background:rgba(6,13,24,.88); backdrop-filter:blur(4px); z-index:9990; display:none; align-items:center; justify-content:center; }
+.pbi-overlay.show { display:flex; }
+.pbi-modal { background:var(--navy); border:1px solid var(--border); border-top:3px solid var(--green); border-radius:10px; width:90vw; max-width:980px; max-height:90vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.6); }
+.pbi-modal-hdr { display:flex; align-items:center; gap:10px; padding:14px 20px; border-bottom:1px solid var(--border); flex-shrink:0; }
+.pbi-modal-title { font:700 11px var(--mono); color:var(--green); text-transform:uppercase; letter-spacing:.12em; }
+.pbi-modal-body { padding:18px 20px; flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:14px; }
+.pbi-modal-footer { padding:12px 20px; border-top:1px solid var(--border); gap:8px; justify-content:flex-end; flex-shrink:0; display:none; }
+.pbi-modal-footer.show { display:flex; }
+.pbi-det-card { background:var(--card); border:1px solid var(--border); border-radius:6px; padding:12px 16px; display:flex; flex-direction:column; gap:5px; }
+.pbi-badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; background:rgba(0,200,83,.1); border:1px solid rgba(0,200,83,.3); border-radius:10px; font:700 9px var(--mono); color:var(--green); text-transform:uppercase; letter-spacing:.1em; }
+.pbi-badge.warn { background:rgba(255,107,53,.08); border-color:rgba(255,107,53,.3); color:var(--warn); }
+.pbi-btn { padding:7px 16px; border-radius:5px; font:700 9px var(--mono); cursor:pointer; text-transform:uppercase; letter-spacing:.1em; transition:all .15s; border:1px solid; }
+.pbi-btn.primary { background:linear-gradient(135deg,var(--green),#00a844); color:#000; border-color:transparent; }
+.pbi-btn.primary:hover:not(:disabled) { box-shadow:0 0 20px rgba(0,200,83,.3); }
+.pbi-btn.secondary { background:transparent; color:var(--muted); border-color:var(--border); }
+.pbi-btn.secondary:hover:not(:disabled) { color:var(--text); border-color:rgba(255,255,255,.2); }
+.pbi-btn.skip { background:rgba(0,144,255,.08); color:var(--aps); border-color:rgba(0,144,255,.2); }
+.pbi-btn.skip:hover:not(:disabled) { background:rgba(0,144,255,.15); }
+.pbi-btn:disabled { opacity:.4; cursor:not-allowed; }
+.pbi-cfg { display:none; background:rgba(0,0,0,.2); border:1px solid var(--border); border-radius:5px; padding:10px; margin-top:4px; }
+.pbi-cfg.show { display:block; }
+.pbi-cfg-field label { display:block; font:500 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:3px; }
+.pbi-cfg-field input { width:100%; padding:4px 7px; background:var(--blue); border:1px solid var(--border); border-radius:3px; font:400 11px var(--mono); color:var(--text); outline:none; text-align:center; }
+.pbi-cfg-field input:focus { border-color:var(--accent); }
+.pbi-frame { height:56vh; border:none; width:100%; background:#0a0f1e; border-radius:4px; }
+.pbi-progress { display:flex; align-items:center; gap:10px; padding:14px 16px; background:var(--card); border-radius:6px; border:1px solid var(--border); }
+.pbi-spin { width:14px; height:14px; border:2px solid rgba(0,200,83,.2); border-top-color:var(--green); border-radius:50%; animation:spin .8s linear infinite; flex-shrink:0; }
+.pbi-progress-text { font:400 10px var(--mono); color:var(--muted); }
 .load-spinner { width:36px; height:36px; border:2px solid rgba(0,144,255,.2); border-top-color:var(--aps); border-radius:50%; animation:spin .8s linear infinite; }
 .load-text { font:400 10px var(--mono); color:var(--muted); letter-spacing:.1em; text-transform:uppercase; }
 @keyframes spin { to { transform:rotate(360deg); } }
@@ -678,15 +730,22 @@ if (_hasError) {
       <div class="nav-empty">Selecciona un proyecto</div>
     </div>
 
-    <!-- SUBIR RVT LOCAL -->
+    <!-- SUBIR ARCHIVOS LOCAL -->
     <div class="pl-upload">
-      <input type="file" id="rvtFileInput" accept=".rvt" style="display:none" onchange="subirRVT(this.files[0]);this.value=''">
-      <button class="btn-upload-rvt" id="btnUploadRVT" onclick="document.getElementById('rvtFileInput').click()">
-        <span>📤</span> Subir RVT
-      </button>
-      <div class="upload-prog" id="uploadProg">
-        <div class="upload-track"><div class="upload-fill" id="uploadFill"></div></div>
-        <div class="upload-msg" id="uploadMsg">Preparando...</div>
+      <input type="file" id="modelo3dInput" accept=".rvt,.ifc,.ifczip,.nwc,.nwd,.skp,.fbx,.3dm" style="display:none" onchange="interceptarIFC(this.files[0]);this.value=''">
+      <input type="file" id="doc2dInput"    accept=".dwg,.dxf,.pdf,.dwf,.dwfx"                   style="display:none" onchange="subirArchivo(this.files[0],'btnUploadDoc2D');this.value=''">
+      <div class="upload-card">
+        <div class="upload-card-label">&#9889; Sin B360 ni Revit</div>
+        <button class="btn-upload-rvt" id="btnUploadModelo3D" onclick="document.getElementById('modelo3dInput').click()" title="RVT, IFC, NWC, NWD, SKP…">
+          <span>&#128230;</span> Subir Modelo 3D
+        </button>
+        <button class="btn-upload-rvt" id="btnUploadDoc2D" style="margin-top:6px;border-color:rgba(0,200,83,.2);color:var(--green);background:rgba(0,200,83,.05);" onclick="document.getElementById('doc2dInput').click()" title="DWG, PDF, DWF…">
+          <span>&#128195;</span> Subir Documento 2D
+        </button>
+        <div class="upload-prog" id="uploadProg">
+          <div class="upload-track"><div class="upload-fill" id="uploadFill"></div></div>
+          <div class="upload-msg" id="uploadMsg">Preparando...</div>
+        </div>
       </div>
     </div>
 
@@ -1449,26 +1508,18 @@ function cargarVisor(urn, nombre, tokenOverride) {
         apsDoc = doc;
         ocultarLoading();
         var root = doc.getRoot();
-        var geometries = root.search({ type: 'geometry' });
-        var viewable = geometries.length > 0 ? geometries[0] : root.getDefaultGeometry();
-        if (!viewable) { mostrarError('El modelo no tiene geometría visualizable.'); return; }
-        viewer.loadDocumentNode(doc, viewable, { keepCurrentModels: false })
-          .then(function() {
-            viewer.resize();
-            viewer.addEventListener(Autodesk.Viewing.SELECTION_CHANGED_EVENT, onElementSelected);
-            // Construir índice completo del modelo en background
-            setTimeout(function() {
-              construirIndiceModelo(function(idx) {
-                if (idx) {
-                  construirDonutDesdeIndice(idx);
-                  // Regenerar reporte si el tab está abierto
-                  var rptContent = document.querySelector('[data-content="charts"]');
-                  if (rptContent && rptContent.classList.contains('active')) renderReporte();
-                }
-              });
-            }, 1000);
-          })
-          .catch(function(err) { mostrarError('Error cargando nodo: ' + (err.message || err)); });
+        var views3d = root.search({ type: 'geometry', role: '3d' });
+        var views2d = root.search({ type: 'geometry', role: '2d' });
+        var allViews = views3d.concat(views2d);
+        if (!allViews.length) allViews = root.search({ type: 'geometry' });
+        if (!allViews.length) { mostrarError('El modelo no tiene geometría visualizable.'); return; }
+
+        // Si hay más de una vista, mostrar picker
+        if (allViews.length > 1) {
+          mostrarViewsPicker(doc, views3d, views2d);
+          return;
+        }
+        cargarNodoVisor(doc, allViews[0]);
       },
       function onDocumentLoadError(code, msg, errors) {
         ocultarLoading();
@@ -1493,6 +1544,58 @@ function cargarVisor(urn, nombre, tokenOverride) {
   } else {
     arrancarVisor();
   }
+}
+
+function cargarNodoVisor(doc, viewable) {
+  mostrarLoading('Cargando vista...');
+  viewer.loadDocumentNode(doc, viewable, { keepCurrentModels: false })
+    .then(function() {
+      ocultarLoading();
+      viewer.resize();
+      viewer.addEventListener(Autodesk.Viewing.SELECTION_CHANGED_EVENT, onElementSelected);
+      setTimeout(function() {
+        construirIndiceModelo(function(idx) {
+          if (idx) {
+            construirDonutDesdeIndice(idx);
+            var rptContent = document.querySelector('[data-content="charts"]');
+            if (rptContent && rptContent.classList.contains('active')) renderReporte();
+          }
+        });
+      }, 1000);
+    })
+    .catch(function(err) { ocultarLoading(); mostrarError('Error cargando vista: ' + (err.message || err)); });
+}
+
+function mostrarViewsPicker(doc, views3d, views2d) {
+  var overlay = document.getElementById('viewsModalOverlay');
+  var list    = document.getElementById('vmList');
+  var sub     = document.getElementById('vmSub');
+  sub.textContent = (views3d.length + views2d.length) + ' vistas disponibles — selecciona cuál cargar en el visor.';
+  list.innerHTML = '';
+
+  function agregarSeccion(titulo, vistas, tag, tagCls, icono) {
+    if (!vistas.length) return;
+    var sec = document.createElement('div'); sec.className = 'vm-section'; sec.textContent = titulo;
+    list.appendChild(sec);
+    vistas.forEach(function(v) {
+      var nombre = v.data.name || v.data.guid || 'Vista';
+      var item = document.createElement('div'); item.className = 'vm-item';
+      item.innerHTML = '<div class="vm-item-icon">' + icono + '</div>'
+        + '<div class="vm-item-info"><div class="vm-item-name">' + nombre + '</div>'
+        + '<div class="vm-item-meta">' + (v.data.role || tag) + '</div></div>'
+        + '<span class="vm-tag ' + tagCls + '">' + tag + '</span>';
+      item.onclick = function() {
+        overlay.classList.remove('show');
+        cargarNodoVisor(doc, v);
+      };
+      list.appendChild(item);
+    });
+  }
+
+  agregarSeccion('Vistas 3D', views3d, '3D', 't3d', '&#128230;');
+  agregarSeccion('Láminas 2D', views2d, '2D', 't2d', '&#128195;');
+  overlay.classList.add('show');
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.classList.remove('show'); };
 }
 
 // ============================================================
@@ -2884,15 +2987,18 @@ function cerrarModelo() {
 }
 
 // ============================================================
-// SUBIR RVT LOCAL → APS OSS → Traducción → Visor
+// SUBIR ARCHIVO LOCAL → APS OSS → Traducción → Visor
 // ============================================================
-async function subirRVT(file) {
+function subirRVT(file) { subirArchivo(file, 'btnUploadModelo3D'); }
+
+async function subirArchivo(file, btnId) {
   if (!file) return;
-  const btn   = document.getElementById('btnUploadRVT');
+  const btn   = document.getElementById(btnId || 'btnUploadModelo3D');
   const prog  = document.getElementById('uploadProg');
   const fill  = document.getElementById('uploadFill');
   const msg   = document.getElementById('uploadMsg');
   const PROXY = 'https://voxelbim.zinnarox.workers.dev';
+  const ext   = file.name.split('.').pop().toUpperCase();
 
   const setStep = (texto, pct, error) => {
     msg.textContent  = texto;
@@ -2900,9 +3006,11 @@ async function subirRVT(file) {
     fill.classList.toggle('err', !!error);
   };
 
-  btn.disabled = true;
+  document.getElementById('btnUploadModelo3D').disabled = true;
+  document.getElementById('btnUploadDoc2D').disabled   = true;
   prog.classList.add('show');
   fill.classList.remove('err');
+  msg.textContent = 'Preparando ' + ext + '…';
 
   try {
     // 1. Obtener URL firmada
@@ -2971,16 +3079,523 @@ async function subirRVT(file) {
     setStep('¡Listo! Cargando…', 100);
     const t2lRes = await fetch(PROXY + '/aps/token2l');
     const t2l    = await t2lRes.json();
-    cargarVisor(urn, file.name.replace(/\.rvt$/i, ''), t2l.access_token);
+    const displayName = file.name.replace(/\.[^.]+$/, '');
+    cargarVisor(urn, displayName, t2l.access_token);
     document.getElementById('btnCerrarModelo').style.display = 'inline-flex';
     setTimeout(() => { prog.classList.remove('show'); fill.style.width = '0%'; }, 2500);
 
   } catch(e) {
     setStep('Error: ' + e.message, 100, true);
   } finally {
-    btn.disabled = false;
+    document.getElementById('btnUploadModelo3D').disabled = false;
+    document.getElementById('btnUploadDoc2D').disabled   = false;
   }
 }
+
+// ============================================================
+// PLANBIM CHILE — Validación IFC
+// ============================================================
+var PBI_ESP = {
+  "Coordinacion":         {cod:"COO",ents:[["IFCGRID","Grilla"],["IFCSITE","Sitio"],["IFCBUILDING","Edificio"],["IFCBUILDINGSTOREY","Nivel"],["IFCSPACE","Espacio"],["IFCZONE","Zona"],["IFCWALL","Muro"],["IFCCURTAINWALL","Muro Cortina"],["IFCWINDOW","Ventana"],["IFCDOOR","Puerta"],["IFCROOF","Cubierta"],["IFCCOVERING","Cielo Falso / Piso"],["IFCBEAM","Viga"],["IFCCOLUMN","Columna"],["IFCFOOTING","Fundacion"],["IFCSLAB","Losa"],["IFCSTAIR","Escalera"],["IFCRAMP","Rampa"],["IFCRAILING","Baranda"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCDUCTSEGMENT","Segmento de Ducto"],["IFCDUCTFITTING","Fitting de Ducto"],["IFCCABLECARRIERSEGMENT","Bandeja de Cable"],["IFCCABLECARRIERFITTING","Fitting Bandeja de Cable"],["IFCELECTRICDISTRIBUTIONBOARD","Tablero Electrico"],["IFCAIRTERMINAL","Terminal de Aire"],["IFCDAMPER","Compuerta"],["IFCPUMP","Bomba"],["IFCTANK","Estanque"],["IFCVALVE","Valvula"],["IFCLIGHTFIXTURE","Luminaria"],["IFCSENSOR","Sensor"],["IFCFIRESUPPRESSIONTERMINAL","Terminal Supresion Incendio"],["IFCALARM","Alarma"],["IFCMEDICALDEVICE","Dispositivo Medico"],["IFCFURNITURE","Mobiliario"],["IFCTRANSPORTELEMENT","Elemento de Transporte"],["IFCSANITARYTERMINAL","Aparato Sanitario"],["IFCWASTETERMINAL","Terminal de Residuos"],["IFCOUTLET","Salida Electrica"],["IFCSWITCHINGDEVICE","Interruptor"],["IFCUNITARYEQUIPMENT","Equipo Unitario"],["IFCCHILLER","Enfriador"],["IFCDISTRIBUTIONCHAMBERELEME","Camara de Distribucion"],["IFCDISTRIBUTIONELEMENT","Elemento de Distribucion"],["IFCAUDIOVISUALAPPLIANCE","Equipo Audiovisual"],["IFCCOMMUNICATIONSAPPLIANCE","Equipo de Comunicaciones"]]},
+  "Sitio":                {cod:"SIT",ents:[["IFCGRID","Grilla"],["IFCSITE","Sitio"],["IFCCIVILELEMENT","Elemento Civil"],["IFCGEOGRAPHICELEMENT","Elemento Geografico"],["IFCSLAB","Losa"],["IFCWALL","Muro"]]},
+  "Arquitectura":         {cod:"ARQ",ents:[["IFCGRID","Grilla"],["IFCWALL","Muro"],["IFCCURTAINWALL","Muro Cortina"],["IFCWINDOW","Ventana"],["IFCDOOR","Puerta"],["IFCROOF","Cubierta"],["IFCCOVERING","Cielo Falso / Piso"],["IFCSANITARYTERMINAL","Aparato Sanitario"],["IFCRAILING","Baranda"],["IFCFURNITURE","Mobiliario"],["IFCVALVE","Valvula"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCWASTETERMINAL","Terminal de Residuos"],["IFCTRANSPORTELEMENT","Elemento de Transporte"],["IFCSPACE","Espacio"],["IFCZONE","Zona"]]},
+  "Volumetrico":          {cod:"VOL",ents:[["IFCGRID","Grilla"],["IFCZONE","Zona"],["IFCSPACE","Espacio"]]},
+  "Estructural":          {cod:"EST",ents:[["IFCGRID","Grilla"],["IFCBEAM","Viga"],["IFCCOLUMN","Columna"],["IFCFOOTING","Fundacion"],["IFCSLAB","Losa"],["IFCWALL","Muro"]]},
+  "Agua Potable":         {cod:"APO",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCPUMP","Bomba"],["IFCTANK","Estanque"],["IFCVALVE","Valvula"]]},
+  "Aguas Tratadas":       {cod:"ATR",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCPUMP","Bomba"],["IFCTANK","Estanque"],["IFCVALVE","Valvula"]]},
+  "Alcantarillado":       {cod:"ALC",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCDISTRIBUTIONCHAMBERELEME","Camara de Distribucion"]]},
+  "Corrientes Debiles":   {cod:"CEC",ents:[["IFCGRID","Grilla"],["IFCCABLECARRIERSEGMENT","Bandeja de Cable"],["IFCCABLECARRIERFITTING","Fitting Bandeja de Cable"],["IFCDISTRIBUTIONCHAMBERELEME","Camara de Distribucion"],["IFCOUTLET","Salida Electrica"],["IFCSENSOR","Sensor"],["IFCAUDIOVISUALAPPLIANCE","Equipo Audiovisual"],["IFCCOMMUNICATIONSAPPLIANCE","Equipo de Comunicaciones"],["IFCELECTRICDISTRIBUTIONBOARD","Tablero Electrico"]]},
+  "Climatizacion":        {cod:"CLI",ents:[["IFCGRID","Grilla"],["IFCAIRTERMINAL","Terminal de Aire"],["IFCDAMPER","Compuerta"],["IFCDUCTFITTING","Fitting de Ducto"],["IFCDUCTSEGMENT","Segmento de Ducto"],["IFCUNITARYEQUIPMENT","Equipo Unitario"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCPUMP","Bomba"],["IFCSOLARDEVICE","Equipo Solar"],["IFCTANK","Estanque"],["IFCCHILLER","Enfriador"],["IFCVALVE","Valvula"]]},
+  "Combustible":          {cod:"COM",ents:[["IFCGRID","Grilla"],["IFCTANK","Estanque"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCVALVE","Valvula"],["IFCPUMP","Bomba"]]},
+  "Control Centralizado": {cod:"CCT",ents:[["IFCGRID","Grilla"],["IFCELECTRICDISTRIBUTIONBOARD","Tablero Electrico"],["IFCDISTRIBUTIONCONTROLELEMENT","Elemento de Control"]]},
+  "Correo Neumatico":     {cod:"COR",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCDISTRIBUTIONELEMENT","Elemento de Distribucion"]]},
+  "Aguas Lluvias":        {cod:"ALL",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCDISTRIBUTIONCHAMBERELEME","Camara de Distribucion"]]},
+  "Gases Clinicos":       {cod:"GCL",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCVALVE","Valvula"],["IFCUNITARYCONTROLELEMENT","Elemento de Control Unitario"],["IFCTANK","Estanque"],["IFCMEDICALDEVICE","Dispositivo Medico"]]},
+  "Iluminacion":          {cod:"ILU",ents:[["IFCGRID","Grilla"],["IFCLIGHTFIXTURE","Luminaria"],["IFCSWITCHINGDEVICE","Interruptor"]]},
+  "Proteccion Incendios": {cod:"PCI",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCSENSOR","Sensor"],["IFCTANK","Estanque"],["IFCPUMP","Bomba"],["IFCFIRESUPPRESSIONTERMINAL","Terminal Supresion Incendio"],["IFCALARM","Alarma"],["IFCVALVE","Valvula"]]},
+  "Electricidad":         {cod:"ELE",ents:[["IFCGRID","Grilla"],["IFCCABLECARRIERSEGMENT","Bandeja de Cable"],["IFCCABLECARRIERFITTING","Fitting Bandeja de Cable"],["IFCDISTRIBUTIONCHAMBERELEME","Camara de Distribucion"],["IFCELECTRICDISTRIBUTIONBOARD","Tablero Electrico"]]},
+  "Helipuerto":           {cod:"HEL",ents:[["IFCGRID","Grilla"],["IFCELEMENTASSEMBLY","Ensamble de Elementos"]]},
+  "Insonorizacion":       {cod:"INS",ents:[["IFCGRID","Grilla"],["IFCCOVERING","Revestimiento / Cielo"],["IFCDUCTSILENCER","Silenciador de Ducto"]]},
+  "Equipamiento":         {cod:"EQP",ents:[["IFCGRID","Grilla"],["IFCFURNITURE","Mobiliario / Equipamiento"],["IFCCOVERING","Revestimiento"],["IFCMEDICALDEVICE","Dispositivo Medico"]]},
+  "Limpiafachada":        {cod:"LFA",ents:[["IFCGRID","Grilla"],["IFCELEMENTASSEMBLY","Ensamble de Elementos"]]},
+  "Mobiliario":           {cod:"MOB",ents:[["IFCGRID","Grilla"],["IFCFURNITURE","Mobiliario"]]},
+  "Paisajismo":           {cod:"PSJ",ents:[["IFCGRID","Grilla"],["IFCGEOGRAPHICELEMENT","Elemento Geografico"],["IFCSLAB","Losa"],["IFCCOVERING","Revestimiento / Pavimento"],["IFCFURNITURE","Mobiliario Exterior"]]},
+  "Pavimentacion":        {cod:"PAV",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCSLAB","Losa"],["IFCCOVERING","Revestimiento / Pavimento"]]},
+  "Residuos":             {cod:"RES",ents:[["IFCGRID","Grilla"],["IFCFURNITURE","Mobiliario / Contenedor"]]},
+  "Riego":                {cod:"RIE",ents:[["IFCGRID","Grilla"],["IFCPIPESEGMENT","Segmento de Tuberia"],["IFCPIPEFITTING","Fitting de Tuberia"],["IFCPUMP","Bomba"],["IFCTANK","Estanque"],["IFCVALVE","Valvula"]]},
+  "Senaletica":           {cod:"SIE",ents:[["IFCGRID","Grilla"],["IFCFURNITURE","Señaletica / Mobiliario"],["IFCSIGN","Señal"],["IFCSIGNAGE","Señaletica"]]},
+  "Transporte Vertical":  {cod:"TRV",ents:[["IFCGRID","Grilla"],["IFCTRANSPORTELEMENT","Elemento de Transporte"]]}
+};
+var PBI_COD_PRIO = {SIT:1,VOL:1};
+var PBI_PRODUCTOS = {
+  IFCWALL:1,IFCWALLSTANDARDCASE:1,IFCCURTAINWALL:1,IFCCOLUMN:1,IFCCOLUMNSTANDARDCASE:1,
+  IFCBEAM:1,IFCBEAMSTANDARDCASE:1,IFCSLAB:1,IFCSLABSTANDARDCASE:1,
+  IFCROOF:1,IFCFOOTING:1,IFCPILE:1,IFCDOOR:1,IFCWINDOW:1,
+  IFCRAILING:1,IFCSTAIR:1,IFCSTAIRFLIGHT:1,IFCRAMP:1,IFCRAMPFLIGHT:1,
+  IFCCOVERING:1,IFCMEMBER:1,IFCPLATE:1,IFCELEMENTASSEMBLY:1,IFCBUILDINGELEMENTPROXY:1,
+  IFCSITE:1,IFCBUILDING:1,IFCBUILDINGSTOREY:1,IFCCIVILELEMENT:1,IFCGEOGRAPHICELEMENT:1,
+  IFCFURNITURE:1,IFCFURNITURESTANDARD:1,IFCSYSTEMFURNITUREELEMENT:1,IFCTRANSPORTELEMENT:1,
+  IFCSANITARYTERMINAL:1,IFCWASTETERMINAL:1,IFCDISCRETEACCESSORY:1,IFCMECHANICALFASTENER:1,
+  IFCPIPESEGMENT:1,IFCPIPEFITTING:1,IFCPUMP:1,IFCTANK:1,IFCVALVE:1,
+  IFCFLOWSEGMENT:1,IFCFLOWFITTING:1,IFCFLOWTERMINAL:1,IFCFLOWMOVINGDEVICE:1,
+  IFCFLOWSTORAGEDEVICE:1,IFCFLOWCONTROLLER:1,IFCFLOWTREATMENTDEVICE:1,
+  IFCDISTRIBUTIONCHAMBERELEME:1,IFCDISTRIBUTIONCHAMBERELEMENT:1,
+  IFCAIRTERMINAL:1,IFCDAMPER:1,IFCDUCTFITTING:1,IFCDUCTSEGMENT:1,
+  IFCUNITARYEQUIPMENT:1,IFCCHILLER:1,IFCSOLARDEVICE:1,IFCCOIL:1,IFCBOILER:1,
+  IFCCOMPRESSOR:1,IFCCONDENSER:1,IFCCOOLEDBEAM:1,IFCCOOLINGTOWER:1,IFCENGINE:1,
+  IFCEVAPORATIVECOOLER:1,IFCEVAPORATOR:1,IFCFAN:1,IFCFILTER:1,IFCHEATEXCHANGER:1,
+  IFCHUMIDIFIER:1,IFCMEDICALDEVICE:1,IFCELECTRICDISTRIBUTIONBOARD:1,
+  IFCELECTRICGENERATOR:1,IFCELECTRICMOTOR:1,IFCELECTRICAPPLIANCE:1,
+  IFCELECTRICTIMECONTROL:1,IFCLAMP:1,IFCLIGHTFIXTURE:1,IFCSWITCHINGDEVICE:1,
+  IFCOUTLET:1,IFCCABLECARRIERSEGMENT:1,IFCCABLECARRIERFITTING:1,
+  IFCCABLESEGMENT:1,IFCCABLEFITTING:1,IFCJUNCTIONBOX:1,IFCMOTORCONNECTION:1,
+  IFCPROTECTIVEDEVICE:1,IFCTRANSFORMER:1,IFCUNITARYCONTROLELEMENT:1,
+  IFCSENSOR:1,IFCACTUATOR:1,IFCALARM:1,IFCCONTROLLER:1,IFCDISTRIBUTIONCONTROLELEMENT:1,
+  IFCAUDIOVISUALAPPLIANCE:1,IFCCOMMUNICATIONSAPPLIANCE:1,IFCFIRESUPPRESSIONTERMINAL:1,
+  IFCDUCTSILENCER:1,IFCSIGN:1,IFCSIGNAGE:1,IFCGRID:1,IFCSPACE:1,IFCZONE:1,
+  IFCDISTRIBUTIONELEMENT:1,IFCBUILDINGELEMENT:1,IFCENERGYCONVERSIONDEVICE:1,
+  IFCDISTRIBUTIONFLOWELEMENT:1
+};
+var PBI_COMP = {
+  IFCSTAIRFLIGHT:"Tramo de Escalera",IFCRAMPFLIGHT:"Tramo de Rampa",
+  IFCELEMENTASSEMBLY:"Componentes agrupados",IFCDISCRETEACCESSORY:"Componente de puerta",
+  IFCPILE:"Pila estructural",IFCRAMP:"Rampa",IFCSTAIR:"Escalera",
+  IFCMEMBER:"Elemento de fachada",IFCPLATE:"Pieza de acero"
+};
+var PBI_UNIFORMAT = {
+  'A':'Substructure','A10':'Foundations','A1010':'Standard Foundations','A1020':'Special Foundations','A1030':'Slab on Grade','A20':'Basement Construction','A2010':'Basement Excavation','A2020':'Basement Walls',
+  'B':'Shell','B10':'Superstructure','B1010':'Floor Construction','B1020':'Roof Construction','B20':'Exterior Enclosure','B2010':'Exterior Walls','B2020':'Exterior Windows','B2030':'Exterior Doors','B30':'Roofing','B3010':'Roof Coverings','B3020':'Roof Openings',
+  'C':'Interiors','C10':'Interior Construction','C1010':'Partitions','C1020':'Interior Doors','C1030':'Fittings','C20':'Stairs','C2010':'Stair Construction','C30':'Interior Finishes','C3010':'Wall Finishes','C3020':'Floor Finishes','C3030':'Ceiling Finishes',
+  'D':'Services','D10':'Conveying','D1010':'Elevators & Lifts','D1020':'Escalators & Moving Walks','D20':'Plumbing','D2010':'Plumbing Fixtures','D2020':'Domestic Water Distribution','D2030':'Sanitary Waste','D2040':'Rain Water Drainage','D2090':'Other Plumbing Systems','D30':'HVAC','D3010':'Energy Supply','D3020':'Heat Generating Systems','D3030':'Cooling Generating Systems','D3040':'Distribution Systems','D3050':'Terminal & Package Units','D3060':'Controls & Instrumentation','D3070':'Systems Testing & Balancing','D3090':'Other HVAC Systems','D40':'Fire Protection','D4010':'Sprinklers','D4020':'Standpipes','D4030':'Fire Protection Specialties','D4090':'Other Fire Protection Systems','D50':'Electrical','D5010':'Electrical Service & Distribution','D5020':'Lighting & Branch Wiring','D5030':'Communications & Security','D5040':'Other Electrical Systems',
+  'E':'Equipment & Furnishings','E10':'Equipment','E1010':'Commercial Equipment','E1020':'Institutional Equipment','E1030':'Vehicular Equipment','E1090':'Other Equipment','E20':'Furnishings','E2010':'Fixed Furnishings','E2020':'Movable Furnishings',
+  'F':'Special Construction & Demolition','F10':'Special Construction','F1010':'Special Structures','F1020':'Integrated Construction','F1030':'Special Construction Systems','F1040':'Special Facilities','F20':'Selective Building Demolition',
+  'G':'Building Sitework','G10':'Site Preparation','G1010':'Site Clearing','G1020':'Site Demolition & Relocations','G1030':'Site Earthwork','G1040':'Hazardous Waste Remediation','G20':'Site Improvements','G2010':'Roadways','G2020':'Parking Lots','G2030':'Pedestrian Paving','G2040':'Site Development','G2050':'Landscaping','G30':'Site Mechanical Utilities','G3010':'Water Supply','G3020':'Sanitary Sewer','G3030':'Storm Sewer','G3040':'Heating Distribution','G3050':'Cooling Distribution','G3060':'Fuel Distribution','G3090':'Other Site Mechanical Utilities','G40':'Site Electrical Utilities','G4010':'Electrical Distribution','G4020':'Site Lighting','G4030':'Site Communications & Security','G4090':'Other Site Electrical Utilities','G90':'Other Site Construction'
+};
+
+function pbi_detectarCodigo(nombre) {
+  var upper = nombre.toUpperCase();
+  var partes = upper.split(/[_\-\s\.]+/);
+  for (var i=0; i<partes.length; i++) {
+    for (var k in PBI_ESP) { if (PBI_ESP[k].cod === partes[i]) return PBI_ESP[k].cod; }
+  }
+  var prioCod = null;
+  for (var k in PBI_ESP) {
+    var cod = PBI_ESP[k].cod;
+    if (upper.indexOf(cod) !== -1) {
+      if (PBI_COD_PRIO[cod]) { prioCod = cod; break; }
+      if (!prioCod) prioCod = cod;
+    }
+  }
+  return prioCod;
+}
+
+function pbi_parsearIFC(texto) {
+  var conteo = {}, idsPorCls = {}, instancias = {};
+  var re = /#(\d+)\s*=\s*(IFC[A-Z0-9]+)\s*\(/g, m;
+  while ((m = re.exec(texto)) !== null) {
+    var cls = m[2];
+    instancias[m[1]] = {cls:cls, pos: m.index + m[0].length};
+    if (PBI_PRODUCTOS[cls]) {
+      conteo[cls] = (conteo[cls]||0) + 1;
+      if (!idsPorCls[cls]) idsPorCls[cls] = [];
+      idsPorCls[cls].push(parseInt(m[1]));
+    }
+  }
+  return {conteo:conteo, instancias:instancias, idsPorCls:idsPorCls, texto:texto};
+}
+function pbi_extraerRaw(texto, pos) {
+  var depth=1, i=pos, out="";
+  while (i<texto.length && depth>0) {
+    var c=texto[i];
+    if (c==="(") depth++;
+    else if (c===")") { depth--; if(!depth) break; }
+    out+=c; i++;
+  }
+  return out;
+}
+function pbi_splitAttrs(raw) {
+  var attrs=[],depth=0,cur="";
+  for (var i=0;i<raw.length;i++){
+    var c=raw[i];
+    if(c==="("||c==="["){depth++;cur+=c;}
+    else if(c===")"||c==="]"){depth--;cur+=c;}
+    else if(c===","&&depth===0){attrs.push(cur.trim());cur="";}
+    else cur+=c;
+  }
+  if(cur.trim()) attrs.push(cur.trim());
+  return attrs;
+}
+function pbi_strVal(a){if(!a||a==="$"||a==="*")return null;var m=a.match(/^'(.*)'$/);return m?m[1]:a;}
+function pbi_refId(a){if(!a)return null;var m=a.match(/^#(\d+)$/);return m?m[1]:null;}
+
+var pbi_instancias = {};
+function pbi_resolverCoordenadas(inst, texto) {
+  if (!inst) return null;
+  var raw = pbi_extraerRaw(texto, inst.pos);
+  var attrs = pbi_splitAttrs(raw);
+  var placementRef = null;
+  for (var i=3; i<=6 && i<attrs.length; i++) {
+    var rid = pbi_refId(attrs[i]);
+    if (rid && pbi_instancias[rid] && pbi_instancias[rid].cls === "IFCLOCALPLACEMENT") { placementRef = rid; break; }
+  }
+  if (!placementRef) return null;
+  var lpInst = pbi_instancias[placementRef];
+  if (!lpInst) return null;
+  var lpRaw = pbi_extraerRaw(texto, lpInst.pos);
+  var lpAttrs = pbi_splitAttrs(lpRaw);
+  var ap3dRef = null;
+  for (var i=0; i<lpAttrs.length; i++) {
+    var rid = pbi_refId(lpAttrs[i]);
+    if (rid && pbi_instancias[rid] && pbi_instancias[rid].cls === "IFCAXIS2PLACEMENT3D") { ap3dRef = rid; break; }
+  }
+  if (!ap3dRef) return null;
+  var apInst = pbi_instancias[ap3dRef];
+  if (!apInst) return null;
+  var apRaw = pbi_extraerRaw(texto, apInst.pos);
+  var apAttrs = pbi_splitAttrs(apRaw);
+  var ptRef = pbi_refId(apAttrs[0]);
+  if (!ptRef) return null;
+  var ptInst = pbi_instancias[ptRef];
+  if (!ptInst || ptInst.cls !== "IFCCARTESIANPOINT") return null;
+  var ptRaw = pbi_extraerRaw(texto, ptInst.pos);
+  var coords = ptRaw.replace(/[\(\)]/g,"").split(",").map(function(v){return parseFloat(v.trim())||0;});
+  return {x:coords[0]||0, y:coords[1]||0, z:coords[2]||0};
+}
+function pbi_verificarOrigen(est, ox, oy, oz) {
+  pbi_instancias = est.instancias;
+  var resultado = [];
+  var tipos = ["IFCSITE","IFCBUILDING"];
+  for (var t=0; t<tipos.length; t++) {
+    var tipo = tipos[t];
+    for (var id in est.instancias) {
+      if (est.instancias[id].cls === tipo) {
+        var coords = pbi_resolverCoordenadas(est.instancias[id], est.texto);
+        var raw = pbi_extraerRaw(est.texto, est.instancias[id].pos);
+        var attrs = pbi_splitAttrs(raw);
+        var nombre = pbi_strVal(attrs[2]) || pbi_strVal(attrs[1]) || "(sin nombre)";
+        var x=coords?coords.x:null, y=coords?coords.y:null, z=coords?coords.z:null;
+        var ok = x===ox && y===oy && z===oz;
+        resultado.push({entidad:tipo, nombre:nombre, x:x!==null?x:"N/A", y:y!==null?y:"N/A", z:z!==null?z:"N/A", ok:ok});
+        break;
+      }
+    }
+  }
+  return resultado;
+}
+function pbi_verificarNombres(est, nSite, nBuilding) {
+  var resultado = [];
+  var reglas = {IFCSITE:{largo:nSite,desc:nSite+" car."},IFCBUILDING:{largo:nBuilding,desc:nBuilding+" car."}};
+  for (var tipo in reglas) {
+    for (var id in est.instancias) {
+      if (est.instancias[id].cls === tipo) {
+        var raw = pbi_extraerRaw(est.texto, est.instancias[id].pos);
+        var attrs = pbi_splitAttrs(raw);
+        var nombre = pbi_strVal(attrs[2]) || pbi_strVal(attrs[1]) || "";
+        var largo = nombre.length;
+        resultado.push({tipo:tipo, nombre:nombre, largo:largo, desc:"Debe tener "+reglas[tipo].desc, ok:largo===reglas[tipo].largo});
+        break;
+      }
+    }
+  }
+  return resultado;
+}
+function pbi_verificarNiveles(est, nStorey) {
+  var resultado = [];
+  for (var id in est.instancias) {
+    if (est.instancias[id].cls === "IFCBUILDINGSTOREY") {
+      var raw = pbi_extraerRaw(est.texto, est.instancias[id].pos);
+      var attrs = pbi_splitAttrs(raw);
+      var nombre = pbi_strVal(attrs[2]) || pbi_strVal(attrs[1]) || "";
+      resultado.push({id:"#"+id, nombre:nombre, largo:nombre.length, ok:nombre.length===nStorey});
+    }
+  }
+  return resultado;
+}
+function pbi_obtenerNoClasificados(conteo) {
+  var clsEsp = {};
+  for (var k in PBI_ESP) { for (var i=0; i<PBI_ESP[k].ents.length; i++) clsEsp[PBI_ESP[k].ents[i][0]]=1; }
+  var nc = [], comp = [];
+  for (var cls in conteo) {
+    if (!clsEsp[cls]) {
+      if (PBI_COMP[cls]) comp.push([cls, PBI_COMP[cls], conteo[cls]]);
+      else nc.push([cls, conteo[cls]]);
+    }
+  }
+  nc.sort(function(a,b){return b[1]-a[1];});
+  return {nc:nc, comp:comp};
+}
+function pbi_verificarClasificacion(est) {
+  var total=0, con_clas=0, codigos={};
+  var reRel = /IFCRELASSOCIATESCLASSIFICATION\s*\(/gi, m;
+  while ((m = reRel.exec(est.texto)) !== null) {
+    var raw = pbi_extraerRaw(est.texto, m.index + m[0].length);
+    var attrs = pbi_splitAttrs(raw);
+    var setRef = pbi_refId(attrs[5]);
+    var code = null, system = null;
+    if (setRef && est.instancias[setRef]) {
+      var csRaw = pbi_extraerRaw(est.texto, est.instancias[setRef].pos);
+      var csAttrs = pbi_splitAttrs(csRaw);
+      code   = pbi_strVal(csAttrs[0]) || pbi_strVal(csAttrs[4]);
+      system = pbi_strVal(csAttrs[1]);
+    }
+    if (!code) continue;
+    var related = attrs[4];
+    var reRef = /#(\d+)/g, rm;
+    while ((rm = reRef.exec(related)) !== null) {
+      total++; con_clas++;
+      if (!codigos[code]) codigos[code]={codigo:code,sistema:system,cantidad:0};
+      codigos[code].cantidad++;
+    }
+  }
+  var codArr = Object.keys(codigos).map(function(k){return codigos[k];});
+  codArr.sort(function(a,b){return b.cantidad-a.cantidad;});
+  return {total:total, con_clas:con_clas, codigos:codArr};
+}
+function pbi_descUniformat(code) {
+  if (!code) return null;
+  var c = code.toString().toUpperCase().replace(/[\.\-\s]/g,'');
+  for (var len = Math.min(c.length, 10); len >= 1; len--) {
+    if (PBI_UNIFORMAT[c.substring(0,len)]) return PBI_UNIFORMAT[c.substring(0,len)];
+  }
+  return null;
+}
+
+var PBI_CSS = "<style>:root{--navy:#060d18;--accent:#00d4ff;--green:#00c853;--bg:#0a0f1e;--card:#0d1526;--text:#c8d8f0;--muted:#4a6080;--border:#1a2a40;--warn:#ff6b35;--red:#ff3d57}*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Courier New',monospace;background:var(--bg);color:var(--text);padding:20px;font-size:12px;line-height:1.5}.rpt-header{background:var(--navy);border:1px solid var(--border);border-top:3px solid var(--accent);border-radius:7px;padding:18px 22px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-start}.rpt-header h1{font-size:13px;font-weight:700;color:#e0f0ff;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px}.rpt-header p{font-size:9px;color:var(--muted);margin-top:2px}.rpt-badge{display:inline-flex;align-items:center;padding:2px 8px;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);border-radius:10px;font-size:8px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.1em}.resumen{display:flex;gap:8px;margin-bottom:14px}.card{background:var(--card);border:1px solid var(--border);border-radius:5px;padding:10px 12px;flex:1;text-align:center}.card .numero{font-size:22px;font-weight:700;color:var(--accent);margin-bottom:2px}.card .numero.red{color:var(--red)}.card .numero.green{color:var(--green)}.card .label{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}.seccion-titulo{font-size:8px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.15em;margin-bottom:5px;padding-left:7px;border-left:3px solid var(--accent)}table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--border);border-radius:5px;overflow:hidden;margin-bottom:16px;font-size:11px}th{background:var(--navy);color:var(--muted);padding:6px 11px;text-align:left;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;border-bottom:1px solid var(--border)}td{padding:6px 11px;border-bottom:1px solid var(--border);color:var(--text)}tr:last-child td{border-bottom:none}tr.present td{background:rgba(0,200,83,.04)}tr.absent td{background:rgba(255,61,87,.04)}tr.unclassified td{background:rgba(255,107,53,.04)}tr.proxy td{background:rgba(255,107,53,.06)}tr.proxy-hito td{background:rgba(0,200,83,.04)}.cantidad{font-weight:700;font-size:12px;text-align:center}tr.present .cantidad{color:var(--green)}tr.absent .cantidad{color:var(--red)}tr.unclassified .cantidad{color:var(--warn)}.estado{text-align:center;font-size:14px}tr.present .estado{color:var(--green)}tr.absent .estado{color:var(--red)}code{background:rgba(0,212,255,.08);color:var(--accent);padding:1px 5px;border-radius:2px;font-size:10px;border:1px solid rgba(0,212,255,.12)}.sec-box{border-radius:5px 5px 0 0;padding:7px 11px;margin-bottom:0;font-size:10px;font-weight:600}.sec-box-ok{background:rgba(0,200,83,.08);border-left:3px solid var(--green);color:var(--green)}.sec-box-err{background:rgba(255,61,87,.08);border-left:3px solid var(--red);color:var(--red)}.sec-box-warn{background:rgba(255,107,53,.08);border-left:3px solid var(--warn);color:var(--warn)}.sec-box-info{background:rgba(0,212,255,.06);border-left:3px solid var(--accent);color:var(--accent)}.section-wrap{margin-bottom:18px}.nc-header{background:rgba(255,107,53,.06);border-left:3px solid var(--warn);border-radius:5px 5px 0 0;padding:9px 12px}.nc-titulo{display:block;font-size:10px;font-weight:700;color:var(--warn);margin-bottom:2px}.nc-subtitulo{display:block;font-size:9px;color:var(--muted)}.footer{margin-top:18px;font-size:8px;color:var(--muted);text-align:center;padding-top:12px;border-top:1px solid var(--border)}</style>";
+
+function pbi_hOrigen(res){
+  if(!res.length) return "";
+  var ok=res.every(function(r){return r.ok;});
+  var f=res.map(function(r){return "<tr class='"+(r.ok?'present':'absent')+"'><td>"+r.entidad+"</td><td>"+r.nombre+"</td><td class='cantidad'>"+r.x+"</td><td class='cantidad'>"+r.y+"</td><td class='cantidad'>"+r.z+"</td><td class='estado'>"+(r.ok?'&#10003;':'&#10007;')+"</td></tr>";}).join("");
+  return "<div class='section-wrap'><div class='seccion-titulo'>"+(ok?'&#10003;':'&#10007;')+" Verificacion de Origen Interno</div><div class='sec-box "+(ok?'sec-box-ok':'sec-box-err')+"'>"+(ok?"Origen interno correcto — en (0,0,0)":"Modelo desplazado del origen (0,0,0)")+"</div><table><thead><tr><th>Entidad</th><th>Nombre</th><th style='text-align:center'>X</th><th style='text-align:center'>Y</th><th style='text-align:center'>Z</th><th style='text-align:center'>OK</th></tr></thead><tbody>"+f+"</tbody></table></div>";
+}
+function pbi_hNombres(res){
+  if(!res.length) return "";
+  var ok=res.every(function(r){return r.ok;});
+  var f=res.map(function(r){return "<tr class='"+(r.ok?'present':'absent')+"'><td><code>"+r.tipo+"</code></td><td><strong>"+r.nombre+"</strong></td><td class='cantidad'>"+r.largo+"</td><td style='text-align:center;font-size:10px;color:var(--muted);'>"+r.desc+"</td><td class='estado'>"+(r.ok?'&#10003;':'&#10007;')+"</td></tr>";}).join("");
+  return "<div class='section-wrap'><div class='seccion-titulo'>"+(ok?'&#10003;':'&#10007;')+" Nombres de Sitio y Edificio</div><div class='sec-box "+(ok?'sec-box-ok':'sec-box-err')+"'>"+(ok?"Nombres correctos":"Nombre(s) de Sitio o Edificio incorrectos")+"</div><table><thead><tr><th>Entidad</th><th>Nombre</th><th style='text-align:center'>Caracteres</th><th style='text-align:center'>Regla</th><th style='text-align:center'>OK</th></tr></thead><tbody>"+f+"</tbody></table></div>";
+}
+function pbi_hNiveles(res){
+  if(!res.length) return "<div class='section-wrap'><div class='seccion-titulo'>Niveles del Proyecto</div><div class='sec-box sec-box-info'>No se encontraron IfcBuildingStorey en el modelo.</div></div>";
+  var ok=res.every(function(r){return r.ok;}), nOk=res.filter(function(r){return r.ok;}).length;
+  var f=res.map(function(r){return "<tr class='"+(r.ok?'present':'absent')+"'><td>"+r.id+"</td><td><strong>"+r.nombre+"</strong></td><td class='cantidad'>"+r.largo+"</td><td class='estado'>"+(r.ok?'&#10003;':'&#10007;')+"</td></tr>";}).join("");
+  return "<div class='section-wrap'><div class='seccion-titulo'>"+(ok?'&#10003;':'&#10007;')+" Niveles del Proyecto</div><div class='sec-box "+(ok?'sec-box-ok':'sec-box-err')+"'>"+(ok?"Todos los niveles con nombre correcto ("+nOk+"/"+res.length+")":(res.length-nOk)+" nivel(es) con nombre incorrecto")+"</div><table><thead><tr><th>ID</th><th>Nombre</th><th style='text-align:center'>Caracteres</th><th style='text-align:center'>OK</th></tr></thead><tbody>"+f+"</tbody></table></div>";
+}
+function pbi_hClas(res, ncData){
+  if(!res||res.total===0) return "";
+  var noClasificados=ncData?ncData.nc:[];
+  var totalNoClasif=noClasificados.reduce(function(s,n){return s+n[1];},0);
+  var pct=res.total?Math.round(res.con_clas/res.total*100):0;
+  var pctNC=res.total?Math.round(totalNoClasif/res.total*100):0;
+  var sub="Del total de <strong>"+res.total+"</strong> elementos: <span style='color:#00d4ff'>"+res.con_clas+" clasificados ("+pct+"%)</span> &middot; <span style='color:#ff6b35'>"+totalNoClasif+" sin clasificar ("+pctNC+"%)</span>.";
+  if(!res.codigos.length) return "<div class='section-wrap'><div class='seccion-titulo'>&#9632; Clasificacion</div><div class='sec-box sec-box-warn'>"+sub+" No se encontraron codigos de clasificacion.</div></div>";
+  var filas=res.codigos.map(function(c){var desc=pbi_descUniformat(c.codigo);return "<tr class='present'><td><code>"+c.codigo+"</code>"+(desc?" <span style='color:#00d4ff'>— "+desc+"</span>":"")+"</td><td style='color:var(--muted);font-size:10px;'>"+(c.sistema||"—")+"</td><td class='cantidad' style='color:#00d4ff;'>"+c.cantidad+"</td></tr>";}).join("");
+  return "<div class='section-wrap'><div class='seccion-titulo'>&#9632; Clasificacion de Elementos</div><div class='sec-box sec-box-warn' style='border-radius:5px;'>"+sub+"</div><table style='border-top:none;'><thead><tr><th>Codigo</th><th>Sistema</th><th style='text-align:center'>Elementos</th></tr></thead><tbody>"+filas+"</tbody></table></div>";
+}
+function pbi_generarHTML(espNombre, ents, entsNoRev, est, modeloNombre, fecha, cfg) {
+  var conteo=est.conteo, filas="", totalEsp=0, presentes=0, ausentes=0;
+  for(var i=0;i<ents.length;i++){
+    var cls=ents[i][0], nom=ents[i][1], qty=conteo[cls]||0;
+    totalEsp+=qty; qty>0?presentes++:ausentes++;
+    filas+="<tr class='"+(qty>0?'present':'absent')+"'><td>"+nom+"</td><td><code>"+cls.charAt(0)+cls.slice(1).toLowerCase()+"</code></td><td class='cantidad'>"+qty+"</td><td class='estado'>"+(qty>0?'&#10003;':'&#10007;')+"</td></tr>";
+  }
+  var ncData=pbi_obtenerNoClasificados(conteo);
+  var rOrg=pbi_verificarOrigen(est,cfg.ox,cfg.oy,cfg.oz);
+  var rNom=pbi_verificarNombres(est,cfg.nSite,cfg.nBuilding);
+  var rNiv=pbi_verificarNiveles(est,cfg.nStorey);
+  var rCla=pbi_verificarClasificacion(est);
+  var secNoRev="";
+  if(entsNoRev&&entsNoRev.length){
+    var fnr=entsNoRev.map(function(e){return "<tr style='opacity:.5'><td>"+e[1]+"</td><td><code>"+e[0]+"</code></td><td class='cantidad' style='color:var(--muted);'>"+(conteo[e[0]]||"—")+"</td></tr>";}).join("");
+    secNoRev="<div class='section-wrap'><div class='seccion-titulo'>&#9711; Entidades no revisadas ("+entsNoRev.length+")</div><div class='sec-box sec-box-info'>Entidades de la especialidad no incluidas en esta revision.</div><table><thead><tr><th>Nombre</th><th>Clase IFC</th><th style='text-align:center'>En modelo</th></tr></thead><tbody>"+fnr+"</tbody></table></div>";
+  }
+  var secNc="";
+  if(ncData.nc.length){
+    var fn="",tnc=0;
+    for(var i=0;i<ncData.nc.length;i++){
+      var cls=ncData.nc[i][0], qty=ncData.nc[i][1]; tnc+=qty;
+      var isP=cls==="IFCBUILDINGELEMENTPROXY";
+      var rc=isP&&qty===1?"proxy-hito":isP?"proxy":"unclassified";
+      fn+="<tr class='"+rc+"'><td><code>"+cls+"</code>"+(isP&&qty===1?" <span style='color:var(--green);font-size:9px;'>&nbsp;ℹ Hito</span>":isP?" <span style='color:var(--warn);font-size:9px;'>&nbsp;⚠ Proxy</span>":"")+"</td><td class='cantidad'>"+qty+"</td></tr>";
+    }
+    secNc="<div class='section-wrap'><div class='seccion-titulo'>&#9888; Entidades fuera de clasificacion</div><div class='nc-header'><span class='nc-titulo'>Entidades no clasificadas en esta especialidad</span><span class='nc-subtitulo'>Existen en el modelo pero no estan en el listado de la especialidad.</span></div><table><thead><tr><th>Clase IFC</th><th style='text-align:center'>Cantidad</th></tr></thead><tbody>"+fn+"</tbody><tfoot><tr><td style='font-weight:bold;padding:6px 11px;color:var(--text);'>Total no clasificados</td><td class='cantidad' style='font-weight:bold;color:var(--warn);'>"+tnc+"</td></tr></tfoot></table></div>";
+  } else {
+    secNc="<div class='section-wrap'><div class='seccion-titulo'>&#10003; Sin entidades fuera de clasificacion</div><div class='sec-box sec-box-ok'>Todas las entidades del modelo estan dentro del listado de esta especialidad.</div></div>";
+  }
+  var secComp="";
+  if(ncData.comp&&ncData.comp.length){
+    var fc=ncData.comp.map(function(c){return "<tr><td><code>"+c[0]+"</code></td><td style='font-size:10px;color:var(--muted);'>"+c[1]+"</td><td class='cantidad' style='color:#00d4ff;'>"+c[2]+"</td></tr>";}).join("");
+    secComp="<div class='section-wrap'><div class='seccion-titulo'>&#9432; Entidades complementarias</div><div class='sec-box sec-box-info'>Subcomponentes sin clasificacion independiente.</div><table><thead><tr><th>Clase IFC</th><th>Descripcion</th><th style='text-align:center'>Cantidad</th></tr></thead><tbody>"+fc+"</tbody></table></div>";
+  }
+  var entSection = ents.length ? "<div class='section-wrap'><div class='seccion-titulo'>&#9776; Entidades del listado</div><table><thead><tr><th>Nombre</th><th>Clase IFC</th><th style='text-align:center'>Cantidad</th><th style='text-align:center'>Estado</th></tr></thead><tbody>"+filas+"</tbody></table></div>" : "";
+  return "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'><title>Reporte PlanBIM</title>"+PBI_CSS+"</head><body>"
+    +"<div class='rpt-header'><div><h1>Reporte IFC — "+espNombre+"</h1><p>"+modeloNombre+"</p><p>"+fecha+"</p></div><div class='rpt-badge'>&#127959; PlanBIM Chile</div></div>"
+    +"<div class='resumen'><div class='card'><div class='numero'>"+ents.length+"</div><div class='label'>Revisadas</div></div><div class='card'><div class='numero green'>"+presentes+"</div><div class='label'>Presentes</div></div><div class='card'><div class='numero red'>"+ausentes+"</div><div class='label'>Ausentes</div></div><div class='card'><div class='numero'>"+totalEsp+"</div><div class='label'>Total elementos</div></div></div>"
+    +pbi_hOrigen(rOrg)+pbi_hNombres(rNom)+pbi_hNiveles(rNiv)+entSection+secNoRev+secNc+secComp+pbi_hClas(rCla,ncData)
+    +"<div class='footer'>VoxelBIM — Plataforma BIM</div></body></html>";
+}
+
+// ── Modal UI ──
+var pbi_pendingFile = null;
+
+function interceptarIFC(file) {
+  if (!file) return;
+  var ext = file.name.split('.').pop().toLowerCase();
+  if (ext !== 'ifc' && ext !== 'ifczip') {
+    subirArchivo(file, 'btnUploadModelo3D');
+    return;
+  }
+  pbi_pendingFile = file;
+  var cod = pbi_detectarCodigo(file.name);
+  var espNombre = null;
+  for (var k in PBI_ESP) { if (PBI_ESP[k].cod === cod) { espNombre = k; break; } }
+  var sizeMB = (file.size / 1024 / 1024).toFixed(1);
+
+  var detHtml = '<div class="pbi-det-card">'
+    + '<div style="font:400 9px var(--mono);color:var(--muted);">Archivo IFC detectado</div>'
+    + '<div style="font:600 11px var(--mono);color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+file.name+'">'+file.name+'</div>'
+    + '<div style="font:400 9px var(--mono);color:var(--muted);">'+sizeMB+' MB</div>'
+    + (cod
+        ? '<div style="margin-top:4px;"><span class="pbi-badge">'+cod+' — '+espNombre+'</span></div>'
+        : '<div style="margin-top:4px;"><span class="pbi-badge warn">&#9888; Sin especialidad detectada en el nombre</span></div>'
+      )
+    + '</div>';
+
+  var selectHtml = '';
+  if (!cod) {
+    var opts = '<option value="">-- Sin especialidad (validar origen/nombres/niveles) --</option>';
+    for (var k in PBI_ESP) opts += '<option value="'+PBI_ESP[k].cod+'">'+PBI_ESP[k].cod+' — '+k+'</option>';
+    selectHtml = '<div><div style="font:700 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.15em;margin-bottom:5px;">Especialidad</div>'
+      + '<select id="pbiEspSel" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:4px;font:500 11px var(--mono);color:var(--text);background:var(--blue);outline:none;">'+opts+'</select></div>';
+  }
+
+  var cfgHtml = '<div>'
+    + '<div style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;" onclick="pbi_toggleCfg(this)">'
+    + '<span style="font:700 8px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.15em;">&#9654; Configuración de verificaciones</span>'
+    + '</div>'
+    + '<div id="pbiCfg" class="pbi-cfg">'
+    + '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:7px;">'
+    + '<div class="pbi-cfg-field"><label>Origen X</label><input type="number" id="pbiCfgX" value="0" step="any"></div>'
+    + '<div class="pbi-cfg-field"><label>Origen Y</label><input type="number" id="pbiCfgY" value="0" step="any"></div>'
+    + '<div class="pbi-cfg-field"><label>Origen Z</label><input type="number" id="pbiCfgZ" value="0" step="any"></div>'
+    + '<div class="pbi-cfg-field"><label>Sitio (car.)</label><input type="number" id="pbiCfgSite" value="3" min="1" max="20"></div>'
+    + '<div class="pbi-cfg-field"><label>Edificio (car.)</label><input type="number" id="pbiCfgBuilding" value="2" min="1" max="20"></div>'
+    + '<div class="pbi-cfg-field"><label>Nivel (car.)</label><input type="number" id="pbiCfgStorey" value="5" min="1" max="20"></div>'
+    + '</div></div></div>';
+
+  var btnsHtml = '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+    + '<button class="pbi-btn primary" onclick="ejecutarValidacion()">&#128269; Validar ahora</button>'
+    + '<button class="pbi-btn skip" onclick="saltarValidacion()">&#9193; Saltar y subir directamente</button>'
+    + '</div>';
+
+  var body = document.getElementById('pbiBody');
+  body.innerHTML = detHtml + selectHtml + cfgHtml + btnsHtml
+    + '<div id="pbiFrameWrap" style="display:none;flex-direction:column;gap:8px;"></div>';
+  document.getElementById('pbiFooter').classList.remove('show');
+  document.getElementById('pbiOverlay').classList.add('show');
+}
+
+function pbi_toggleCfg(el) {
+  var cfg = document.getElementById('pbiCfg');
+  cfg.classList.toggle('show');
+  var span = el.querySelector('span');
+  span.innerHTML = (cfg.classList.contains('show') ? '&#9660;' : '&#9654;') + ' Configuración de verificaciones';
+}
+
+function cerrarPlanBim() {
+  document.getElementById('pbiOverlay').classList.remove('show');
+  pbi_pendingFile = null;
+}
+function saltarValidacion() {
+  var file = pbi_pendingFile;
+  cerrarPlanBim();
+  subirArchivo(file, 'btnUploadModelo3D');
+}
+function continuar3DUpload() {
+  var file = pbi_pendingFile;
+  cerrarPlanBim();
+  subirArchivo(file, 'btnUploadModelo3D');
+}
+
+function ejecutarValidacion() {
+  var file = pbi_pendingFile;
+  if (!file) return;
+
+  var cod = pbi_detectarCodigo(file.name);
+  var espSelEl = document.getElementById('pbiEspSel');
+  if (espSelEl && espSelEl.value) cod = espSelEl.value;
+
+  var espNombre = null;
+  for (var k in PBI_ESP) { if (PBI_ESP[k].cod === cod) { espNombre = k; break; } }
+
+  var cfg = {
+    ox: parseFloat(document.getElementById('pbiCfgX').value)||0,
+    oy: parseFloat(document.getElementById('pbiCfgY').value)||0,
+    oz: parseFloat(document.getElementById('pbiCfgZ').value)||0,
+    nSite: parseInt(document.getElementById('pbiCfgSite').value)||3,
+    nBuilding: parseInt(document.getElementById('pbiCfgBuilding').value)||2,
+    nStorey: parseInt(document.getElementById('pbiCfgStorey').value)||5
+  };
+
+  var wrap = document.getElementById('pbiFrameWrap');
+  wrap.innerHTML = '<div class="pbi-progress"><div class="pbi-spin"></div><span class="pbi-progress-text">Analizando IFC… esto puede tardar unos segundos en archivos grandes.</span></div>';
+  wrap.style.display = 'flex';
+  wrap.style.flexDirection = 'column';
+
+  document.querySelectorAll('#pbiOverlay .pbi-btn').forEach(function(b){ b.disabled=true; });
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var texto = e.target.result;
+      if (!texto.trimStart().startsWith('ISO-10303-21;')) {
+        wrap.innerHTML = '<div class="pbi-progress" style="border-color:rgba(255,61,87,.3);"><span class="pbi-progress-text" style="color:#ff3d57;">&#10007; El archivo no parece ser un IFC válido (falta header ISO-10303-21).</span></div>';
+        return;
+      }
+      wrap.querySelector('.pbi-progress-text').textContent = 'Parseando instancias IFC…';
+      var est = pbi_parsearIFC(texto);
+      var ents = espNombre ? PBI_ESP[espNombre].ents : [];
+      var fecha = new Date().toLocaleDateString('es-CL') + ' ' + new Date().toLocaleTimeString('es-CL');
+      var htmlReport = pbi_generarHTML(espNombre||'Sin especialidad', ents, [], est, file.name, fecha, cfg);
+      wrap.innerHTML = '<iframe id="pbiFrame" class="pbi-frame" sandbox="allow-same-origin allow-scripts"></iframe>';
+      document.getElementById('pbiFrame').srcdoc = htmlReport;
+      document.getElementById('pbiFooter').classList.add('show');
+    } catch(err) {
+      wrap.innerHTML = '<div class="pbi-progress" style="border-color:rgba(255,61,87,.3);"><span class="pbi-progress-text" style="color:#ff3d57;">&#10007; Error al analizar el IFC: '+err.message+'</span></div>';
+    } finally {
+      document.querySelectorAll('#pbiOverlay .pbi-btn').forEach(function(b){ b.disabled=false; });
+    }
+  };
+  reader.onerror = function() {
+    wrap.innerHTML = '<div class="pbi-progress" style="border-color:rgba(255,61,87,.3);"><span class="pbi-progress-text" style="color:#ff3d57;">&#10007; Error al leer el archivo.</span></div>';
+    document.querySelectorAll('#pbiOverlay .pbi-btn').forEach(function(b){ b.disabled=false; });
+  };
+  reader.readAsText(file);
+}
 </script>
+
+<!-- PLANBIM VALIDATION MODAL -->
+<div id="pbiOverlay" class="pbi-overlay">
+  <div class="pbi-modal">
+    <div class="pbi-modal-hdr">
+      <span class="pbi-modal-title">&#127959; Validaci&oacute;n PlanBIM Chile</span>
+      <button onclick="cerrarPlanBim()" style="margin-left:auto;background:none;border:1px solid var(--border);color:var(--muted);font:600 9px var(--mono);cursor:pointer;padding:4px 10px;border-radius:4px;text-transform:uppercase;letter-spacing:.08em;" title="Cerrar">&#10005; Cerrar</button>
+    </div>
+    <div id="pbiBody" class="pbi-modal-body"></div>
+    <div id="pbiFooter" class="pbi-modal-footer">
+      <button class="pbi-btn primary" onclick="continuar3DUpload()">&#9654; Continuar subida</button>
+      <button class="pbi-btn secondary" onclick="cerrarPlanBim()">&#10005; Cancelar subida</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEWS PICKER MODAL -->
+<div id="viewsModalOverlay" class="views-modal-overlay">
+  <div class="views-modal">
+    <div class="vm-title">&#128230; Vistas disponibles</div>
+    <div class="vm-sub" id="vmSub">Este archivo contiene múltiples vistas. Selecciona cuál cargar.</div>
+    <div id="vmList" class="vm-list"></div>
+  </div>
+</div>
+
 </body>
 </html>
