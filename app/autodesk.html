@@ -1406,7 +1406,7 @@ function renderNavItems(items) {
 // ============================================================
 // VISOR 3D
 // ============================================================
-function cargarVisor(urn, nombre) {
+function cargarVisor(urn, nombre, tokenOverride) {
   if (typeof Autodesk === 'undefined' || !Autodesk.Viewing) {
     mostrarError('SDK del visor no disponible. Recarga la página.'); return;
   }
@@ -1478,13 +1478,17 @@ function cargarVisor(urn, nombre) {
     );
   }
 
+  var tokenVisor = tokenOverride || apsToken;
   if (!viewerIniciado) {
     viewerIniciado = true;
     Autodesk.Viewing.Initializer(
-      { env:'AutodeskProduction', accessToken:apsToken, api:'streamingV2' },
+      { env:'AutodeskProduction', accessToken:tokenVisor, api:'streamingV2' },
       function() { arrancarVisor(); }
     );
-  } else { arrancarVisor(); }
+  } else {
+    if (tokenOverride) Autodesk.Viewing.endpoint.setAccessToken(tokenOverride, 3600);
+    arrancarVisor();
+  }
 }
 
 // ============================================================
@@ -2942,9 +2946,11 @@ async function subirRVT(file) {
       poll();
     });
 
-    // 6. Cargar en visor
+    // 6. Obtener token 2L para el visor y cargar
     setStep('¡Listo! Cargando…', 100);
-    cargarVisor(urn, file.name.replace(/\.rvt$/i, ''));
+    const t2lRes = await fetch(PROXY + '/aps/token2l');
+    const t2l    = await t2lRes.json();
+    cargarVisor(urn, file.name.replace(/\.rvt$/i, ''), t2l.access_token);
     setTimeout(() => { prog.classList.remove('show'); fill.style.width = '0%'; }, 2500);
 
   } catch(e) {

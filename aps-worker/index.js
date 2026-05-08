@@ -74,6 +74,14 @@ export default {
         return json(await resp.json(), resp.status, cors);
       } catch(e) { return json({ error: e.message }, 500, cors); }
     }
+    // ---- TOKEN 2-LEGGED para el viewer ----
+    if (request.method === 'GET' && url.pathname === '/aps/token2l') {
+      try {
+        const token = await get2LToken('data:read viewables:read');
+        return json({ access_token: token, expires_in: 3600 }, 200, cors);
+      } catch(e) { return json({ error: e.message }, 500, cors); }
+    }
+
     // ---- UPLOAD INIT ----
     if (request.method === 'POST' && url.pathname === '/aps/upload-init') {
       try {
@@ -144,13 +152,13 @@ export default {
   }
 };
 
-async function get2LToken() {
+async function get2LToken(scope = 'data:read data:write data:create bucket:create bucket:read') {
   const r = await fetch('https://developer.api.autodesk.com/authentication/v2/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       grant_type:    'client_credentials',
-      scope:         'data:read data:write data:create bucket:create bucket:read',
+      scope,
       client_id:     CLIENT_ID,
       client_secret: CLIENT_SECRET,
     })
