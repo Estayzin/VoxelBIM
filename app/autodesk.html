@@ -708,6 +708,7 @@ if (_hasError) {
     <div class="viewer-toolbar" id="viewerToolbar" style="display:none;">
       <span class="vt-title" id="viewerTitle">Sin modelo</span>
       <span class="vt-badge" id="viewerBadge">APS Viewer</span>
+      <button id="btnCerrarModelo" onclick="cerrarModelo()" title="Cerrar modelo" style="display:none;padding:4px 10px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:4px;font:600 9px var(--mono);cursor:pointer;text-transform:uppercase;letter-spacing:.08em;transition:all .15s;" onmouseover="this.style.borderColor='#ff3d57';this.style.color='#ff3d57'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">✕ Cerrar</button>
     </div>
 
     <div id="viewerContainer" style="flex:1;position:relative;display:flex;flex-direction:column;">
@@ -2866,6 +2867,23 @@ window._tutorial = new Tutorial({
 </script>
 <script>
 // ============================================================
+// CERRAR MODELO (para volver a subir otro)
+// ============================================================
+function cerrarModelo() {
+  if (viewer) { try { viewer.finish(); } catch(e) {} viewer = null; }
+  try { Autodesk.Viewing.shutdown(); } catch(e) {}
+  viewerIniciado = false;
+  urnActual = null;
+  document.getElementById('forgeViewer').style.display = 'none';
+  document.getElementById('viewerToolbar').style.display = 'none';
+  document.getElementById('viewerWelcome').classList.remove('hidden');
+  document.getElementById('btnCerrarModelo').style.display = 'none';
+  document.getElementById('viewerTitle').textContent = 'Sin modelo';
+  document.getElementById('ptList').innerHTML = '<div class="pt-empty">Carga un modelo para ver<br>el árbol de elementos</div>';
+  document.getElementById('rptArea').innerHTML = '<div class="rpt-empty">Sin modelo cargado</div>';
+}
+
+// ============================================================
 // SUBIR RVT LOCAL → APS OSS → Traducción → Visor
 // ============================================================
 async function subirRVT(file) {
@@ -2954,6 +2972,7 @@ async function subirRVT(file) {
     const t2lRes = await fetch(PROXY + '/aps/token2l');
     const t2l    = await t2lRes.json();
     cargarVisor(urn, file.name.replace(/\.rvt$/i, ''), t2l.access_token);
+    document.getElementById('btnCerrarModelo').style.display = 'inline-flex';
     setTimeout(() => { prog.classList.remove('show'); fill.style.width = '0%'; }, 2500);
 
   } catch(e) {
