@@ -101,7 +101,8 @@ function httpsRequest(method, urlString, bodyData = null, headers = {}) {
 // Endpoint: /aps/token
 async function handleApsToken(req, res, body) {
   try {
-    const { code } = JSON.parse(body);
+    const { code, redirect_uri } = JSON.parse(body);
+    const callbackUrl = redirect_uri || APS_CALLBACK_URL;
 
     if (!code) {
       res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -113,7 +114,7 @@ async function handleApsToken(req, res, body) {
     console.log('  Code:', code.substring(0, 20) + '...');
     console.log('  Client ID:', APS_CLIENT_ID ? 'PRESENTE' : 'FALTA');
     console.log('  Client Secret:', APS_CLIENT_SECRET ? 'PRESENTE' : 'FALTA');
-    console.log('  Redirect URI:', APS_CALLBACK_URL);
+    console.log('  Redirect URI:', callbackUrl);
 
     // Si no hay credenciales, modo demo
     if (!APS_CLIENT_ID || !APS_CLIENT_SECRET) {
@@ -142,7 +143,7 @@ async function handleApsToken(req, res, body) {
       code: code,
       client_id: APS_CLIENT_ID,
       client_secret: APS_CLIENT_SECRET,
-      redirect_uri: APS_CALLBACK_URL,
+      redirect_uri: callbackUrl,
     };
 
     console.log('[APS] Intercambiando código con Autodesk...');
@@ -321,6 +322,7 @@ http.createServer((req, res) => {
   console.log('║  🚀 http://localhost:' + PORT + '                         ║');
   console.log('║  📍 /index.html — Portal principal             ║');
   console.log('║  🔷 /app/autodesk.html — APS + Claude          ║');
+  console.log('║  🤖 /app/acc-explorer.html — ACC + Gemini      ║');
   console.log('║  🎬 /app/voxelbim.html — Visor IFC             ║');
   console.log('║  📡 /aps/token — API Autodesk OAuth            ║');
   console.log('║  🤖 /claude/chat — API Claude                  ║');

@@ -826,7 +826,9 @@ if (_hasError) {
 // ============================================================
 var IS_LOCAL      = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 var APS_CLIENT_ID = 'kOJ4igA0Lm8a9ZHA3KGkATKASthAdjiWBjY9ventTQBnGVab';
-var APS_CALLBACK  = window.location.origin + window.location.pathname;
+var APS_CALLBACK  = IS_LOCAL
+  ? 'http://localhost:3000/app/autodesk.html'
+  : 'https://voxelbim.pages.dev/app/autodesk.html';
 var APS_PROXY     = IS_LOCAL
   ? 'https://voxelbim.zinnarox.workers.dev/token'
   : 'https://voxelbim.zinnarox.workers.dev/token';
@@ -993,7 +995,7 @@ function mostrarToast(msg) {
     fetch(APS_PROXY, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: code })
+      body: JSON.stringify({ code: code, redirect_uri: APS_CALLBACK })
     })
     .then(r => r.json())
     .then(data => {

@@ -57,14 +57,13 @@ export default {
       try {
         const body        = await request.json();
         if (!body.code)   return json({ error: 'missing code' }, 400, cors);
-        const callbackUrl = CALLBACK_URLS[origin] || CALLBACK_URLS['https://voxelbim.pages.dev'];
+        const callbackUrl = body.redirect_uri || CALLBACK_URLS[origin] || CALLBACK_URLS['https://voxelbim.pages.dev'];
         const params = new URLSearchParams({
           grant_type:    'authorization_code',
           code:           body.code,
           redirect_uri:   callbackUrl,
           client_id:      CLIENT_ID,
           client_secret:  CLIENT_SECRET,
-          scope:          'data:read viewables:read account:read bucket:read',
         });
         const resp = await fetch(APS_TOKEN_URL, {
           method: 'POST',
