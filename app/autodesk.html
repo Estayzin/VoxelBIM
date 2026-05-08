@@ -159,6 +159,17 @@ body.light-mode #connStatus { color:#5a7a9a !important; }
 .workspace { display:flex; flex:1; overflow:hidden; position:relative; }
 /* ── PANEL IZQUIERDO ── */
 .panel-left { width:300px; flex-shrink:0; background:var(--blue); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+/* ── UPLOAD RVT ── */
+.pl-upload { padding:10px 12px; border-top:1px solid var(--border); flex-shrink:0; background:var(--navy); }
+.btn-upload-rvt { width:100%; padding:9px; background:rgba(0,144,255,.07); color:var(--aps); border:1px solid rgba(0,144,255,.2); border-radius:6px; font:700 10px var(--mono); cursor:pointer; text-transform:uppercase; letter-spacing:.1em; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:7px; }
+.btn-upload-rvt:hover:not(:disabled) { background:rgba(0,144,255,.14); border-color:rgba(0,144,255,.5); box-shadow:0 0 14px rgba(0,144,255,.15); }
+.btn-upload-rvt:disabled { opacity:.4; cursor:not-allowed; }
+.upload-prog { margin-top:8px; display:none; }
+.upload-prog.show { display:block; }
+.upload-track { height:3px; background:rgba(255,255,255,.06); border-radius:2px; overflow:hidden; margin-bottom:5px; }
+.upload-fill { height:100%; width:0%; background:var(--aps); border-radius:2px; transition:width .3s; }
+.upload-fill.err { background:#ff3d57; }
+.upload-msg { font:400 9px var(--mono); color:var(--muted); line-height:1.6; }
 .pl-header { padding:12px 16px; border-bottom:1px solid var(--border); flex-shrink:0; }
 .pl-title { font:700 9px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.2em; margin-bottom:10px; }
 .btn-login { width:100%; padding:10px; background:var(--aps); color:#fff; border:none; border-radius:6px; font:700 11px var(--mono); cursor:pointer; letter-spacing:.08em; text-transform:uppercase; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:8px; }
@@ -665,6 +676,18 @@ if (_hasError) {
     <!-- Lista de carpetas/archivos del proyecto -->
     <div class="nav-list" id="navList" style="display:none;">
       <div class="nav-empty">Selecciona un proyecto</div>
+    </div>
+
+    <!-- SUBIR RVT LOCAL -->
+    <div class="pl-upload">
+      <input type="file" id="rvtFileInput" accept=".rvt" style="display:none" onchange="subirRVT(this.files[0]);this.value=''">
+      <button class="btn-upload-rvt" id="btnUploadRVT" onclick="document.getElementById('rvtFileInput').click()">
+        <span>📤</span> Subir RVT
+      </button>
+      <div class="upload-prog" id="uploadProg">
+        <div class="upload-track"><div class="upload-fill" id="uploadFill"></div></div>
+        <div class="upload-msg" id="uploadMsg">Preparando...</div>
+      </div>
     </div>
 
   </div>
@@ -2833,6 +2856,103 @@ window._tutorial = new Tutorial({
     },
   ],
 }).start();
+</script>
+<script>
+// ============================================================
+// SUBIR RVT LOCAL → APS OSS → Traducción → Visor
+// ============================================================
+async function subirRVT(file) {
+  if (!file) return;
+  const btn   = document.getElementById('btnUploadRVT');
+  const prog  = document.getElementById('uploadProg');
+  const fill  = document.getElementById('uploadFill');
+  const msg   = document.getElementById('uploadMsg');
+  const PROXY = 'https://voxelbim.zinnarox.workers.dev';
+
+  const setStep = (texto, pct, error) => {
+    msg.textContent  = texto;
+    fill.style.width = pct + '%';
+    fill.classList.toggle('err', !!error);
+  };
+
+  btn.disabled = true;
+  prog.classList.add('show');
+  fill.classList.remove('err');
+
+  try {
+    // 1. Obtener URL firmada
+    setStep('Iniciando carga…', 5);
+    const initRes = await fetch(PROXY + '/aps/upload-init', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename: file.name })
+    });
+    const init = await initRes.json();
+    if (init.error) throw new Error(init.error);
+    const { uploadKey, signedUrl, urn, objectKey } = init;
+
+    // 2. Subir archivo directamente a S3
+    await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', signedUrl);
+      xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+      xhr.upload.onprogress = e => {
+        if (e.lengthComputable)
+          setStep(`Subiendo… ${Math.round(e.loaded / e.total * 100)}%`, 10 + e.loaded / e.total * 50);
+      };
+      xhr.onload  = () => xhr.status < 300 ? resolve() : reject(new Error('Upload S3: ' + xhr.status));
+      xhr.onerror = () => reject(new Error('Error de red al subir'));
+      xhr.send(file);
+    });
+
+    // 3. Completar upload
+    setStep('Completando carga…', 62);
+    await fetch(PROXY + '/aps/upload-complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ objectKey, uploadKey })
+    });
+
+    // 4. Iniciar traducción
+    setStep('Iniciando traducción…', 68);
+    const transRes = await fetch(PROXY + '/aps/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ urn })
+    });
+    const trans = await transRes.json();
+    if (trans.diagnostic) throw new Error(trans.diagnostic);
+
+    // 5. Polling hasta completar (~1-5 min)
+    setStep('Traduciendo modelo…', 72);
+    await new Promise((resolve, reject) => {
+      let attempts = 0;
+      const poll = async () => {
+        if (++attempts > 72) return reject(new Error('Timeout: traducción tardó demasiado'));
+        try {
+          const r    = await fetch(PROXY + '/aps/status?urn=' + urn);
+          const data = await r.json();
+          const pct  = 72 + Math.min(parseInt(data.progress) || 0, 99) * 0.26;
+          setStep(`Traduciendo… ${data.progress || '0%'}`, pct);
+          if (data.status === 'success') return resolve();
+          if (data.status === 'failed')  return reject(new Error('Traducción fallida'));
+        } catch(_) {}
+        setTimeout(poll, 5000);
+      };
+      poll();
+    });
+
+    // 6. Cargar en visor
+    setStep('¡Listo! Cargando…', 100);
+    cargarVisor(urn, file.name.replace(/\.rvt$/i, ''));
+    setTimeout(() => { prog.classList.remove('show'); fill.style.width = '0%'; }, 2500);
+
+  } catch(e) {
+    setStep('Error: ' + e.message, 100, true);
+  } finally {
+    btn.disabled = false;
+  }
+}
 </script>
 </body>
 </html>

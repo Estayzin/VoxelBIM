@@ -1,7 +1,8 @@
-// Cloudflare Worker — APS OAuth proxy
+// Cloudflare Worker — APS OAuth proxy + Upload helper
 const CLIENT_ID     = 'kOJ4igA0Lm8a9ZHA3KGkATKASthAdjiWBjY9ventTQBnGVab';
 const CLIENT_SECRET = 'GFwhQIEpFLUGFEfS5Iug0m8Q869JAhO9Dfk83L11BCPmuuVdwkv6GDOuBXvjBO2E';
 const APS_TOKEN_URL = 'https://developer.api.autodesk.com/authentication/v2/token';
+const BUCKET_KEY    = 'voxelbim-uploads-v1';
 
 const ALLOWED_ORIGINS = [
   'https://voxelbim.pages.dev',
@@ -73,9 +74,104 @@ export default {
         return json(await resp.json(), resp.status, cors);
       } catch(e) { return json({ error: e.message }, 500, cors); }
     }
+    // ---- UPLOAD INIT ----
+    if (request.method === 'POST' && url.pathname === '/aps/upload-init') {
+      try {
+        const { filename } = await request.json();
+        const objectKey = `${Date.now()}_${filename.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+        const token = await get2LToken();
+        await ensureBucket(token);
+        const r = await fetch(
+          `https://developer.api.autodesk.com/oss/v2/buckets/${BUCKET_KEY}/objects/${encodeURIComponent(objectKey)}/signeds3upload`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const data = await r.json();
+        if (!data.urls) return json({ error: data.reason || 'No signed URL' }, 400, cors);
+        const urnRaw = `urn:adsk.objects:os.object:${BUCKET_KEY}/${objectKey}`;
+        const urn    = btoa(urnRaw).replace(/=/g, '');
+        return json({ uploadKey: data.uploadKey, signedUrl: data.urls[0], urn, objectKey }, 200, cors);
+      } catch(e) { return json({ error: e.message }, 500, cors); }
+    }
+
+    // ---- UPLOAD COMPLETE ----
+    if (request.method === 'POST' && url.pathname === '/aps/upload-complete') {
+      try {
+        const { objectKey, uploadKey } = await request.json();
+        const token = await get2LToken();
+        const r = await fetch(
+          `https://developer.api.autodesk.com/oss/v2/buckets/${BUCKET_KEY}/objects/${encodeURIComponent(objectKey)}/signeds3upload`,
+          {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ uploadKey })
+          }
+        );
+        return json(await r.json(), r.status, cors);
+      } catch(e) { return json({ error: e.message }, 500, cors); }
+    }
+
+    // ---- TRANSLATE ----
+    if (request.method === 'POST' && url.pathname === '/aps/translate') {
+      try {
+        const { urn } = await request.json();
+        const token = await get2LToken();
+        const r = await fetch('https://developer.api.autodesk.com/modelderivative/v2/designdata/job', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'x-ads-force': 'true' },
+          body: JSON.stringify({
+            input:  { urn },
+            output: { formats: [{ type: 'svf2', views: ['2d', '3d'] }] }
+          })
+        });
+        return json(await r.json(), r.status, cors);
+      } catch(e) { return json({ error: e.message }, 500, cors); }
+    }
+
+    // ---- TRANSLATION STATUS ----
+    if (request.method === 'GET' && url.pathname === '/aps/status') {
+      try {
+        const urn   = url.searchParams.get('urn');
+        const token = await get2LToken();
+        const r = await fetch(
+          `https://developer.api.autodesk.com/modelderivative/v2/designdata/${urn}/manifest`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        return json(await r.json(), r.status, cors);
+      } catch(e) { return json({ error: e.message }, 500, cors); }
+    }
+
     return json({ error: 'not found' }, 404, cors);
   }
 };
+
+async function get2LToken() {
+  const r = await fetch('https://developer.api.autodesk.com/authentication/v2/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type:    'client_credentials',
+      scope:         'data:read data:write data:create bucket:create bucket:read',
+      client_id:     CLIENT_ID,
+      client_secret: CLIENT_SECRET,
+    })
+  });
+  const d = await r.json();
+  if (!d.access_token) throw new Error('2L token failed: ' + JSON.stringify(d));
+  return d.access_token;
+}
+
+async function ensureBucket(token) {
+  const r = await fetch(
+    `https://developer.api.autodesk.com/oss/v2/buckets/${BUCKET_KEY}/details`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  if (r.status === 200) return;
+  await fetch('https://developer.api.autodesk.com/oss/v2/buckets', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ bucketKey: BUCKET_KEY, policyKey: 'transient' })
+  });
+}
 
 function json(data, status = 200, cors = {}) {
   return new Response(JSON.stringify(data), {
