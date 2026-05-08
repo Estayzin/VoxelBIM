@@ -24,3 +24,6 @@ cp visor/dist/assets/worker-*.mjs visor/dist/worker.mjs
 
 # 6. Copiar _headers para que Cloudflare Pages aplique las cabeceras CORS/COOP
 cp _headers visor/dist/_headers
+
+# 7. Copiar scripts/ (tutorial.js y otros)
+cp -r scripts visor/dist/scripts
