@@ -5,6 +5,7 @@ const APS_TOKEN_URL = 'https://developer.api.autodesk.com/authentication/v2/toke
 
 const ALLOWED_ORIGINS = [
   'https://voxelbim.pages.dev',
+  'https://develop.voxelbim.pages.dev',
   'http://localhost:3000',
 ];
 
@@ -21,8 +22,9 @@ function getCORS(origin) {
 
 // Callback URL según origen
 const CALLBACK_URLS = {
-  'https://voxelbim.pages.dev': 'https://voxelbim.pages.dev/app/autodesk.html',
-  'http://localhost:3000':      'http://localhost:3000/app/autodesk.html',
+  'https://voxelbim.pages.dev':         'https://voxelbim.pages.dev/app/autodesk.html',
+  'https://develop.voxelbim.pages.dev': 'https://develop.voxelbim.pages.dev/app/autodesk.html',
+  'http://localhost:3000':              'http://localhost:3000/app/autodesk.html',
 };
 
 export default {
