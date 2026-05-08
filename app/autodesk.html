@@ -1035,7 +1035,7 @@ function mostrarToast(msg) {
     return;
   }
   var stored = sessionStorage.getItem('aps_token');
-  if (stored) { apsToken = stored; onTokenReady(); }
+  if (stored) { apsToken = stored; setTimeout(onTokenReady, 0); }
 
   var oauthErr = sessionStorage.getItem('aps_oauth_error');
   if (oauthErr) {
@@ -1479,6 +1479,10 @@ function cargarVisor(urn, nombre, tokenOverride) {
   }
 
   var tokenVisor = tokenOverride || apsToken;
+  if (tokenOverride && viewerIniciado) {
+    viewerIniciado = false;
+    try { Autodesk.Viewing.shutdown(); } catch(e) {}
+  }
   if (!viewerIniciado) {
     viewerIniciado = true;
     Autodesk.Viewing.Initializer(
@@ -1486,7 +1490,6 @@ function cargarVisor(urn, nombre, tokenOverride) {
       function() { arrancarVisor(); }
     );
   } else {
-    if (tokenOverride) Autodesk.Viewing.endpoint.setAccessToken(tokenOverride, 3600);
     arrancarVisor();
   }
 }
