@@ -251,13 +251,18 @@ body.light-mode .upload-card-label { background:var(--blue); }
 /* ── VIEWS PICKER MODAL ── */
 .views-modal-overlay { position:fixed; inset:0; background:rgba(6,13,24,.82); backdrop-filter:blur(4px); z-index:500; display:none; align-items:center; justify-content:center; }
 .views-modal-overlay.show { display:flex; }
-.views-modal { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:20px; width:460px; max-width:92vw; max-height:80vh; display:flex; flex-direction:column; gap:12px; }
+.views-modal { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:20px; width:720px; max-width:94vw; max-height:80vh; display:flex; flex-direction:column; gap:12px; }
 .vm-title { font:700 13px var(--sans); color:var(--text); }
 .vm-sub { font:400 9px var(--mono); color:var(--muted); }
-.vm-section { font:700 8px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.15em; margin-top:4px; }
-.vm-list { overflow-y:auto; max-height:320px; display:flex; flex-direction:column; gap:4px; }
-.vm-list::-webkit-scrollbar { width:3px; }
-.vm-list::-webkit-scrollbar-thumb { background:var(--border); }
+.vm-columns { display:grid; grid-template-columns:1fr 1fr; gap:12px; overflow:hidden; }
+.vm-col { display:flex; flex-direction:column; gap:6px; min-width:0; }
+.vm-col-title { font:700 8px var(--mono); text-transform:uppercase; letter-spacing:.15em; padding-bottom:6px; border-bottom:1px solid var(--border); }
+.vm-col-title.t3d { color:var(--aps); }
+.vm-col-title.t2d { color:var(--green); }
+.vm-col-list { overflow-y:auto; max-height:320px; display:flex; flex-direction:column; gap:4px; }
+.vm-col-list::-webkit-scrollbar { width:3px; }
+.vm-col-list::-webkit-scrollbar-thumb { background:var(--border); }
+.vm-col-empty { font:400 9px var(--mono); color:var(--muted); opacity:.5; padding:16px 8px; text-align:center; }
 .vm-item { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:5px; border:1px solid var(--border); cursor:pointer; transition:all .12s; }
 .vm-item:hover { border-color:var(--aps); background:rgba(0,144,255,.05); }
 .vm-item-icon { font-size:16px; flex-shrink:0; }
@@ -267,6 +272,27 @@ body.light-mode .upload-card-label { background:var(--blue); }
 .vm-tag { font:700 7px var(--mono); padding:1px 5px; border-radius:2px; flex-shrink:0; }
 .vm-tag.t3d { background:rgba(0,144,255,.1); color:var(--aps); }
 .vm-tag.t2d { background:rgba(0,200,83,.1); color:var(--green); }
+/* ── HUB LOCAL MODAL ── */
+.hub-overlay { position:fixed; inset:0; background:rgba(6,13,24,.82); backdrop-filter:blur(4px); z-index:500; display:none; align-items:center; justify-content:center; }
+.hub-overlay.show { display:flex; }
+.hub-modal { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:20px; width:500px; max-width:94vw; max-height:80vh; display:flex; flex-direction:column; gap:12px; }
+.hub-title { font:700 13px var(--sans); color:var(--text); }
+.hub-sub { font:400 9px var(--mono); color:var(--muted); }
+.hub-list { overflow-y:auto; max-height:360px; display:flex; flex-direction:column; gap:4px; }
+.hub-list::-webkit-scrollbar { width:3px; }
+.hub-list::-webkit-scrollbar-thumb { background:var(--border); }
+.hub-empty { font:400 10px var(--mono); color:var(--muted); opacity:.5; padding:24px 8px; text-align:center; }
+.hub-item { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:5px; border:1px solid var(--border); cursor:pointer; transition:all .12s; }
+.hub-item:hover { border-color:rgba(255,193,7,.4); background:rgba(255,193,7,.04); }
+.hub-item-icon { font-size:16px; flex-shrink:0; }
+.hub-item-info { flex:1; min-width:0; }
+.hub-item-name { font:500 11px var(--mono); color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hub-item-meta { font:400 8px var(--mono); color:var(--muted); margin-top:1px; }
+.hub-item-del { background:none; border:none; color:var(--muted); cursor:pointer; padding:2px 6px; border-radius:3px; font-size:12px; opacity:.5; transition:.1s; }
+.hub-item-del:hover { opacity:1; color:#ff4d4d; }
+.hub-footer { display:flex; justify-content:flex-end; padding-top:6px; border-top:1px solid var(--border); }
+.hub-clear { font:500 9px var(--mono); background:none; border:1px solid var(--border); color:var(--muted); padding:4px 10px; border-radius:4px; cursor:pointer; transition:.1s; }
+.hub-clear:hover { color:var(--text); border-color:var(--muted); }
 /* ── PLANBIM VALIDATION MODAL ── */
 .pbi-overlay { position:fixed; inset:0; background:rgba(6,13,24,.88); backdrop-filter:blur(4px); z-index:9990; display:none; align-items:center; justify-content:center; }
 .pbi-overlay.show { display:flex; }
@@ -741,6 +767,9 @@ if (_hasError) {
         </button>
         <button class="btn-upload-rvt" id="btnUploadDoc2D" style="margin-top:6px;border-color:rgba(0,200,83,.2);color:var(--green);background:rgba(0,200,83,.05);" onclick="document.getElementById('doc2dInput').click()" title="DWG, PDF, DWF…">
           <span>&#128195;</span> Subir Documento 2D
+        </button>
+        <button class="btn-upload-rvt" id="btnHubLocal" style="margin-top:6px;border-color:rgba(255,193,7,.2);color:#ffc107;background:rgba(255,193,7,.05);" onclick="mostrarHub()" title="Modelos cargados en esta sesión">
+          <span>&#128193;</span> Hub local <span id="hubCount" style="display:none;background:rgba(255,193,7,.18);color:#ffc107;border-radius:3px;padding:0 5px;font-size:9px;margin-left:4px;vertical-align:middle;"></span>
         </button>
         <div class="upload-prog" id="uploadProg">
           <div class="upload-track"><div class="upload-fill" id="uploadFill"></div></div>
@@ -1567,15 +1596,19 @@ function cargarNodoVisor(doc, viewable) {
 
 function mostrarViewsPicker(doc, views3d, views2d) {
   var overlay = document.getElementById('viewsModalOverlay');
-  var list    = document.getElementById('vmList');
+  var list3d  = document.getElementById('vmList3d');
+  var list2d  = document.getElementById('vmList2d');
   var sub     = document.getElementById('vmSub');
   sub.textContent = (views3d.length + views2d.length) + ' vistas disponibles — selecciona cuál cargar en el visor.';
-  list.innerHTML = '';
+  list3d.innerHTML = '';
+  list2d.innerHTML = '';
 
-  function agregarSeccion(titulo, vistas, tag, tagCls, icono) {
-    if (!vistas.length) return;
-    var sec = document.createElement('div'); sec.className = 'vm-section'; sec.textContent = titulo;
-    list.appendChild(sec);
+  function llenarColumna(lista, vistas, tag, tagCls, icono) {
+    if (!vistas.length) {
+      var empty = document.createElement('div'); empty.className = 'vm-col-empty';
+      empty.textContent = 'Sin vistas disponibles';
+      lista.appendChild(empty); return;
+    }
     vistas.forEach(function(v) {
       var nombre = v.data.name || v.data.guid || 'Vista';
       var item = document.createElement('div'); item.className = 'vm-item';
@@ -1583,16 +1616,13 @@ function mostrarViewsPicker(doc, views3d, views2d) {
         + '<div class="vm-item-info"><div class="vm-item-name">' + nombre + '</div>'
         + '<div class="vm-item-meta">' + (v.data.role || tag) + '</div></div>'
         + '<span class="vm-tag ' + tagCls + '">' + tag + '</span>';
-      item.onclick = function() {
-        overlay.classList.remove('show');
-        cargarNodoVisor(doc, v);
-      };
-      list.appendChild(item);
+      item.onclick = function() { overlay.classList.remove('show'); cargarNodoVisor(doc, v); };
+      lista.appendChild(item);
     });
   }
 
-  agregarSeccion('Vistas 3D', views3d, '3D', 't3d', '&#128230;');
-  agregarSeccion('Láminas 2D', views2d, '2D', 't2d', '&#128195;');
+  llenarColumna(list3d, views3d, '3D', 't3d', '&#128230;');
+  llenarColumna(list2d, views2d, '2D', 't2d', '&#128195;');
   overlay.classList.add('show');
   overlay.onclick = function(e) { if (e.target === overlay) overlay.classList.remove('show'); };
 }
@@ -2915,6 +2945,9 @@ document.getElementById('chatInput').addEventListener('input', function() {
   });
 })();
 
+/* ══ INICIALIZAR HUB ══ */
+hubActualizarBoton();
+
 /* ══ MODO CLARO/OSCURO ══ */
 (function() {
   const btn = document.getElementById('btnLightMode');
@@ -3081,6 +3114,8 @@ async function subirArchivo(file, btnId) {
     const displayName = file.name.replace(/\.[^.]+$/, '');
     cargarVisor(urn, displayName, t2l.access_token);
     document.getElementById('btnCerrarModelo').style.display = 'inline-flex';
+    const fileType = /\.(dwg|dxf|pdf|dwf|dwfx)$/i.test(file.name) ? '2D' : '3D';
+    guardarEnHub(urn, displayName, fileType);
     setTimeout(() => { prog.classList.remove('show'); fill.style.width = '0%'; }, 2500);
 
   } catch(e) {
@@ -3089,6 +3124,79 @@ async function subirArchivo(file, btnId) {
     document.getElementById('btnUploadModelo3D').disabled = false;
     document.getElementById('btnUploadDoc2D').disabled   = false;
   }
+}
+
+// ============================================================
+// HUB LOCAL — historial de modelos de la sesión
+// ============================================================
+var HUB_KEY = 'voxelbim_hub';
+
+function hubGetItems() {
+  try { return JSON.parse(sessionStorage.getItem(HUB_KEY) || '[]'); } catch(e) { return []; }
+}
+
+function guardarEnHub(urn, name, type) {
+  var items = hubGetItems();
+  if (items.some(function(i) { return i.urn === urn; })) { hubActualizarBoton(); return; }
+  items.unshift({ urn: urn, name: name, type: type || '3D', ts: Date.now() });
+  sessionStorage.setItem(HUB_KEY, JSON.stringify(items));
+  hubActualizarBoton();
+}
+
+function hubActualizarBoton() {
+  var cnt = document.getElementById('hubCount');
+  if (!cnt) return;
+  var n = hubGetItems().length;
+  if (n) { cnt.textContent = n; cnt.style.display = 'inline'; }
+  else   { cnt.style.display = 'none'; }
+}
+
+function mostrarHub() {
+  var overlay = document.getElementById('hubOverlay');
+  var list    = document.getElementById('hubList');
+  var items   = hubGetItems();
+  list.innerHTML = '';
+  if (!items.length) {
+    var empty = document.createElement('div'); empty.className = 'hub-empty';
+    empty.textContent = 'Sin modelos en el hub. Sube un archivo para guardarlo aquí.';
+    list.appendChild(empty);
+  } else {
+    items.forEach(function(item, idx) {
+      var row = document.createElement('div'); row.className = 'hub-item';
+      var icono = item.type === '2D' ? '&#128195;' : '&#128230;';
+      var hora  = new Date(item.ts).toLocaleTimeString('es-CL', { hour:'2-digit', minute:'2-digit' });
+      row.innerHTML = '<div class="hub-item-icon">' + icono + '</div>'
+        + '<div class="hub-item-info">'
+        +   '<div class="hub-item-name">' + item.name + '</div>'
+        +   '<div class="hub-item-meta">' + item.type + ' · cargado a las ' + hora + '</div>'
+        + '</div>'
+        + '<button class="hub-item-del" title="Quitar del hub" onclick="event.stopPropagation();quitarDeHub(' + idx + ')">&#10005;</button>';
+      row.onclick = function() {
+        overlay.classList.remove('show');
+        fetch(PROXY + '/aps/token2l')
+          .then(function(r) { return r.json(); })
+          .then(function(t) { cargarVisor(item.urn, item.name, t.access_token); })
+          .catch(function(e) { mostrarError('Error cargando desde hub: ' + e.message); });
+      };
+      list.appendChild(row);
+    });
+  }
+  overlay.classList.add('show');
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.classList.remove('show'); };
+}
+
+function quitarDeHub(idx) {
+  var items = hubGetItems();
+  items.splice(idx, 1);
+  sessionStorage.setItem(HUB_KEY, JSON.stringify(items));
+  hubActualizarBoton();
+  mostrarHub();
+}
+
+function limpiarHub() {
+  sessionStorage.removeItem(HUB_KEY);
+  hubActualizarBoton();
+  mostrarHub();
 }
 
 // ============================================================
@@ -3587,12 +3695,33 @@ function ejecutarValidacion() {
   </div>
 </div>
 
+<!-- HUB LOCAL MODAL -->
+<div id="hubOverlay" class="hub-overlay">
+  <div class="hub-modal">
+    <div class="hub-title">&#128193; Hub local — sesión actual</div>
+    <div class="hub-sub" id="hubSub">Modelos cargados en esta sesión. Se borran al cerrar el navegador.</div>
+    <div id="hubList" class="hub-list"></div>
+    <div class="hub-footer">
+      <button class="hub-clear" onclick="limpiarHub()">&#128465; Limpiar hub</button>
+    </div>
+  </div>
+</div>
+
 <!-- VIEWS PICKER MODAL -->
 <div id="viewsModalOverlay" class="views-modal-overlay">
   <div class="views-modal">
     <div class="vm-title">&#128230; Vistas disponibles</div>
     <div class="vm-sub" id="vmSub">Este archivo contiene múltiples vistas. Selecciona cuál cargar.</div>
-    <div id="vmList" class="vm-list"></div>
+    <div class="vm-columns">
+      <div class="vm-col">
+        <div class="vm-col-title t3d">&#128230; Vistas 3D</div>
+        <div id="vmList3d" class="vm-col-list"></div>
+      </div>
+      <div class="vm-col">
+        <div class="vm-col-title t2d">&#128195; Láminas 2D</div>
+        <div id="vmList2d" class="vm-col-list"></div>
+      </div>
+    </div>
   </div>
 </div>
 
