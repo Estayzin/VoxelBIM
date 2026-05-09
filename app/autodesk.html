@@ -3151,9 +3151,11 @@ function guardarEnHub(urn, name, type) {
 function hubActualizar() {
   var items   = hubGetItems();
   var n       = items.length;
-  // Badge en botón
+  // Badge + estado del botón
   var cnt = document.getElementById('hubCount');
   if (cnt) { cnt.textContent = n; cnt.style.display = n ? 'inline' : 'none'; }
+  var btn = document.getElementById('btnHubLocal');
+  if (btn) { btn.disabled = !n; btn.style.opacity = n ? '1' : '.35'; btn.style.cursor = n ? 'pointer' : 'not-allowed'; }
   // Sección sidebar
   var sidebar = document.getElementById('hubSidebar');
   var list    = document.getElementById('hubSidebarList');
