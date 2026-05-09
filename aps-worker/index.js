@@ -1,6 +1,4 @@
 // Cloudflare Worker — APS OAuth proxy + Upload helper
-const CLIENT_ID     = 'kOJ4igA0Lm8a9ZHA3KGkATKASthAdjiWBjY9ventTQBnGVab';
-const CLIENT_SECRET = 'GFwhQIEpFLUGFEfS5Iug0m8Q869JAhO9Dfk83L11BCPmuuVdwkv6GDOuBXvjBO2E';
 const APS_TOKEN_URL = 'https://developer.api.autodesk.com/authentication/v2/token';
 const BUCKET_KEY    = 'voxelbim-uploads-v1';
 
@@ -39,7 +37,7 @@ export default {
     if (request.method === 'POST' && url.pathname === '/claude') {
       try {
         const payload = await request.json();
-        const apiKey  = env.ANTHROPIC_API_KEY || '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';
+        const apiKey  = env.ANTHROPIC_API_KEY;
         const resp = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: {
@@ -63,8 +61,8 @@ export default {
           grant_type:    'authorization_code',
           code:           body.code,
           redirect_uri:   callbackUrl,
-          client_id:      CLIENT_ID,
-          client_secret:  CLIENT_SECRET,
+          client_id:      env.APS_CLIENT_ID,
+          client_secret:  env.APS_CLIENT_SECRET,
         });
         const resp = await fetch(APS_TOKEN_URL, {
           method: 'POST',
@@ -77,7 +75,7 @@ export default {
     // ---- TOKEN 2-LEGGED para el viewer ----
     if (request.method === 'GET' && url.pathname === '/aps/token2l') {
       try {
-        const token = await get2LToken('data:read viewables:read');
+        const token = await get2LToken(env, 'data:read viewables:read');
         return json({ access_token: token, expires_in: 3600 }, 200, cors);
       } catch(e) { return json({ error: e.message }, 500, cors); }
     }
@@ -87,7 +85,7 @@ export default {
       try {
         const { filename } = await request.json();
         const objectKey = `${Date.now()}_${filename.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-        const token = await get2LToken();
+        const token = await get2LToken(env);
         await ensureBucket(token);
         const r = await fetch(
           `https://developer.api.autodesk.com/oss/v2/buckets/${BUCKET_KEY}/objects/${encodeURIComponent(objectKey)}/signeds3upload`,
@@ -105,7 +103,7 @@ export default {
     if (request.method === 'POST' && url.pathname === '/aps/upload-complete') {
       try {
         const { objectKey, uploadKey } = await request.json();
-        const token = await get2LToken();
+        const token = await get2LToken(env);
         const r = await fetch(
           `https://developer.api.autodesk.com/oss/v2/buckets/${BUCKET_KEY}/objects/${encodeURIComponent(objectKey)}/signeds3upload`,
           {
@@ -122,7 +120,7 @@ export default {
     if (request.method === 'POST' && url.pathname === '/aps/translate') {
       try {
         const { urn } = await request.json();
-        const token = await get2LToken();
+        const token = await get2LToken(env);
         const r = await fetch('https://developer.api.autodesk.com/modelderivative/v2/designdata/job', {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'x-ads-force': 'true' },
@@ -139,7 +137,7 @@ export default {
     if (request.method === 'GET' && url.pathname === '/aps/status') {
       try {
         const urn   = url.searchParams.get('urn');
-        const token = await get2LToken();
+        const token = await get2LToken(env);
         const r = await fetch(
           `https://developer.api.autodesk.com/modelderivative/v2/designdata/${urn}/manifest`,
           { headers: { Authorization: `Bearer ${token}` } }
@@ -152,15 +150,15 @@ export default {
   }
 };
 
-async function get2LToken(scope = 'data:read data:write data:create bucket:create bucket:read') {
+async function get2LToken(env, scope = 'data:read data:write data:create bucket:create bucket:read') {
   const r = await fetch('https://developer.api.autodesk.com/authentication/v2/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       grant_type:    'client_credentials',
       scope,
-      client_id:     CLIENT_ID,
-      client_secret: CLIENT_SECRET,
+      client_id:     env.APS_CLIENT_ID,
+      client_secret: env.APS_CLIENT_SECRET,
     })
   });
   const d = await r.json();
