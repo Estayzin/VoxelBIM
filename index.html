@@ -446,17 +446,10 @@ const BIM_LOGO_HTML = `<g class="bit-wrap">
 document.querySelectorAll('.bim-svg').forEach(svg => { svg.innerHTML = BIM_LOGO_HTML; });
 
 // Hash SHA-256 de las credenciales
-// Pro:    usuario "admin"  + contraseña "221472"
-// Demo 1: usuario "demo1"  + contraseña "5167" (Explorador BIM)
-// Demo 2: usuario "demo2"  + contraseña "1472" (Autodesk APS)
 const HASHES = {
-  // hash de "admin:221472"
   'd231f71a9d546eb5fb328f99bb495fcd50ff32a4dc7226519131b5f9fa695fce': 'pro',
-  // hash de "demo1:5167"
   '5417b77699089c0d0ad6085ae6fb3a8b5b49ec9cf2d2d35e97f9169d74156bef': 'demo_explorer',
-  // hash de "demo2:1472"
   '1794bf57ce0108bc9577d4ccf4ffebd0b76327d0c667659d9a85dcc13b8efef2': 'demo_autodesk',
-  // hash de "demo3:1234"
   '0ca59ce08059db6187883ea0c62e9bf61f392cf08862a3f639ed3e434697310e': 'demo_all'
 };
 
