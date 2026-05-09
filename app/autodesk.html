@@ -18,7 +18,7 @@
 <meta name="description" content="Módulo Autodesk APS — Integración con BIM 360, ACC y Claude AI.">
 <meta name="copyright" content="Carlos Estay Ruggieri, 2026">
 <title>Voxel360 — Plataforma BIM</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="stylesheet" href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.min.css">
@@ -27,7 +27,6 @@
 /* ══ PALETA BASE — Modo claro ACC (defecto) ══ */
 :root {
   --navy:  #000000;     /* Header/footer negro ACC */
-  --display: 'Syne', sans-serif; /* Solo para logo/marca */
   --blue:  #f5f6f7;     /* Sidebar fondo */
   --bg:    #ffffff;     /* Contenido principal */
   --card:  #f0f2f4;     /* Superficies elevadas */
@@ -550,8 +549,8 @@ body.light-mode .upload-card-label { background:var(--blue); }
 #viewerWelcome.hidden { display:none; }
 .vw-box { border:1px dashed rgba(6,150,215,.3); border-radius:16px; padding:48px 56px; display:flex; flex-direction:column; align-items:center; gap:14px; background:rgba(245,246,247,.85); pointer-events:none; }
 body.dark-mode .vw-box { background:rgba(6,13,24,.55); border-color:rgba(0,144,255,.25); }
-.vw-title { font:800 18px 'Syne',sans-serif; color:var(--text); letter-spacing:.06em; text-transform:uppercase; }
-.vw-sub   { font:400 12px var(--sans); color:var(--muted); letter-spacing:.06em; text-transform:uppercase; }
+.vw-title { font:800 20px var(--sans); color:var(--text); letter-spacing:.02em; }
+.vw-sub   { font:400 12px var(--sans); color:var(--muted); text-align:center; line-height:1.6; max-width:360px; }
 /* ── NOTIFICACIÓN TOAST ── */
 .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(60px); background:rgba(13,21,38,.96); border:1px solid rgba(199,125,255,.3); border-radius:8px; padding:10px 18px; font:500 10px var(--mono); color:#e0c8ff; letter-spacing:.06em; z-index:9999; transition:transform .25s ease, opacity .25s ease; opacity:0; pointer-events:none; white-space:nowrap; }
 .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
@@ -610,8 +609,8 @@ if (_hasError) {
     </svg>
   </div>
   <div>
-    <div style="font:800 14px 'Syne',sans-serif;color:#ffffff;letter-spacing:.04em;text-transform:uppercase;">Voxel360</div>
-    <div style="font:500 11px var(--sans);color:rgba(255,255,255,.5);margin-top:1px;">Visor BIM &middot; ACC</div>
+    <div style="font:800 15px var(--sans);color:#ffffff;letter-spacing:.02em;">Voxel360</div>
+    <div style="font:400 11px var(--sans);color:rgba(255,255,255,.5);margin-top:1px;">Visor BIM · ACC</div>
   </div>
 
   <!-- Árbol de Proyecto — alineado al ancho del sidebar (300px) -->
@@ -785,10 +784,10 @@ if (_hasError) {
             </g>
           </svg>
           <div class="vw-title">Voxel360</div>
-          <div style="font:400 10px var(--mono);color:var(--aps);letter-spacing:.2em;text-transform:uppercase;opacity:.7;">Visor BIM &middot; APS &middot; ACC</div>
+          <div style="font:500 12px var(--sans);color:var(--muted);letter-spacing:.06em;text-transform:uppercase;">Visor BIM · APS · ACC</div>
           <div style="width:40px;height:1px;background:var(--border);"></div>
           <div class="vw-sub">1. Conecta → 2. Elige plataforma → 3. Abre proyecto → 4. Selecciona modelo</div>
-          <div style="font:400 9px var(--mono);color:var(--muted);opacity:.45;">BIM 360 &middot; ACC &middot; A360 &middot; RVT &middot; IFC &middot; DWG</div>
+          <div style="font:400 12px var(--sans);color:var(--muted);opacity:.5;">BIM 360 · ACC · A360 · RVT · IFC · DWG</div>
         </div>
       </div>
 
