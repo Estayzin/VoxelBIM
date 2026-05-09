@@ -762,6 +762,12 @@ if (_hasError) {
       <input type="file" id="doc2dInput"    accept=".dwg,.dxf,.pdf,.dwf,.dwfx"                   style="display:none" onchange="subirArchivo(this.files[0],'btnUploadDoc2D');this.value=''">
       <div class="upload-card">
         <div class="upload-card-label">&#9889; Sin B360 ni Revit</div>
+        <div style="font:400 9px var(--mono);color:var(--muted);line-height:1.9;margin-bottom:8px;">
+          <div style="color:var(--aps);font-weight:700;margin-bottom:4px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;">Cómo usar</div>
+          <div>1. <b style="color:var(--text);">Subir Modelo 3D</b> — RVT, IFC, NWC, SKP…</div>
+          <div>2. <b style="color:var(--text);">Subir Documento 2D</b> — DWG, PDF, DWF…</div>
+          <div>3. <b style="color:#ffc107;">Hub local</b> — reabre modelos ya traducidos<br>&nbsp;&nbsp;&nbsp;&nbsp;en esta sesión sin volver a subirlos</div>
+        </div>
         <button class="btn-upload-rvt" id="btnUploadModelo3D" onclick="document.getElementById('modelo3dInput').click()" title="RVT, IFC, NWC, NWD, SKP…">
           <span>&#128230;</span> Subir Modelo 3D
         </button>
