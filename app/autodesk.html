@@ -272,12 +272,7 @@ body.light-mode .upload-card-label { background:var(--blue); }
 .vm-tag { font:700 7px var(--mono); padding:1px 5px; border-radius:2px; flex-shrink:0; }
 .vm-tag.t3d { background:rgba(0,144,255,.1); color:var(--aps); }
 .vm-tag.t2d { background:rgba(0,200,83,.1); color:var(--green); }
-/* ── HUB LOCAL SIDEBAR ── */
-.hub-sidebar { border-top:1px solid var(--border); background:var(--navy); }
-.hub-sidebar-hdr { display:flex; align-items:center; justify-content:space-between; padding:7px 14px 3px; }
-.hub-sidebar-label { font:700 8px var(--mono); color:#ffc107; text-transform:uppercase; letter-spacing:.12em; }
-.hub-sidebar-clear { background:none; border:none; color:var(--muted); cursor:pointer; font-size:11px; opacity:.5; padding:2px 4px; transition:.1s; }
-.hub-sidebar-clear:hover { opacity:1; color:#ff4d4d; }
+/* ── HUB LOCAL (en projectTree) ── */
 .hub-nav-item { display:flex; align-items:center; gap:9px; padding:6px 14px; cursor:pointer; transition:background .12s; border-left:2px solid transparent; }
 .hub-nav-item:hover { background:rgba(255,193,7,.06); border-left-color:rgba(255,193,7,.4); }
 .hub-nav-item.active { background:rgba(255,193,7,.08); border-left-color:#ffc107; }
@@ -728,18 +723,8 @@ if (_hasError) {
       </div>
     </div>
 
-    <!-- Lista de hubs/proyectos -->
-    <div class="tree" id="projectTree">
-      <div style="padding:20px 16px;text-align:left;">
-        <div style="font:400 9px var(--mono);color:var(--muted);line-height:2;">
-          <div style="color:var(--aps);font-weight:700;margin-bottom:6px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;">Pasos para comenzar</div>
-          <div>1. Conecta tu cuenta Autodesk ↑</div>
-          <div>2. Elige una plataforma (BIM 360 / ACC)</div>
-          <div>3. Abre un proyecto</div>
-          <div>4. Selecciona un modelo para visualizar</div>
-        </div>
-      </div>
-    </div>
+    <!-- Lista de hubs/proyectos (poblado por hubActualizar o cargarHubs) -->
+    <div class="tree" id="projectTree"></div>
 
     <!-- Lista de carpetas/archivos del proyecto -->
     <div class="nav-list" id="navList" style="display:none;">
@@ -756,7 +741,7 @@ if (_hasError) {
           <div style="color:var(--aps);font-weight:700;margin-bottom:4px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;">Cómo usar</div>
           <div>1. <b style="color:var(--text);">Subir Modelo 3D</b> — RVT, IFC, NWC, SKP…</div>
           <div>2. <b style="color:var(--text);">Subir Documento 2D</b> — DWG, PDF, DWF…</div>
-          <div>3. Los modelos subidos quedan en el <b style="color:#ffc107;">Hub local</b><br>&nbsp;&nbsp;&nbsp;&nbsp;abajo para recargarlos sin volver a subir</div>
+          <div>3. Los modelos subidos aparecen en el <b style="color:#ffc107;">Hub local</b><br>&nbsp;&nbsp;&nbsp;&nbsp;arriba para recargarlos sin volver a subir</div>
         </div>
         <button class="btn-upload-rvt" id="btnUploadModelo3D" onclick="document.getElementById('modelo3dInput').click()" title="RVT, IFC, NWC, NWD, SKP…">
           <span>&#128230;</span> Subir Modelo 3D
@@ -772,15 +757,6 @@ if (_hasError) {
           <div class="upload-msg" id="uploadMsg">Preparando...</div>
         </div>
       </div>
-    </div>
-
-    <!-- HUB LOCAL — lista de modelos de la sesión -->
-    <div id="hubSidebar" class="hub-sidebar" style="display:none;">
-      <div class="hub-sidebar-hdr">
-        <span class="hub-sidebar-label">&#128193; Hub local</span>
-        <button class="hub-sidebar-clear" onclick="limpiarHub()" title="Limpiar hub">&#128465; limpiar</button>
-      </div>
-      <div id="hubSidebarList"></div>
     </div>
 
   </div>
@@ -1179,8 +1155,7 @@ function cerrarSesion() {
   document.getElementById('platformWrap').style.display = 'none';
   todosLosHubs = [];
   cerrarNavegador();
-  document.getElementById('projectTree').innerHTML =
-    '<div style="padding:20px 16px;text-align:left;"><div style="font:400 9px var(--mono);color:var(--muted);line-height:2;"><div style="color:var(--aps);font-weight:700;margin-bottom:6px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;">Pasos para comenzar</div><div>1. Conecta tu cuenta Autodesk ↑</div><div>2. Elige una plataforma (BIM 360 / ACC)</div><div>3. Abre un proyecto</div><div>4. Selecciona un modelo para visualizar</div></div></div>';
+  hubActualizar();
 }
 </script>
 
@@ -3148,30 +3123,36 @@ function guardarEnHub(urn, name, type) {
   hubActualizar();
 }
 
+var HUB_PASOS = '<div style="padding:20px 16px;text-align:left;"><div style="font:400 9px var(--mono);color:var(--muted);line-height:2;"><div style="color:var(--aps);font-weight:700;margin-bottom:6px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;">Pasos para comenzar</div><div>1. Conecta tu cuenta Autodesk ↑</div><div>2. Elige una plataforma (BIM 360 / ACC)</div><div>3. Abre un proyecto</div><div>4. Selecciona un modelo para visualizar</div></div></div>';
+
 function hubActualizar() {
-  var items   = hubGetItems();
-  var n       = items.length;
+  var items = hubGetItems();
+  var n     = items.length;
   // Badge + estado del botón
   var cnt = document.getElementById('hubCount');
   if (cnt) { cnt.textContent = n; cnt.style.display = n ? 'inline' : 'none'; }
   var btn = document.getElementById('btnHubLocal');
   if (btn) { btn.disabled = !n; btn.style.opacity = n ? '1' : '.35'; btn.style.cursor = n ? 'pointer' : 'not-allowed'; }
-  // Sección sidebar
-  var sidebar = document.getElementById('hubSidebar');
-  var list    = document.getElementById('hubSidebarList');
-  if (!sidebar || !list) return;
-  sidebar.style.display = n ? 'block' : 'none';
-  list.innerHTML = '';
+  // Si está conectado a Autodesk el projectTree pertenece a B360
+  if (typeof apsToken !== 'undefined' && apsToken) return;
+  var tree = document.getElementById('projectTree');
+  if (!tree) return;
+  if (!n) { tree.innerHTML = HUB_PASOS; return; }
+  // Mostrar hub en el área principal del sidebar
+  tree.innerHTML = '';
+  var hdr = document.createElement('div');
+  hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 14px 4px;border-bottom:1px solid var(--border);margin-bottom:2px;';
+  hdr.innerHTML = '<span style="font:700 8px var(--mono);color:#ffc107;text-transform:uppercase;letter-spacing:.12em;">&#128193; Hub local — esta sesión</span>'
+    + '<button onclick="limpiarHub()" style="background:none;border:none;color:var(--muted);font:400 9px var(--mono);cursor:pointer;opacity:.55;padding:2px 4px;" title="Limpiar hub">&#128465; limpiar</button>';
+  tree.appendChild(hdr);
   items.forEach(function(item, idx) {
     var icono = item.type === '2D' ? '&#128195;' : '&#128230;';
     var tag   = item.type === '2D' ? 'tag-dwg' : 'tag-rvt';
     var hora  = new Date(item.ts).toLocaleTimeString('es-CL', { hour:'2-digit', minute:'2-digit' });
     var row = document.createElement('div'); row.className = 'hub-nav-item';
     row.innerHTML = '<div class="nav-icon">' + icono + '</div>'
-      + '<div class="nav-info">'
-      +   '<div class="nav-name">' + item.name + '</div>'
-      +   '<div class="nav-sub">' + item.type + ' · ' + hora + '</div>'
-      + '</div>'
+      + '<div class="nav-info"><div class="nav-name">' + item.name + '</div>'
+      + '<div class="nav-sub">' + item.type + ' · ' + hora + '</div></div>'
       + '<span class="nav-tag ' + tag + '">' + item.type + '</span>'
       + '<button class="hub-nav-del" title="Quitar" onclick="event.stopPropagation();quitarDeHub(' + idx + ')">&#10005;</button>';
     row.onclick = function() {
@@ -3182,13 +3163,13 @@ function hubActualizar() {
         .then(function(t) { cargarVisor(item.urn, item.name, t.access_token); })
         .catch(function(e) { mostrarError('Error cargando desde hub: ' + e.message); });
     };
-    list.appendChild(row);
+    tree.appendChild(row);
   });
 }
 
 function scrollAlHub() {
-  var sidebar = document.getElementById('hubSidebar');
-  if (sidebar) sidebar.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  var tree = document.getElementById('projectTree');
+  if (tree) tree.scrollTop = 0;
 }
 
 function quitarDeHub(idx) {
