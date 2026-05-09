@@ -1516,10 +1516,6 @@ function cargarVisor(urn, nombre, tokenOverride) {
   }
 
   var tokenVisor = tokenOverride || apsToken;
-  if (tokenOverride && viewerIniciado) {
-    viewerIniciado = false;
-    try { Autodesk.Viewing.shutdown(); } catch(e) {}
-  }
   if (!viewerIniciado) {
     viewerIniciado = true;
     Autodesk.Viewing.Initializer(
@@ -1527,6 +1523,10 @@ function cargarVisor(urn, nombre, tokenOverride) {
       function() { arrancarVisor(); }
     );
   } else {
+    // Viewer ya iniciado — actualizar token y recargar sin reinicializar el SDK
+    if (tokenVisor) {
+      try { Autodesk.Viewing.endpoint.setAccessToken(tokenVisor); } catch(e) {}
+    }
     arrancarVisor();
   }
 }
@@ -3145,8 +3145,10 @@ function hubActualizar() {
 }
 
 function scrollAlHub() {
+  var navList = document.getElementById('navList');
+  if (navList) navList.style.display = 'none';
   var tree = document.getElementById('projectTree');
-  if (tree) tree.scrollTop = 0;
+  if (tree) { tree.style.display = 'block'; tree.scrollTop = 0; }
 }
 
 function quitarDeHub(idx) {
